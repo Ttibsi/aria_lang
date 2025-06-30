@@ -1,9 +1,7 @@
 #include "idk.h"
 
 int main() {
-    Aria_VM ariaVM = {0};
-    aria_vm_init(&ariaVM, in_str, sizeof(in_str)); 
-
+    Aria_VM ariaVM = aria_vm_init(); 
     aria_interpret(&ariaVM, "main", "var foo = 35 + (2 * 17)");
 
     /* ... */
