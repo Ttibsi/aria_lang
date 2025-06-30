@@ -3,11 +3,9 @@
 #include <string.h> 
 
 Aria_VM aria_vm_init() {
-    Aria_VM vm = {
+    return (Aria_VM){
         .lexer = NULL
     };
-
-    return vm;
 }
 
 void aria_vm_destroy(Aria_VM* aria_vm) {
