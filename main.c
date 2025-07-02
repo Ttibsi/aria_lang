@@ -1,4 +1,4 @@
-#include "idk.h"
+#include "aria.h"
 
 int main() {
     Aria_VM ariaVM = aria_vm_init(); 
