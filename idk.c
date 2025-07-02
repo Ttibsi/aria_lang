@@ -4,6 +4,8 @@
 #include <stddef.h> 
 #include <string.h> 
 
+// TODO: Investigate using an arena for memory allocation instead
+ 
 Aria_VM aria_vm_init() {
     return (Aria_VM){
         .lexer = NULL
@@ -14,7 +16,13 @@ void aria_vm_destroy(Aria_VM* aria_vm) {
 }
 
 int aria_interpret(Aria_VM* aria_vm, const char* module, const char* source) {
-    *aria_vm->lexer = aria_tokenize(aria_vm, module, source);
+    Aria_Lexer temp = aria_tokenize(aria_vm, module, source);
+    aria_vm->lexer = malloc(sizeof(Aria_Lexer));
+    memcpy(aria_vm->lexer, &temp, sizeof(Aria_Lexer)); 
+ 
+#if ARIA_DEBUG == 1
+    print_tokens(aria_vm->lexer); 
+#endif 
 }
  
 #define TOKEN_APPEND(tok, begin, size) \
@@ -46,6 +54,7 @@ Aria_Lexer aria_tokenize(Aria_VM* vm, const char* module, const char* source) {
     int skip = 0; 
     for (size_t i = 0; i < strlen(source); i++) {
         if (skip) { skip--; continue; } 
+        if (isspace(source[i])) { continue; } 
  
         // individual characters
         switch (source[i]) {
@@ -83,9 +92,9 @@ Aria_Lexer aria_tokenize(Aria_VM* vm, const char* module, const char* source) {
         }
 
         // keywords 
-        for (int i = 0; i < keyword_count; i++) {
-            if (strncmp(&source[i], keywords[i].kw, keywords[i].len) == 0) {
-                TOKEN_APPEND(keywords[i].tok, i, keywords[i].len); 
+        for (int j = 0; j < keyword_count; j++) {
+            if (strncmp(source + i, keywords[j].kw, keywords[j].len) == 0) {
+                TOKEN_APPEND(keywords[j].tok, i, keywords[j].len); 
             }
         }
 
@@ -111,4 +120,14 @@ void aria_lexer_append(Aria_Lexer* lexer, Aria_Token* tok) {
     }
  
     lexer->data[lexer->size] = *tok;  
+    lexer->size++; 
+}
+
+void print_tokens(Aria_Lexer* lexer) {
+    printf("=== TOKENS ===\n");
+ 
+    for (int i = 0; i < lexer->size; i++) {
+        Aria_Token* tok = &lexer->data[i]; 
+        printf("Token: %2d, pos: %d, size: %d\n", tok->type, tok->start, tok->len);
+    } 
 }

@@ -7,6 +7,10 @@
 #include <stdlib.h>
 #include <stdbool.h> 
 
+// debug modes
+// 1 - lexer 
+#define ARIA_DEBUG 1 
+
 typedef enum {
     // Single-character tokens.
     TOK_LEFT_PAREN, TOK_RIGHT_PAREN,
@@ -87,5 +91,7 @@ int aria_interpret(Aria_VM* aria_vm, const char* module, const char* source);
 // Lexer
 Aria_Lexer aria_tokenize(Aria_VM* vm, const char* module, const char* source);
 void aria_lexer_append(Aria_Lexer* lexer, Aria_Token* tok);
+void print_tokens(Aria_Lexer* lexer); 
+ 
 
 #endif // ARIA_H 
