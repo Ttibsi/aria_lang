@@ -1,5 +1,7 @@
 #include "idk.h"
 
+#include <ctype.h> 
+#include <stddef.h> 
 #include <string.h> 
 
 Aria_VM aria_vm_init() {
@@ -8,19 +10,28 @@ Aria_VM aria_vm_init() {
     };
 }
 
-void aria_vm_destroy(Aria_VM* aria_vm) {
+void aria_vm_destroy(Aria_VM* aria_vm) { 
 }
 
-void aria_interpret(Aria_VM* aria_vm, const char* module, const char* source) {
+int aria_interpret(Aria_VM* aria_vm, const char* module, const char* source) {
     *aria_vm->lexer = aria_tokenize(aria_vm, module, source);
-} 
+}
  
-#define TOKEN_APPEND(type, start, len, l) \
+#define TOKEN_APPEND(tok, begin, size) \
 do { \
-    Aria_Token t = {.type = type, .start = start, .len = len}; \
-    start += len; \
-    aria_lexer_append(&l, &t); \
+    Aria_Token t = {.type = tok, .start = begin, .len = size}; \
+    skip += (size - 1); \
+    aria_lexer_append(&lexer, &t); \
 } while (0)
+
+#define NEXT_TOK_IS_EQ(eq_tok, tok) \
+do { \
+    if (source[i + 1] == '=') { \
+        TOKEN_APPEND(eq_tok, i, 2); \
+    } else { \
+        TOKEN_APPEND(tok, i, 1); \
+    } \
+} while (0) 
 
 Aria_Lexer aria_tokenize(Aria_VM* vm, const char* module, const char* source) {
     Aria_Lexer lexer = {
@@ -28,21 +39,76 @@ Aria_Lexer aria_tokenize(Aria_VM* vm, const char* module, const char* source) {
         .size = 0,
         .capacity = 32,
         .source = source,
-        .module = module
+        .module = module,
+        .error = false 
     };
 
-    char* current = source;
-    int start = 0;
+    int skip = 0; 
+    for (size_t i = 0; i < strlen(source); i++) {
+        if (skip) { skip--; continue; } 
+ 
+        // individual characters
+        switch (source[i]) {
+            // TODO: skip whitespace
+            case '.': TOKEN_APPEND(TOK_DOT, i, 1); break;
+            case ',': TOKEN_APPEND(TOK_COMMA, i, 1); break; 
+            case ';': TOKEN_APPEND(TOK_SEMICOLON, i, 1); break; 
+            case '-': TOKEN_APPEND(TOK_MINUS, i, 1); break;
+            case '+': TOKEN_APPEND(TOK_PLUS, i, 1); break;
+            case '*': TOKEN_APPEND(TOK_STAR, i, 1); break;
+            case '/': TOKEN_APPEND(TOK_SLASH, i, 1); break;
+            case '{': TOKEN_APPEND(TOK_LEFT_BRACE, i, 1); break;
+            case '}': TOKEN_APPEND(TOK_RIGHT_BRACE, i, 1); break;
+            case '(': TOKEN_APPEND(TOK_LEFT_PAREN, i, 1); break;
+            case ')': TOKEN_APPEND(TOK_RIGHT_PAREN, i, 1); break; 
+            case '!': NEXT_TOK_IS_EQ(TOK_BANG_EQUAL, TOK_BANG); break;
+            case '=': NEXT_TOK_IS_EQ(TOK_EQUAL_EQUAL, TOK_EQUAL); break;
+            case '<': NEXT_TOK_IS_EQ(TOK_LESS_EQUAL, TOK_LESS); break;
+            case '>': NEXT_TOK_IS_EQ(TOK_GREATER_EQUAL, TOK_GREATER); break;
 
-    while (*current != '\0') {
-        switch (*current) {
-            case ' ': TOKEN_APPEND();
+            // digraphs 
+            // TODO: if not double, add TOK_ERR 
+            case '&': if (source[i + 1] == '&') { TOKEN_APPEND(TOK_AND, i, 2); break; }
+            case '|': if (source[i + 1] == '|') { TOKEN_APPEND(TOK_OR, i, 2); break; }
+
+            // string literals 
+            case '"': {
+                int str_lit_len = 0; 
+                while (source[i++] != '"') {
+                    str_lit_len++; 
+                    // TODO: if i >= strlen, TOK_ERR 
+                }
+                TOKEN_APPEND(TOK_STRING, i, str_lit_len);
+            } 
         }
+
+        // keywords 
+        for (int i = 0; i < keyword_count; i++) {
+            if (strncmp(&source[i], keywords[i].kw, keywords[i].len) == 0) {
+                TOKEN_APPEND(keywords[i].tok, i, keywords[i].len); 
+            }
+        }
+
+        // number literals
+        int num_len = 0; 
+        const int num_start = i; 
+        while (isdigit(source[i])) {
+            num_len++;
+            i++; 
+        }
+        if (num_len) { TOKEN_APPEND(TOK_NUMBER, num_start, num_len); }
     }
 
+    // EOF     
+    TOKEN_APPEND(TOK_EOF, strlen(source), 0); 
     return lexer;
 } 
 
-static void aria_lexer_append(Aria_Lexer* lexer, Aria_Token* tok) {
-    ...
+void aria_lexer_append(Aria_Lexer* lexer, Aria_Token* tok) {
+    if (lexer->size == lexer->capacity) {
+        lexer->data = realloc(lexer->data, sizeof(Aria_Token) * lexer->capacity * 2);
+        lexer->capacity *= 2; 
+    }
+ 
+    lexer->data[lexer->size] = *tok;  
 }

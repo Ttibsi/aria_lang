@@ -1,6 +1,6 @@
 CFLAGS := -Wall -Wextra -g
 
-*.o: *.c
+%.o: %.c
 	gcc $< -c -MMD -MP -o $@ $(CFLAGS)
 
 main: main.o idk.o
