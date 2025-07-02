@@ -42,20 +42,20 @@ typedef struct {
 } Keyword;
 
 static const Keyword keywords[] = {
-    { "case", 4, TOK_CASE },
-    { "class", 5, TOK_CLASS }, 
-    { "const", 5, TOK_CONST }, 
-    { "default", 7, TOK_DEFAULT }, 
-    { "else", 4, TOK_ELSE }, 
-    { "false", 5, TOK_FALSE }, 
-    { "for", 3, TOK_FOR }, 
-    { "func", 4, TOK_FUNC },
-    { "if",   2, TOK_IF }, 
-    { "return", 6, TOK_RETURN }, 
-    { "static", 6, TOK_STATIC }, 
-    { "switch", 6, TOK_SWITCH }, 
-    { "true", 4, TOK_TRUE }, 
-    { "var",  3, TOK_VAR },
+    { "case",    4,  TOK_CASE     },
+    { "class",   5,  TOK_CLASS    }, 
+    { "const",   5,  TOK_CONST    }, 
+    { "default", 7,  TOK_DEFAULT  }, 
+    { "else",    4,  TOK_ELSE     }, 
+    { "false",   5,  TOK_FALSE    }, 
+    { "for",     3,  TOK_FOR      }, 
+    { "func",    4,  TOK_FUNC     },
+    { "if",      2,  TOK_IF       }, 
+    { "return",  6,  TOK_RETURN   }, 
+    { "static",  6,  TOK_STATIC   }, 
+    { "switch",  6,  TOK_SWITCH   }, 
+    { "true",    4,  TOK_TRUE     }, 
+    { "var",     3,  TOK_VAR      },
 };
 static const int keyword_count = sizeof(keywords) / sizeof(Keyword);
  
