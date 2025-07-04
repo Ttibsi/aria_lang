@@ -82,12 +82,13 @@ Aria_Lexer aria_tokenize(Aria_VM* vm, const char* module, const char* source) {
 
             // string literals 
             case '"': {
+                const int start = i; 
                 int str_lit_len = 0; 
                 while (source[i++] != '"') {
                     str_lit_len++; 
                     // TODO: if i >= strlen, TOK_ERR 
                 }
-                TOKEN_APPEND(TOK_STRING, i, str_lit_len);
+                TOKEN_APPEND(TOK_STRING, start, str_lit_len);
             } 
         }
 
@@ -106,6 +107,19 @@ Aria_Lexer aria_tokenize(Aria_VM* vm, const char* module, const char* source) {
             i++; 
         }
         if (num_len) { TOKEN_APPEND(TOK_NUMBER, num_start, num_len); }
+
+        // identifiers: [a-zA-Z][a-zA_Z0-9_]+
+        if (('a' <= source[i] && source[i] <= 'z') || ('A' <= source[i] && source[i] <= 'Z')) {
+            int identifier_len = 1;
+            while (i + identifier_len < strlen(source) && 
+                   (('a' <= source[i + identifier_len] && source[i + identifier_len] <= 'z') ||
+                    ('A' <= source[i + identifier_len] && source[i + identifier_len] <= 'Z') ||
+                    ('0' <= source[i + identifier_len] && source[i + identifier_len] <= '9') ||
+                    source[i + identifier_len] == '_')) {
+                identifier_len++;
+            }
+            TOKEN_APPEND(TOK_IDENTIFIER, i, identifier_len);
+        }
     }
 
     // EOF     
@@ -128,6 +142,13 @@ void print_tokens(Aria_Lexer* lexer) {
  
     for (int i = 0; i < lexer->size; i++) {
         Aria_Token* tok = &lexer->data[i]; 
-        printf("Token: %2d, pos: %d, size: %d\n", tok->type, tok->start, tok->len);
+        printf(
+            "Token: %2d, pos: %d, size: %d - %.*s\n",
+            tok->type,
+            tok->start,
+            tok->len,
+            tok->len,  // length of format specifier to print letters
+            lexer->source + tok->start
+        );
     } 
 }
