@@ -46,20 +46,20 @@ typedef struct {
 } Keyword;
 
 static const Keyword keywords[] = {
-    { "case",    4,  TOK_CASE     },
-    { "class",   5,  TOK_CLASS    }, 
-    { "const",   5,  TOK_CONST    }, 
-    { "default", 7,  TOK_DEFAULT  }, 
-    { "else",    4,  TOK_ELSE     }, 
-    { "false",   5,  TOK_FALSE    }, 
-    { "for",     3,  TOK_FOR      }, 
-    { "func",    4,  TOK_FUNC     },
-    { "if",      2,  TOK_IF       }, 
-    { "return",  6,  TOK_RETURN   }, 
-    { "static",  6,  TOK_STATIC   }, 
-    { "switch",  6,  TOK_SWITCH   }, 
-    { "true",    4,  TOK_TRUE     }, 
-    { "var",     3,  TOK_VAR      },
+    { "case",    4,  TOK_CASE     },  // 22
+    { "class",   5,  TOK_CLASS    },  // 23
+    { "const",   5,  TOK_CONST    },  // 24
+    { "default", 7,  TOK_DEFAULT  },  // 25
+    { "else",    4,  TOK_ELSE     },  // 26
+    { "false",   5,  TOK_FALSE    },  // 27
+    { "for",     3,  TOK_FOR      },  // 28
+    { "func",    4,  TOK_FUNC     },  // 29
+    { "if",      2,  TOK_IF       },  // 30
+    { "return",  6,  TOK_RETURN   },  // 31
+    { "static",  6,  TOK_STATIC   },  // 32
+    { "switch",  6,  TOK_SWITCH   },  // 33
+    { "true",    4,  TOK_TRUE     },  // 34
+    { "var",     3,  TOK_VAR      },  // 35
 };
 static const int keyword_count = sizeof(keywords) / sizeof(Keyword);
  
@@ -90,7 +90,7 @@ int aria_interpret(Aria_VM* aria_vm, const char* module, const char* source);
 
 // Lexer
 Aria_Lexer aria_tokenize(Aria_VM* vm, const char* module, const char* source);
-void aria_lexer_append(Aria_Lexer* lexer, Aria_Token* tok);
+int aria_lexer_append(Aria_Lexer* l, const TokenType tok, const int begin, const int size);
 void print_tokens(Aria_Lexer* lexer); 
  
 

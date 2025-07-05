@@ -24,13 +24,6 @@ int aria_interpret(Aria_VM* aria_vm, const char* module, const char* source) {
     print_tokens(aria_vm->lexer); 
 #endif 
 }
- 
-#define TOKEN_APPEND(tok, begin, size) \
-do { \
-    Aria_Token t = {.type = tok, .start = begin, .len = size}; \
-    skip += (size - 1); \
-    aria_lexer_append(&lexer, &t); \
-} while (0)
 
 #define NEXT_TOK_IS_EQ(eq_tok, tok) \
 do { \
@@ -40,6 +33,26 @@ do { \
         TOKEN_APPEND(tok, i, 1); \
     } \
 } while (0) 
+
+int aria_lexer_append(Aria_Lexer* l, const TokenType tok, const int begin, const int size) {
+    Aria_Token t = {.type = tok, .start = begin, .len = size}; \
+    if (l->size == l->capacity) {
+        l->data = realloc(l->data, sizeof(Aria_Token) * l->capacity * 2);
+        l->capacity *= 2; 
+    }
+ 
+    l->data[l->size] = t;  
+    l->size++; 
+    return size - 1;
+} 
+
+int next_tok_is_eq(Aria_Lexer* lexer, const char* text, TokenType tok, const int pos) {
+    if (text + pos + 1 == '=') {
+        return aria_lexer_append(lexer, tok + 1, pos, 2);
+    } else { 
+        return aria_lexer_append(lexer, tok, pos, 1); 
+    }
+} 
 
 Aria_Lexer aria_tokenize(Aria_VM* vm, const char* module, const char* source) {
     Aria_Lexer lexer = {
@@ -52,33 +65,33 @@ Aria_Lexer aria_tokenize(Aria_VM* vm, const char* module, const char* source) {
     };
 
     int skip = 0; 
-    for (size_t i = 0; i < strlen(source); i++) {
+    for (size_t i = 0; i <= strlen(source); i++) {
         if (skip) { skip--; continue; } 
         if (isspace(source[i])) { continue; } 
  
         // individual characters
         switch (source[i]) {
             // TODO: skip whitespace
-            case '.': TOKEN_APPEND(TOK_DOT, i, 1); break;
-            case ',': TOKEN_APPEND(TOK_COMMA, i, 1); break; 
-            case ';': TOKEN_APPEND(TOK_SEMICOLON, i, 1); break; 
-            case '-': TOKEN_APPEND(TOK_MINUS, i, 1); break;
-            case '+': TOKEN_APPEND(TOK_PLUS, i, 1); break;
-            case '*': TOKEN_APPEND(TOK_STAR, i, 1); break;
-            case '/': TOKEN_APPEND(TOK_SLASH, i, 1); break;
-            case '{': TOKEN_APPEND(TOK_LEFT_BRACE, i, 1); break;
-            case '}': TOKEN_APPEND(TOK_RIGHT_BRACE, i, 1); break;
-            case '(': TOKEN_APPEND(TOK_LEFT_PAREN, i, 1); break;
-            case ')': TOKEN_APPEND(TOK_RIGHT_PAREN, i, 1); break; 
-            case '!': NEXT_TOK_IS_EQ(TOK_BANG_EQUAL, TOK_BANG); break;
-            case '=': NEXT_TOK_IS_EQ(TOK_EQUAL_EQUAL, TOK_EQUAL); break;
-            case '<': NEXT_TOK_IS_EQ(TOK_LESS_EQUAL, TOK_LESS); break;
-            case '>': NEXT_TOK_IS_EQ(TOK_GREATER_EQUAL, TOK_GREATER); break;
+            case '.': skip += aria_lexer_append(&lexer, TOK_DOT, i, 1); continue;
+            case ',': skip += aria_lexer_append(&lexer, TOK_COMMA, i, 1); continue; 
+            case ';': skip += aria_lexer_append(&lexer, TOK_SEMICOLON, i, 1); continue; 
+            case '-': skip += aria_lexer_append(&lexer, TOK_MINUS, i, 1); continue;
+            case '+': skip += aria_lexer_append(&lexer, TOK_PLUS, i, 1); continue;
+            case '*': skip += aria_lexer_append(&lexer, TOK_STAR, i, 1); continue;
+            case '/': skip += aria_lexer_append(&lexer, TOK_SLASH, i, 1); continue;
+            case '{': skip += aria_lexer_append(&lexer, TOK_LEFT_BRACE, i, 1); continue;
+            case '}': skip += aria_lexer_append(&lexer, TOK_RIGHT_BRACE, i, 1); continue;
+            case '(': skip += aria_lexer_append(&lexer, TOK_LEFT_PAREN, i, 1); continue;
+            case ')': skip += aria_lexer_append(&lexer, TOK_RIGHT_PAREN, i, 1); continue; 
+            case '!': skip += next_tok_is_eq(&lexer, source, TOK_BANG, i); continue;
+            case '=': skip += next_tok_is_eq(&lexer, source, TOK_EQUAL, i); continue;
+            case '<': skip += next_tok_is_eq(&lexer, source, TOK_LESS, i); continue;
+            case '>': skip += next_tok_is_eq(&lexer, source, TOK_GREATER, i); continue;
 
             // digraphs 
             // TODO: if not double, add TOK_ERR 
-            case '&': if (source[i + 1] == '&') { TOKEN_APPEND(TOK_AND, i, 2); break; }
-            case '|': if (source[i + 1] == '|') { TOKEN_APPEND(TOK_OR, i, 2); break; }
+            case '&': if (source[i + 1] == '&') { skip += aria_lexer_append(&lexer, TOK_AND, i, 2); continue; }
+            case '|': if (source[i + 1] == '|') { skip += aria_lexer_append(&lexer, TOK_OR, i, 2); continue; }
 
             // string literals 
             case '"': {
@@ -88,16 +101,21 @@ Aria_Lexer aria_tokenize(Aria_VM* vm, const char* module, const char* source) {
                     str_lit_len++; 
                     // TODO: if i >= strlen, TOK_ERR 
                 }
-                TOKEN_APPEND(TOK_STRING, start, str_lit_len);
-            } 
+                skip += aria_lexer_append(&lexer, TOK_STRING, start, str_lit_len);
+            } continue;
         }
 
-        // keywords 
+        bool found = false; 
+
+        // keywords  
         for (int j = 0; j < keyword_count; j++) {
             if (strncmp(source + i, keywords[j].kw, keywords[j].len) == 0) {
-                TOKEN_APPEND(keywords[j].tok, i, keywords[j].len); 
+                found = true; 
+                skip += aria_lexer_append(&lexer, keywords[j].tok, i, keywords[j].len); 
+                break;
             }
-        }
+        }        
+        if (found) { continue; } 
 
         // number literals
         int num_len = 0; 
@@ -106,7 +124,12 @@ Aria_Lexer aria_tokenize(Aria_VM* vm, const char* module, const char* source) {
             num_len++;
             i++; 
         }
-        if (num_len) { TOKEN_APPEND(TOK_NUMBER, num_start, num_len); }
+        if (num_len) {
+            skip += aria_lexer_append(&lexer, TOK_NUMBER, num_start, num_len) - 1;
+            if (skip < 0) { skip = 0; } 
+            i--; 
+            continue; 
+        }
 
         // identifiers: [a-zA-Z][a-zA_Z0-9_]+
         if (('a' <= source[i] && source[i] <= 'z') || ('A' <= source[i] && source[i] <= 'Z')) {
@@ -118,24 +141,14 @@ Aria_Lexer aria_tokenize(Aria_VM* vm, const char* module, const char* source) {
                     source[i + identifier_len] == '_')) {
                 identifier_len++;
             }
-            TOKEN_APPEND(TOK_IDENTIFIER, i, identifier_len);
+            skip += aria_lexer_append(&lexer, TOK_IDENTIFIER, i, identifier_len); 
         }
     }
 
     // EOF     
-    TOKEN_APPEND(TOK_EOF, strlen(source), 0); 
+    aria_lexer_append(&lexer, TOK_EOF, strlen(source), 0); 
     return lexer;
 } 
-
-void aria_lexer_append(Aria_Lexer* lexer, Aria_Token* tok) {
-    if (lexer->size == lexer->capacity) {
-        lexer->data = realloc(lexer->data, sizeof(Aria_Token) * lexer->capacity * 2);
-        lexer->capacity *= 2; 
-    }
- 
-    lexer->data[lexer->size] = *tok;  
-    lexer->size++; 
-}
 
 void print_tokens(Aria_Lexer* lexer) {
     printf("=== TOKENS ===\n");
