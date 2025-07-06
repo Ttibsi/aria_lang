@@ -25,15 +25,6 @@ int aria_interpret(Aria_VM* aria_vm, const char* module, const char* source) {
 #endif 
 }
 
-#define NEXT_TOK_IS_EQ(eq_tok, tok) \
-do { \
-    if (source[i + 1] == '=') { \
-        TOKEN_APPEND(eq_tok, i, 2); \
-    } else { \
-        TOKEN_APPEND(tok, i, 1); \
-    } \
-} while (0) 
-
 int aria_lexer_append(Aria_Lexer* l, const TokenType tok, const int begin, const int size) {
     Aria_Token t = {.type = tok, .start = begin, .len = size}; \
     if (l->size == l->capacity) {
