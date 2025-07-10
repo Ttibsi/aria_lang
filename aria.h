@@ -79,8 +79,51 @@ typedef struct {
     bool error; 
 } Aria_Lexer;
 
+typedef enum {
+    AST_STR_LITERAL,
+    AST_NUMERIC,
+    AST_IDENTIFIER,
+    AST_BRACKET_BLOCK,
+
+    AST_NULL
+} Aria_AstType;
+
+typedef struct AstNode {
+    Aria_AstType type;
+    union {
+
+        struct {} none;
+
+        struct {
+            Aria_Token* token;
+        } literal;
+
+        struct block {
+            AstNode* data;
+            int size;
+            int capacity;
+        } block;
+        
+        struct {
+            struct AstNode* lhs;
+            char op;
+            struct AstNode* rhs;
+        } bin_op;
+
+    } is;
+} Aria_AstNode;
+
+typedef struct {
+    Aria_AstNode* data;
+    int size;
+    int capacity;
+
+    int curr_token;
+} Aria_Parser;
+
 typedef struct {
     Aria_Lexer* lexer; 
+    Aria_Parser* parser;
 } Aria_VM; 
 
 // Global
@@ -92,6 +135,12 @@ int aria_interpret(Aria_VM* aria_vm, const char* module, const char* source);
 Aria_Lexer aria_tokenize(Aria_VM* vm, const char* module, const char* source);
 int aria_lexer_append(Aria_Lexer* l, const TokenType tok, const int begin, const int size);
 void print_tokens(Aria_Lexer* lexer); 
+
+// Parser
+Aria_Parser aria_parse(Aria_VM* aria_vm);
+Aria_AstNode aria_parse_tok(Aria_Lexer* l, int pos, Aria_Token* cur);
+void aria_parser_append(Aria_Parser* p, const Aria_AstNode node);
+void aria_parser_block_append(struct block* b, const Aria_AstNode node);
  
 
 #endif // ARIA_H 

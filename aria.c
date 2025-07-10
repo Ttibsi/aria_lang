@@ -23,6 +23,10 @@ int aria_interpret(Aria_VM* aria_vm, const char* module, const char* source) {
 #if ARIA_DEBUG == 1
     print_tokens(aria_vm->lexer); 
 #endif 
+    
+    Aria_Parser parser = aria_parse(aria_vm);
+    aria_vm->parser = malloc(sizeof(Aria_Parser));
+    memcpy(aria_vm->parser, &parser, sizeof(Aria_Parser)); 
 }
 
 int aria_lexer_append(Aria_Lexer* l, const TokenType tok, const int begin, const int size) {
@@ -155,4 +159,126 @@ void print_tokens(Aria_Lexer* lexer) {
             lexer->source + tok->start
         );
     } 
+}
+
+// https://vey.ie/2018/10/04/RecursiveDescent.html
+// https://ruairidh.dev/build-your-own-ast/
+Aria_Parser aria_parse(Aria_VM* aria_vm) {
+    Aria_Parser parser = {
+        .data = malloc(32 * sizeof(Aria_AstNode)),
+        .size = 0,
+        .capacity = 32,
+    };
+
+    for (int i = 0; i < aria_vm->lexer->size; i++) {
+        Aria_Token* current = &aria_vm->lexer->data[i];
+        aria_parser_append(&parser, aria_parse_tok(aria_vm->lexer, i, current));
+
+    }
+    return parser;
+}
+
+Aria_Token next_tok(Aria_Lexer* l, int pos) {
+    return l->data[pos + 1];
+}
+
+Aria_AstNode aria_parse_tok(Aria_Lexer* l, int pos, Aria_Token* cur) {
+
+    switch (cur->type) {
+        case TOK_LEFT_PAREN:
+            Aria_AstNode node = (Aria_AstNode){
+                .type = AST_BRACKET_BLOCK,
+                .is.block = {
+                    .data = malloc(32 * sizeof(struct block)),
+                    .size = 0,
+                    .capacity = 32,
+                }
+            };
+
+            while (next_tok(l, pos).type != TOK_RIGHT_PAREN) {
+                Aria_Token temp = next_tok(l, pos + 1);
+                aria_parser_block_append(&node.is.block, aria_parse_tok(l, pos + 1, &temp));
+            }
+
+            return node;
+
+        case TOK_RIGHT_PAREN:
+            return (Aria_AstNode){
+                .type = AST_NULL,
+                .is.none = {}
+            };
+
+        case TOK_LEFT_BRACE:
+        case TOK_RIGHT_BRACE:
+        case TOK_COMMA:
+        case TOK_DOT:
+        case TOK_SEMICOLON:
+        case TOK_MINUS:
+        case TOK_PLUS:
+        case TOK_SLASH:
+        case TOK_STAR:
+        case TOK_BANG:
+        case TOK_BANG_EQUAL:
+        case TOK_EQUAL:
+        case TOK_EQUAL_EQUAL:
+        case TOK_GREATER:
+        case TOK_GREATER_EQUAL:
+        case TOK_LESS:
+        case TOK_LESS_EQUAL:
+        case TOK_AND:
+        case TOK_OR:
+        case TOK_CASE:
+        case TOK_CLASS:
+        case TOK_CONST:
+        case TOK_DEFAULT:
+        case TOK_ELSE:
+        case TOK_FALSE:
+        case TOK_FOR:
+        case TOK_FUNC:
+        case TOK_IF:
+        case TOK_RETURN:
+        case TOK_STATIC:
+        case TOK_SWITCH:
+        case TOK_TRUE:
+        case TOK_VAR:
+        case TOK_IDENTIFIER:
+            return (Aria_AstNode){
+                .type = AST_IDENTIFIER,
+                .is.literal = { .token = cur }
+            };
+        case TOK_STRING:
+            return (Aria_AstNode){
+                .type = AST_STR_LITERAL,
+                .is.literal = { .token = cur }
+            };
+
+        case TOK_NUMBER:
+            return (Aria_AstNode){
+                .type = AST_NUMERIC,
+                .is.literal = { .token = cur }
+            };
+        case TOK_ERROR:
+        case TOK_EOF:
+          break;
+        };
+}
+
+void aria_parser_append(Aria_Parser* p, const Aria_AstNode node) {
+    if (p->size == p->capacity) {
+        p->data = realloc(p->data, sizeof(Aria_Parser) * p->capacity * 2);
+        p->capacity *= 2; 
+    }
+ 
+    p->data[p->size] = node;  
+    p->size++; 
+}
+
+void aria_parser_block_append(struct block* b, const Aria_AstNode node) {
+    if (b->size == b->capacity) {
+        b->data = realloc(b->data, sizeof(struct block) * b->capacity * 2);
+        b->capacity *= 2; 
+    }
+ 
+    b->data[b->size] = node;  
+    b->size++; 
 }
