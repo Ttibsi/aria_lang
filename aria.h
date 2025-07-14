@@ -84,6 +84,7 @@ typedef enum {
     AST_NUMERIC,
     AST_IDENTIFIER,
     AST_BRACKET_BLOCK,
+    AST_BIN_OP,
 
     AST_NULL
 } Aria_AstType;
@@ -106,7 +107,7 @@ typedef struct AstNode {
         
         struct {
             struct AstNode* lhs;
-            char op;
+            TokenType op;
             struct AstNode* rhs;
         } bin_op;
 
@@ -138,8 +139,9 @@ void print_tokens(Aria_Lexer* lexer);
 
 // Parser
 Aria_Parser aria_parse(Aria_VM* aria_vm);
-Aria_AstNode aria_parse_tok(Aria_Lexer* l, int pos, Aria_Token* cur);
+Aria_AstNode aria_parse_tok(Aria_Lexer* l, Aria_Parser* p, int pos, Aria_Token* cur);
 void aria_parser_append(Aria_Parser* p, const Aria_AstNode node);
+Aria_AstNode aria_parser_pop(Aria_Parser* p);
 void aria_parser_block_append(struct block* b, const Aria_AstNode node);
  
 

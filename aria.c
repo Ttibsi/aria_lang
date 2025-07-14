@@ -182,7 +182,7 @@ Aria_Token next_tok(Aria_Lexer* l, int pos) {
     return l->data[pos + 1];
 }
 
-Aria_AstNode aria_parse_tok(Aria_Lexer* l, int pos, Aria_Token* cur) {
+Aria_AstNode aria_parse_tok(Aria_Lexer* l, Aria_Parser* p, int pos, Aria_Token* cur) {
 
     switch (cur->type) {
         case TOK_LEFT_PAREN:
@@ -197,7 +197,7 @@ Aria_AstNode aria_parse_tok(Aria_Lexer* l, int pos, Aria_Token* cur) {
 
             while (next_tok(l, pos).type != TOK_RIGHT_PAREN) {
                 Aria_Token temp = next_tok(l, pos + 1);
-                aria_parser_block_append(&node.is.block, aria_parse_tok(l, pos + 1, &temp));
+                aria_parser_block_append(&node.is.block, aria_parse_tok(l, p, pos + 1, &temp));
             }
 
             return node;
@@ -208,25 +208,49 @@ Aria_AstNode aria_parse_tok(Aria_Lexer* l, int pos, Aria_Token* cur) {
                 .is.none = {}
             };
 
-        case TOK_LEFT_BRACE:
-        case TOK_RIGHT_BRACE:
-        case TOK_COMMA:
-        case TOK_DOT:
-        case TOK_SEMICOLON:
-        case TOK_MINUS:
-        case TOK_PLUS:
-        case TOK_SLASH:
-        case TOK_STAR:
-        case TOK_BANG:
-        case TOK_BANG_EQUAL:
-        case TOK_EQUAL:
+        // binops
         case TOK_EQUAL_EQUAL:
         case TOK_GREATER:
         case TOK_GREATER_EQUAL:
         case TOK_LESS:
         case TOK_LESS_EQUAL:
-        case TOK_AND:
+        case TOK_MINUS:
+        case TOK_PLUS:
+        case TOK_SLASH:
+        case TOK_STAR:
+        case TOK_AND: 
         case TOK_OR:
+            {
+            Aria_AstNode lhs = aria_parser_pop(p);
+
+            // Get the next token for RHS
+            Aria_Token next = next_tok(l, pos);
+            Aria_AstNode rhs = aria_parse_tok(l, p, pos + 1, &next);
+
+            // Create the binary operation node
+            Aria_AstNode* lhs_ptr = malloc(sizeof(Aria_AstNode));
+            Aria_AstNode* rhs_ptr = malloc(sizeof(Aria_AstNode));
+            *lhs_ptr = lhs;
+            *rhs_ptr = rhs;
+
+            return (Aria_AstNode){
+                .type = AST_BIN_OP,
+                .is.bin_op = {
+                    .lhs = lhs_ptr,
+                    .op = cur->type,
+                    .rhs = rhs_ptr
+                }
+            };
+        }
+
+        case TOK_LEFT_BRACE:
+        case TOK_RIGHT_BRACE:
+        case TOK_COMMA:
+        case TOK_DOT:
+        case TOK_SEMICOLON:
+        case TOK_BANG:
+        case TOK_BANG_EQUAL:
+        case TOK_EQUAL:
         case TOK_CASE:
         case TOK_CLASS:
         case TOK_CONST:
@@ -271,6 +295,18 @@ void aria_parser_append(Aria_Parser* p, const Aria_AstNode node) {
  
     p->data[p->size] = node;  
     p->size++; 
+}
+
+Aria_AstNode aria_parser_pop(Aria_Parser* p) {
+    if (p->size == 0) {
+        return (Aria_AstNode){
+            .type = AST_NULL,
+            .is.none = {}
+        };
+    }
+    
+    p->size--;
+    return p->data[p->size];
 }
 
 void aria_parser_block_append(struct block* b, const Aria_AstNode node) {
