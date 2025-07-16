@@ -1,16 +1,10 @@
 #ifndef ARIA_H
 #define ARIA_H
 
+#include <stdbool.h>
 #include <stddef.h>
-#include <stdint.h> 
-#include <stdio.h>
-#include <stdlib.h>
-#include <stdbool.h> 
 
-// debug modes
-// 1 - lexer 
-#define ARIA_DEBUG 1 
-
+// Lexing
 typedef enum {
     // Single-character tokens.
     TOK_LEFT_PAREN, TOK_RIGHT_PAREN,
@@ -40,9 +34,22 @@ typedef enum {
 } TokenType;
 
 typedef struct {
-    char* kw;     
-    int len; 
-    TokenType tok; 
+    bool valid;
+    TokenType type;
+    int start;
+    int len;
+} Aria_Token;
+
+typedef struct {
+    const char* source;
+    int pc; // program counter
+    Aria_Token current_token;
+} Aria_Lexer;
+
+typedef struct {
+    const char* kw;
+    int len;
+    TokenType tok;
 } Keyword;
 
 static const Keyword keywords[] = {
@@ -61,88 +68,56 @@ static const Keyword keywords[] = {
     { "true",    4,  TOK_TRUE     },  // 34
     { "var",     3,  TOK_VAR      },  // 35
 };
-static const int keyword_count = sizeof(keywords) / sizeof(Keyword);
- 
-typedef struct {
-    TokenType type; 
-    int start;
-    int len;
-} Aria_Token; 
+static const int keyword_count = sizeof(keywords) / sizeof(keywords[0]);
 
-typedef struct {
-    Aria_Token* data;
-    int size;
-    int capacity;
-    const char* source; // null-terminated
-    const char* module; // null-terminated
-
-    bool error; 
-} Aria_Lexer;
-
+// Parsing
 typedef enum {
-    AST_STR_LITERAL,
-    AST_NUMERIC,
-    AST_IDENTIFIER,
-    AST_BRACKET_BLOCK,
-    AST_BIN_OP,
+    AST_BINARY,
+} NodeType;
 
-    AST_NULL
-} Aria_AstType;
-
-typedef struct AstNode {
-    Aria_AstType type;
+typedef struct Aria_ASTNode {
+    bool sentinal;
+    NodeType type;
     union {
-
-        struct {} none;
-
         struct {
-            Aria_Token* token;
-        } literal;
-
-        struct block {
-            AstNode* data;
-            int size;
-            int capacity;
-        } block;
-        
-        struct {
-            struct AstNode* lhs;
             TokenType op;
-            struct AstNode* rhs;
-        } bin_op;
+            struct Aria_ASTNode* lhs;
+            struct Aria_ASTNode* rhs;
+        } binary;
+    } as;
+    
+    struct Aria_ASTNode* next;
+    struct Aria_ASTNode* prev;
+} Aria_ASTNode;
 
-    } is;
-} Aria_AstNode;
-
+// VM Interface
 typedef struct {
-    Aria_AstNode* data;
-    int size;
-    int capacity;
+    // Memory management
+    Aria_ASTNode* ast_root;
+    
+    // Variable storage (hash table placeholder)
+    void* globals;
+    
+    // Stack for function calls and local variables
+    void* call_stack;
+    size_t stack_size;
+    size_t stack_capacity;
+    
+    // Garbage collection
+    Aria_ASTNode** gc_objects;
+    size_t gc_count;
+    size_t gc_capacity;
+    
+    // Error handling
+    bool has_error;
+    char error_message[256];
+    
+    // Runtime state
+    bool running;
+} Aria_VM;
 
-    int curr_token;
-} Aria_Parser;
+Aria_VM aria_vm_init(void);
+void aria_vm_destroy(Aria_VM* vm);
+int aria_interpret(Aria_VM* vm, const char* name, const char* src);
 
-typedef struct {
-    Aria_Lexer* lexer; 
-    Aria_Parser* parser;
-} Aria_VM; 
-
-// Global
-Aria_VM aria_vm_init();
-void aria_vm_destroy(Aria_VM* aria_vm);
-int aria_interpret(Aria_VM* aria_vm, const char* module, const char* source);
-
-// Lexer
-Aria_Lexer aria_tokenize(Aria_VM* vm, const char* module, const char* source);
-int aria_lexer_append(Aria_Lexer* l, const TokenType tok, const int begin, const int size);
-void print_tokens(Aria_Lexer* lexer); 
-
-// Parser
-Aria_Parser aria_parse(Aria_VM* aria_vm);
-Aria_AstNode aria_parse_tok(Aria_Lexer* l, Aria_Parser* p, int pos, Aria_Token* cur);
-void aria_parser_append(Aria_Parser* p, const Aria_AstNode node);
-Aria_AstNode aria_parser_pop(Aria_Parser* p);
-void aria_parser_block_append(struct block* b, const Aria_AstNode node);
- 
-
-#endif // ARIA_H 
+#endif // ARIA_H

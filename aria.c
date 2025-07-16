@@ -1,320 +1,211 @@
+#include <stdbool.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <ctype.h>
+
 #include "aria.h"
 
-#include <ctype.h> 
-#include <stddef.h> 
-#include <string.h> 
+// Lexing
+char peek(Aria_Lexer* l) {
+    return l->source[l->pc];
+}
 
-// TODO: Investigate using an arena for memory allocation instead
- 
-Aria_VM aria_vm_init() {
-    return (Aria_VM){
-        .lexer = NULL
+char peekNext(Aria_Lexer* l) {
+    return l->source[l->pc + 1];
+}
+
+char advanceChar(Aria_Lexer* l) {
+    return l->source[l->pc++];
+}
+
+void skipWhitespace(Aria_Lexer* l) {
+    while (isspace(peek(l))) {
+        advanceChar(l);
+    }
+}
+
+Aria_Token makeToken(Aria_Lexer* l, TokenType type, int start, int length) {
+    return (Aria_Token){
+        .valid = true,
+        .type = type,
+        .start = start,
+        .len = length
     };
 }
 
-void aria_vm_destroy(Aria_VM* aria_vm) { 
+Aria_Token scanEqualVariant(Aria_Lexer* l, TokenType single, TokenType equal) {
+    int start = l->pc - 1;
+    if (peek(l) == '=') {
+        advanceChar(l);
+        return makeToken(l, equal, start, 2);
+    }
+    return makeToken(l, single, start, 1);
 }
 
-int aria_interpret(Aria_VM* aria_vm, const char* module, const char* source) {
-    Aria_Lexer temp = aria_tokenize(aria_vm, module, source);
-    aria_vm->lexer = malloc(sizeof(Aria_Lexer));
-    memcpy(aria_vm->lexer, &temp, sizeof(Aria_Lexer)); 
- 
-#if ARIA_DEBUG == 1
-    print_tokens(aria_vm->lexer); 
-#endif 
+Aria_Token scanStringLiteral(Aria_Lexer* l) {
+    int start = l->pc - 1;
+    int length = 0;
     
-    Aria_Parser parser = aria_parse(aria_vm);
-    aria_vm->parser = malloc(sizeof(Aria_Parser));
-    memcpy(aria_vm->parser, &parser, sizeof(Aria_Parser)); 
-}
-
-int aria_lexer_append(Aria_Lexer* l, const TokenType tok, const int begin, const int size) {
-    Aria_Token t = {.type = tok, .start = begin, .len = size}; \
-    if (l->size == l->capacity) {
-        l->data = realloc(l->data, sizeof(Aria_Token) * l->capacity * 2);
-        l->capacity *= 2; 
-    }
- 
-    l->data[l->size] = t;  
-    l->size++; 
-    return size - 1;
-} 
-
-int next_tok_is_eq(Aria_Lexer* lexer, const char* text, TokenType tok, const int pos) {
-    if (text + pos + 1 == '=') {
-        return aria_lexer_append(lexer, tok + 1, pos, 2);
-    } else { 
-        return aria_lexer_append(lexer, tok, pos, 1); 
-    }
-} 
-
-Aria_Lexer aria_tokenize(Aria_VM* vm, const char* module, const char* source) {
-    Aria_Lexer lexer = {
-        .data = malloc(32 * sizeof(Aria_Token)),
-        .size = 0,
-        .capacity = 32,
-        .source = source,
-        .module = module,
-        .error = false 
-    };
-
-    int skip = 0; 
-    for (size_t i = 0; i <= strlen(source); i++) {
-        if (skip) { skip--; continue; } 
-        if (isspace(source[i])) { continue; } 
- 
-        // individual characters
-        switch (source[i]) {
-            // TODO: skip whitespace
-            case '.': skip += aria_lexer_append(&lexer, TOK_DOT, i, 1); continue;
-            case ',': skip += aria_lexer_append(&lexer, TOK_COMMA, i, 1); continue; 
-            case ';': skip += aria_lexer_append(&lexer, TOK_SEMICOLON, i, 1); continue; 
-            case '-': skip += aria_lexer_append(&lexer, TOK_MINUS, i, 1); continue;
-            case '+': skip += aria_lexer_append(&lexer, TOK_PLUS, i, 1); continue;
-            case '*': skip += aria_lexer_append(&lexer, TOK_STAR, i, 1); continue;
-            case '/': skip += aria_lexer_append(&lexer, TOK_SLASH, i, 1); continue;
-            case '{': skip += aria_lexer_append(&lexer, TOK_LEFT_BRACE, i, 1); continue;
-            case '}': skip += aria_lexer_append(&lexer, TOK_RIGHT_BRACE, i, 1); continue;
-            case '(': skip += aria_lexer_append(&lexer, TOK_LEFT_PAREN, i, 1); continue;
-            case ')': skip += aria_lexer_append(&lexer, TOK_RIGHT_PAREN, i, 1); continue; 
-            case '!': skip += next_tok_is_eq(&lexer, source, TOK_BANG, i); continue;
-            case '=': skip += next_tok_is_eq(&lexer, source, TOK_EQUAL, i); continue;
-            case '<': skip += next_tok_is_eq(&lexer, source, TOK_LESS, i); continue;
-            case '>': skip += next_tok_is_eq(&lexer, source, TOK_GREATER, i); continue;
-
-            // digraphs 
-            // TODO: if not double, add TOK_ERR 
-            case '&': if (source[i + 1] == '&') { skip += aria_lexer_append(&lexer, TOK_AND, i, 2); continue; }
-            case '|': if (source[i + 1] == '|') { skip += aria_lexer_append(&lexer, TOK_OR, i, 2); continue; }
-
-            // string literals 
-            case '"': {
-                const int start = i; 
-                int str_lit_len = 0; 
-                while (source[i++] != '"') {
-                    str_lit_len++; 
-                    // TODO: if i >= strlen, TOK_ERR 
-                }
-                skip += aria_lexer_append(&lexer, TOK_STRING, start, str_lit_len);
-            } continue;
-        }
-
-        bool found = false; 
-
-        // keywords  
-        for (int j = 0; j < keyword_count; j++) {
-            if (strncmp(source + i, keywords[j].kw, keywords[j].len) == 0) {
-                found = true; 
-                skip += aria_lexer_append(&lexer, keywords[j].tok, i, keywords[j].len); 
-                break;
-            }
-        }        
-        if (found) { continue; } 
-
-        // number literals
-        int num_len = 0; 
-        const int num_start = i; 
-        while (isdigit(source[i])) {
-            num_len++;
-            i++; 
-        }
-        if (num_len) {
-            skip += aria_lexer_append(&lexer, TOK_NUMBER, num_start, num_len) - 1;
-            if (skip < 0) { skip = 0; } 
-            i--; 
-            continue; 
-        }
-
-        // identifiers: [a-zA-Z][a-zA_Z0-9_]+
-        if (('a' <= source[i] && source[i] <= 'z') || ('A' <= source[i] && source[i] <= 'Z')) {
-            int identifier_len = 1;
-            while (i + identifier_len < strlen(source) && 
-                   (('a' <= source[i + identifier_len] && source[i + identifier_len] <= 'z') ||
-                    ('A' <= source[i + identifier_len] && source[i + identifier_len] <= 'Z') ||
-                    ('0' <= source[i + identifier_len] && source[i + identifier_len] <= '9') ||
-                    source[i + identifier_len] == '_')) {
-                identifier_len++;
-            }
-            skip += aria_lexer_append(&lexer, TOK_IDENTIFIER, i, identifier_len); 
-        }
-    }
-
-    // EOF     
-    aria_lexer_append(&lexer, TOK_EOF, strlen(source), 0); 
-    return lexer;
-} 
-
-void print_tokens(Aria_Lexer* lexer) {
-    printf("=== TOKENS ===\n");
- 
-    for (int i = 0; i < lexer->size; i++) {
-        Aria_Token* tok = &lexer->data[i]; 
-        printf(
-            "Token: %2d, pos: %d, size: %d - %.*s\n",
-            tok->type,
-            tok->start,
-            tok->len,
-            tok->len,  // length of format specifier to print letters
-            lexer->source + tok->start
-        );
-    } 
-}
-
-// https://vey.ie/2018/10/04/RecursiveDescent.html
-// https://ruairidh.dev/build-your-own-ast/
-Aria_Parser aria_parse(Aria_VM* aria_vm) {
-    Aria_Parser parser = {
-        .data = malloc(32 * sizeof(Aria_AstNode)),
-        .size = 0,
-        .capacity = 32,
-    };
-
-    for (int i = 0; i < aria_vm->lexer->size; i++) {
-        Aria_Token* current = &aria_vm->lexer->data[i];
-        aria_parser_append(&parser, aria_parse_tok(aria_vm->lexer, i, current));
-
-    }
-    return parser;
-}
-
-Aria_Token next_tok(Aria_Lexer* l, int pos) {
-    return l->data[pos + 1];
-}
-
-Aria_AstNode aria_parse_tok(Aria_Lexer* l, Aria_Parser* p, int pos, Aria_Token* cur) {
-
-    switch (cur->type) {
-        case TOK_LEFT_PAREN:
-            Aria_AstNode node = (Aria_AstNode){
-                .type = AST_BRACKET_BLOCK,
-                .is.block = {
-                    .data = malloc(32 * sizeof(struct block)),
-                    .size = 0,
-                    .capacity = 32,
-                }
-            };
-
-            while (next_tok(l, pos).type != TOK_RIGHT_PAREN) {
-                Aria_Token temp = next_tok(l, pos + 1);
-                aria_parser_block_append(&node.is.block, aria_parse_tok(l, p, pos + 1, &temp));
-            }
-
-            return node;
-
-        case TOK_RIGHT_PAREN:
-            return (Aria_AstNode){
-                .type = AST_NULL,
-                .is.none = {}
-            };
-
-        // binops
-        case TOK_EQUAL_EQUAL:
-        case TOK_GREATER:
-        case TOK_GREATER_EQUAL:
-        case TOK_LESS:
-        case TOK_LESS_EQUAL:
-        case TOK_MINUS:
-        case TOK_PLUS:
-        case TOK_SLASH:
-        case TOK_STAR:
-        case TOK_AND: 
-        case TOK_OR:
-            {
-            Aria_AstNode lhs = aria_parser_pop(p);
-
-            // Get the next token for RHS
-            Aria_Token next = next_tok(l, pos);
-            Aria_AstNode rhs = aria_parse_tok(l, p, pos + 1, &next);
-
-            // Create the binary operation node
-            Aria_AstNode* lhs_ptr = malloc(sizeof(Aria_AstNode));
-            Aria_AstNode* rhs_ptr = malloc(sizeof(Aria_AstNode));
-            *lhs_ptr = lhs;
-            *rhs_ptr = rhs;
-
-            return (Aria_AstNode){
-                .type = AST_BIN_OP,
-                .is.bin_op = {
-                    .lhs = lhs_ptr,
-                    .op = cur->type,
-                    .rhs = rhs_ptr
-                }
-            };
-        }
-
-        case TOK_LEFT_BRACE:
-        case TOK_RIGHT_BRACE:
-        case TOK_COMMA:
-        case TOK_DOT:
-        case TOK_SEMICOLON:
-        case TOK_BANG:
-        case TOK_BANG_EQUAL:
-        case TOK_EQUAL:
-        case TOK_CASE:
-        case TOK_CLASS:
-        case TOK_CONST:
-        case TOK_DEFAULT:
-        case TOK_ELSE:
-        case TOK_FALSE:
-        case TOK_FOR:
-        case TOK_FUNC:
-        case TOK_IF:
-        case TOK_RETURN:
-        case TOK_STATIC:
-        case TOK_SWITCH:
-        case TOK_TRUE:
-        case TOK_VAR:
-        case TOK_IDENTIFIER:
-            return (Aria_AstNode){
-                .type = AST_IDENTIFIER,
-                .is.literal = { .token = cur }
-            };
-        case TOK_STRING:
-            return (Aria_AstNode){
-                .type = AST_STR_LITERAL,
-                .is.literal = { .token = cur }
-            };
-
-        case TOK_NUMBER:
-            return (Aria_AstNode){
-                .type = AST_NUMERIC,
-                .is.literal = { .token = cur }
-            };
-        case TOK_ERROR:
-        case TOK_EOF:
-          break;
-        };
-}
-
-void aria_parser_append(Aria_Parser* p, const Aria_AstNode node) {
-    if (p->size == p->capacity) {
-        p->data = realloc(p->data, sizeof(Aria_Parser) * p->capacity * 2);
-        p->capacity *= 2; 
-    }
- 
-    p->data[p->size] = node;  
-    p->size++; 
-}
-
-Aria_AstNode aria_parser_pop(Aria_Parser* p) {
-    if (p->size == 0) {
-        return (Aria_AstNode){
-            .type = AST_NULL,
-            .is.none = {}
-        };
+    while (peek(l) != '"' && peek(l) != '\0') {
+        advanceChar(l);
+        length++;
     }
     
-    p->size--;
-    return p->data[p->size];
+    if (peek(l) == '\0') {
+        // TODO: Handle error case
+        return makeToken(l, TOK_EOF, start, 0);
+    }
+    
+    advanceChar(l); // consume closing quote
+    return makeToken(l, TOK_STRING, start, length + 2);
 }
 
-void aria_parser_block_append(struct block* b, const Aria_AstNode node) {
-    if (b->size == b->capacity) {
-        b->data = realloc(b->data, sizeof(struct block) * b->capacity * 2);
-        b->capacity *= 2; 
+Aria_Token scanNumber(Aria_Lexer* l) {
+    int start = l->pc - 1;
+    int length = 1;
+    
+    while (isdigit(peek(l))) {
+        advanceChar(l);
+        length++;
     }
- 
-    b->data[b->size] = node;  
-    b->size++; 
+    
+    return makeToken(l, TOK_NUMBER, start, length);
+}
+
+Aria_Token scanIdentifier(Aria_Lexer* l) {
+    int start = l->pc - 1;
+    int length = 1;
+    
+    while (isalnum(peek(l)) || peek(l) == '_') {
+        advanceChar(l);
+        length++;
+    }
+    
+    // Check if it's a keyword
+    for (int i = 0; i < keyword_count; i++) {
+        if (keywords[i].len == length && 
+            strncmp(l->source + start, keywords[i].kw, length) == 0) {
+            return makeToken(l, keywords[i].tok, start, length);
+        }
+    }
+    
+    return makeToken(l, TOK_IDENTIFIER, start, length);
+}
+
+Aria_Token scanToken(Aria_Lexer* l) {
+    skipWhitespace(l);
+    
+    char c = advanceChar(l);
+    int start = l->pc - 1;
+    
+    if (c == '\0') {
+        return makeToken(l, TOK_EOF, start, 0);
+    }
+    
+    switch (c) {
+        case '.': return makeToken(l, TOK_DOT, start, 1);
+        case ',': return makeToken(l, TOK_COMMA, start, 1);
+        case ';': return makeToken(l, TOK_SEMICOLON, start, 1);
+        case '-': return makeToken(l, TOK_MINUS, start, 1);
+        case '+': return makeToken(l, TOK_PLUS, start, 1);
+        case '*': return makeToken(l, TOK_STAR, start, 1);
+        case '/': return makeToken(l, TOK_SLASH, start, 1);
+        case '{': return makeToken(l, TOK_LEFT_BRACE, start, 1);
+        case '}': return makeToken(l, TOK_RIGHT_BRACE, start, 1);
+        case '(': return makeToken(l, TOK_LEFT_PAREN, start, 1);
+        case ')': return makeToken(l, TOK_RIGHT_PAREN, start, 1);
+        case '!': return scanEqualVariant(l, TOK_BANG, TOK_BANG_EQUAL);
+        case '=': return scanEqualVariant(l, TOK_EQUAL, TOK_EQUAL_EQUAL);
+        case '<': return scanEqualVariant(l, TOK_LESS, TOK_LESS_EQUAL);
+        case '>': return scanEqualVariant(l, TOK_GREATER, TOK_GREATER_EQUAL);
+        case '&':
+            if (peek(l) == '&') {
+                advanceChar(l);
+                return makeToken(l, TOK_AND, start, 2);
+            }
+            break;
+        case '|':
+            if (peek(l) == '|') {
+                advanceChar(l);
+                return makeToken(l, TOK_OR, start, 2);
+            }
+            break;
+        case '"': return scanStringLiteral(l);
+    }
+    
+    if (isdigit(c)) {
+        return scanNumber(l);
+    }
+    
+    if (isalpha(c) || c == '_') {
+        return scanIdentifier(l);
+    }
+    
+    // TODO: Handle error case
+    return makeToken(l, TOK_EOF, start, 0);
+}
+
+void advance(Aria_Lexer* l) {
+    l->current_token = scanToken(l);
+}
+
+bool check(Aria_Lexer* l, TokenType type) {
+    return l->current_token.type == type;
+}
+
+bool match(Aria_Lexer* l, TokenType type) {
+    if (check(l, type)) {
+        advance(l);
+        return true;
+    }
+    return false;
+}
+
+/// Parsing
+Aria_ASTNode* parseBinaryExpr(Aria_Lexer* l) {
+    if (match(l, TOK_PLUS) || match(l, TOK_STAR)) {
+        Aria_ASTNode* node = malloc(sizeof(Aria_ASTNode));
+        node->type = AST_BINARY;
+        node->as.binary.op = l->current_token.type; // Previous token that was matched
+        node->as.binary.lhs = NULL; // Would need proper operand parsing
+        node->as.binary.rhs = NULL; // Would need proper operand parsing
+        return node;
+    }
+    return NULL;
+}
+
+Aria_ASTNode* parseExpression(Aria_Lexer* l) {
+    return parseBinaryExpr(l);
+}
+
+// TODO: Implement a hash table here from crafting interpreters for variable assignment
+
+/// VM Interface
+int aria_interpret(Aria_VM* vm, const char* name, const char* src) {
+    Aria_Lexer lexer = {src, 0, {false, TOK_EOF, 0, 0}};
+    
+    // Initialize with first token
+    // advance(&lexer);
+    //
+    // Aria_ASTNode* root = parseExpression(&lexer);
+
+    Aria_Token token;
+    do {
+        token = scanToken(&lexer);
+        printf("Token: %d, start: %d, len: %d\n", token.type, token.start, token.len);
+    } while (token.type != TOK_EOF);
+
+    // eval here
+    // cleanup here
+
+    return 0;
+}
+
+Aria_VM aria_vm_init(void) {
+    return (Aria_VM){0};
+}
+
+void aria_vm_destroy(Aria_VM* vm) {
+    // VM cleanup will be implemented later
 }
