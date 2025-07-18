@@ -72,9 +72,22 @@ static const int keyword_count = sizeof(keywords) / sizeof(keywords[0]);
 
 // Parsing
 typedef enum {
+    // Primary 
+    AST_NUMBER, 
+    AST_IDENTIFIER,
+    AST_STRING,
+    AST_BOOL, 
+ 
+    // Ops
     AST_BINARY,
 } NodeType;
 
+typedef union {
+    bool boolean;
+    float number;
+    char* text;    // must be null-terminated
+} Aria_Value;
+ 
 typedef struct Aria_ASTNode {
     bool sentinal;
     NodeType type;
@@ -84,6 +97,11 @@ typedef struct Aria_ASTNode {
             struct Aria_ASTNode* lhs;
             struct Aria_ASTNode* rhs;
         } binary;
+
+        // union switch on NodeType 
+        struct {
+            Aria_Value val;
+        } literal;
     } as;
     
     struct Aria_ASTNode* next;
