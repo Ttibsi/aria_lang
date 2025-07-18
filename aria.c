@@ -5,6 +5,7 @@
 #include <ctype.h>
 
 #include "aria.h"
+#define ARIA_DEBUG 1 
 
 // Lexing
 char peek(Aria_Lexer* l) {
@@ -179,22 +180,46 @@ Aria_ASTNode* parseExpression(Aria_Lexer* l) {
     return parseBinaryExpr(l);
 }
 
+void printAST(Aria_ASTNode* node, int depth) {
+    if (!node) return;
+    
+    for (int i = 0; i < depth; i++) printf("  ");
+    printf("Node type: %d\n", node->type);
+    
+    if (node->type == AST_BINARY) {
+        printAST(node->as.binary.lhs, depth + 1);
+        printAST(node->as.binary.rhs, depth + 1);
+    }
+}
+
 // TODO: Implement a hash table here from crafting interpreters for variable assignment
 
 /// VM Interface
 int aria_interpret(Aria_VM* vm, const char* name, const char* src) {
     Aria_Lexer lexer = {src, 0, {false, TOK_EOF, 0, 0}};
-    
-    // Initialize with first token
-    // advance(&lexer);
-    //
-    // Aria_ASTNode* root = parseExpression(&lexer);
 
+#ifdef ARIA_DEBUG
+    printf("=== TOKENS ===\n"); 
     Aria_Token token;
     do {
         token = scanToken(&lexer);
         printf("Token: %d, start: %d, len: %d\n", token.type, token.start, token.len);
     } while (token.type != TOK_EOF);
+    
+    // Reset lexer for parsing
+    lexer.pc = 0;
+#endif
+
+    // Initialize with first token
+    advance(&lexer);
+    
+    // Parse into AST and store in VM
+    vm->ast_root = parseExpression(&lexer);
+    
+#ifdef ARIA_DEBUG
+    printf("\n=== AST ===\n"); 
+    printAST(vm->ast_root, 0);
+#endif
 
     // eval here
     // cleanup here
