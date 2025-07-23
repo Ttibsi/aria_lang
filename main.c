@@ -1,4 +1,4 @@
-#include "aria.h"
+#include "src/aria.h"
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -22,6 +22,10 @@ char* file_to_string(const char* filename) {
     return str;
 }
 
+void usage() {
+    fprintf(stderr, "Usage: ./aria <filename>\n");
+}
+
 int main(int argc, char* argv[]) {
     Aria_VM ariaVM = aria_vm_init(); 
 
@@ -31,7 +35,7 @@ int main(int argc, char* argv[]) {
         aria_interpret(&ariaVM, mod_name, text);
     } else {
         // TODO: Proper repl
-        aria_interpret(&ariaVM, "main", "var foo = 35 + (2 * 17);");
+        usage();
     }
 
     aria_vm_destroy(&ariaVM); 
