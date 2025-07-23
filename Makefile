@@ -22,3 +22,4 @@ aria: $(objects) build/main_obj.o
 .PHONY: clean
 clean:
 	rm -rf build
+	rm aria
