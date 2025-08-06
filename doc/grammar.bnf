@@ -1,0 +1,100 @@
+/* Top Level */
+<module> ::= <block>
+
+<decl> ::= 
+    <class_stmt>
+    | <var_assign>
+    | <const_assign>
+    | <func_stmt>
+    | <statement>
+
+/* Statements */ 
+<statement> ::= 
+    <expr_stmt>
+    | <func_stmt>
+    | <if_stmt>
+    | <for_stmt>
+    | <switch_stmt>
+    | <return_stmt>
+    | <block>
+    | <break_stmt>
+
+<expr_stmt> ::= <expression> ";"
+
+<break_stmt> ::= "break" ";"
+<case_stmt> ::= "case" <literal> ":" <statement>+ 
+<class_stmt> ::= "class" <ident> ( ":" <ident> )? "{" ( <var_assign> | <const_assign> )* <func_stmt>* "}"
+<default_stmt> ::= "default" ":" <statement>+
+<export_stmt> ::= "export" <class_stmt> | "export" <func_stmt>
+/* TODO: for-each */
+<for_stmt> ::= "for" "(" <expression> ")" "{" <statement>+ "}"
+<func_stmt> ::= "func" <ident> <param_list> "{" <block> "}"
+<if_stmt> ::= "if" "(" <expression> ")" "{" <statement>+ "}" ( "else" "{" <statement>+ "}" )?
+<import_stmt> ::= "import" <mod_name> | "import" ( <ident> ",")+ "from" <mod_name>
+<return_stmt> ::= "return" <expr_stmt>
+<static_stmt> ::= "static" <func_stmt>
+<switch_stmt> ::= "switch" <ident> "{" <case_stmt>+ <default_stmt>? "}"
+
+<block> ::= "{" <decl>* "}"
+
+/* Expressions */
+/* Note: This section is ordered by precedence */
+<expression> ::= <assignment>
+<assignment> ::= <lvalue> "=" <logic_or> | <logic_or>
+<lvalue> ::= <ident> | <ident> "." <ident> | <ident> "[" <expression> "]"
+    
+<var_assign> ::= "var" <ident> "=" <logic_or>
+<const_assign> ::= "const" <ident> "=" <logic_or>
+
+<logic_or> ::= <logic_and> ( "||" <logic_and> )?
+<logic_and> ::= <equality> ( "&&" <equality> )?
+<equality> ::= <comparison> ( ( "!=" | "==" ) <comparison> )?
+<comparison> ::= <term> ( ( ">" | ">=" | "<" | "<=" ) <term> )?
+<term> ::= <factor> ( ( "-" | "+" ) <factor> )?
+<factor> ::= <unary> ( ( "/" | "*" ) <unary> )?
+<unary> ::= <unary_prefix> | <postfix>
+<postfix> ::= <primary> ( "++" | "--" )*
+<unary_prefix> ::= 
+    ("-" | "+") <num_lit>
+    | "!" <boolean>
+    | ("-" | "+" | "!") <expression>
+
+<primary> ::= <literal> | <ident> | <func_call> | <group>
+<func_call> ::= <ident> <param_list>
+<group> ::= "(" <expression> ")"
+
+/* Primaries */
+<literal> ::= <string_lit> | <num_lit> | <boolean>
+/* Don't forget symbols here */
+<string_lit> ::= "\"" ([a-z] | [0-9] )* "\"" 
+<num_lit> ::= <nat_num> | <nat_num>? "." <digit> <digits>
+<keyword> ::= 
+    "break"
+    | "case" 
+    | "class" 
+    | "const" 
+    | "default"
+    | "else" 
+    | "export"
+    | "for" 
+    | "func" 
+    |  "if" 
+    | "import" 
+    | "return" 
+    | "static" 
+    | "switch" 
+    | "var"
+    
+<param_list> ::= "(" <ident>* ")"
+
+/* Atoms */
+<mod_name> ::= <ident>
+<ident> ::= <char> (<char> | <nat_num> | "_")*
+<char> ::= [a-z]
+
+<boolean> ::= "true" | "false"
+
+<nat_num> ::= <digit> | <nonzero> <digits>
+<digits> ::= <digit> | <digit> <digits>
+<digit> ::= "0" | <nonzero>
+<nonzero> ::= "1" | "2" | "3" | "4" | "5" | "6" | "7" | "8" | "9"
