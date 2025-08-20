@@ -27,17 +27,14 @@ void usage() {
 }
 
 int main(int argc, char* argv[]) {
-    Aria_VM ariaVM = aria_vm_init(); 
-
     if (argc > 1) {
         const char* mod_name = basename(argv[1]);
         const char* text = file_to_string(argv[1]);
-        aria_interpret(&ariaVM, mod_name, text);
+        aria_interpret(mod_name, text);
     } else {
         // TODO: Proper repl
         usage();
     }
 
-    aria_vm_destroy(&ariaVM); 
     return 0; 
 } 

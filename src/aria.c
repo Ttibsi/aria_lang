@@ -1,11 +1,12 @@
 #include "aria.h"
 
 #include <stdio.h>
+#include <stdlib.h>
 
 // TODO: Implement a hash table here from crafting interpreters for variable assignment
 
 /// VM Interface
-int aria_interpret(Aria_VM* vm, const char* name, const char* src) {
+int aria_interpret(const char* name, const char* src) {
     Aria_Lexer lexer = {src, 0, {false, TOK_EOF, 0, 0}};
 
 #ifdef ARIA_DEBUG
@@ -24,11 +25,18 @@ int aria_interpret(Aria_VM* vm, const char* name, const char* src) {
     advance(&lexer);
     
     // Parse into AST and store in VM
-    vm->ast_root = parseExpression(&lexer);
+    ParserState* state = malloc(sizeof(ParserState));
+    state->prev = NULL;
+    state->curr = state->next; 
+    state->next = malloc(sizeof(Aria_Token));
+    *state->next = scanToken(&lexer);
+    advance_state(state, &lexer);
+
+    Expression expr = parse_expression(state, &lexer, 0.0); 
     
 #ifdef ARIA_DEBUG
     printf("\n=== AST ===\n"); 
-    printAST(vm->ast_root, 0);
+    print_exprs(expr);
 #endif
 
     // eval here
@@ -37,10 +45,3 @@ int aria_interpret(Aria_VM* vm, const char* name, const char* src) {
     return 0;
 }
 
-Aria_VM aria_vm_init(void) {
-    return (Aria_VM){0};
-}
-
-void aria_vm_destroy(Aria_VM* vm) {
-    // VM cleanup will be implemented later
-}
