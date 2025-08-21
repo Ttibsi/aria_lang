@@ -7,18 +7,18 @@
 char* file_to_string(const char* filename) {
     FILE* f = fopen(filename, "rb");
     if (!f) return NULL;
-    
+
     fseek(f, 0, SEEK_END);
     long len = ftell(f);
     fseek(f, 0, SEEK_SET);
-    
+
     char* str = malloc(len + 1);
     if (!str) { fclose(f); return NULL; }
-    
+
     fread(str, 1, len, f);
     str[len] = '\0';
     fclose(f);
-    
+
     return str;
 }
 
@@ -36,5 +36,5 @@ int main(int argc, char* argv[]) {
         usage();
     }
 
-    return 0; 
-} 
+    return 0;
+}

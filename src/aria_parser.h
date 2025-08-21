@@ -5,22 +5,22 @@
 
 typedef enum {
     Atom,
-    Operation 
+    Operation
 } ExprType;
-struct Expr; 
+struct Expr;
 
 typedef struct Expr {
-    ExprType type; 
+    ExprType type;
     union {
         int c;
 
         struct {
             char ch;
-            struct Expr* lhs; 
-            struct Expr* rhs; 
-        } op; 
+            struct Expr* lhs;
+            struct Expr* rhs;
+        } op;
     };
-} Expression; 
+} Expression;
 
 typedef struct {
     Aria_Token* prev;

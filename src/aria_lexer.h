@@ -47,7 +47,7 @@ typedef enum {
     TOK_TRUE,           // 33
     TOK_VAR,            // 34
 
-    // Literals. 
+    // Literals.
     TOK_IDENTIFIER,     // 35
     TOK_STRING,         // 36
     TOK_NUMBER,         // 37
@@ -76,20 +76,20 @@ typedef struct {
 } Keyword;
 
 static const Keyword keywords[] = {
-    { "case",    4,  TOK_CASE     },  // 22
-    { "class",   5,  TOK_CLASS    },  // 23
-    { "const",   5,  TOK_CONST    },  // 24
-    { "default", 7,  TOK_DEFAULT  },  // 25
-    { "else",    4,  TOK_ELSE     },  // 26
-    { "false",   5,  TOK_FALSE    },  // 27
-    { "for",     3,  TOK_FOR      },  // 28
-    { "func",    4,  TOK_FUNC     },  // 29
-    { "if",      2,  TOK_IF       },  // 30
-    { "return",  6,  TOK_RETURN   },  // 31
-    { "static",  6,  TOK_STATIC   },  // 32
-    { "switch",  6,  TOK_SWITCH   },  // 33
-    { "true",    4,  TOK_TRUE     },  // 34
-    { "var",     3,  TOK_VAR      },  // 35
+    { "case",    4,  TOK_CASE     },  // 21
+    { "class",   5,  TOK_CLASS    },  // 22
+    { "const",   5,  TOK_CONST    },  // 23
+    { "default", 7,  TOK_DEFAULT  },  // 24
+    { "else",    4,  TOK_ELSE     },  // 25
+    { "false",   5,  TOK_FALSE    },  // 26
+    { "for",     3,  TOK_FOR      },  // 27
+    { "func",    4,  TOK_FUNC     },  // 28
+    { "if",      2,  TOK_IF       },  // 29
+    { "return",  6,  TOK_RETURN   },  // 30
+    { "static",  6,  TOK_STATIC   },  // 31
+    { "switch",  6,  TOK_SWITCH   },  // 32
+    { "true",    4,  TOK_TRUE     },  // 33
+    { "var",     3,  TOK_VAR      },  // 34
 };
 static const int keyword_count = sizeof(keywords) / sizeof(keywords[0]);
 
