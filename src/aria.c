@@ -5,7 +5,6 @@
 
 // TODO: Implement a hash table here from crafting interpreters for variable assignment
 
-/// VM Interface
 int aria_interpret(const char* name, const char* src) {
     Aria_Lexer lexer = {src, 0, {false, TOK_EOF, 0, 0}};
 
@@ -20,14 +19,11 @@ int aria_interpret(const char* name, const char* src) {
     // Reset lexer for parsing
     lexer.pc = 0;
 #endif
-
-    // Initialize with first token
-    advance(&lexer);
     
-    // Parse into AST and store in VM
+    // Parse into AST
     ParserState* state = malloc(sizeof(ParserState));
     state->prev = NULL;
-    state->curr = state->next; 
+    state->curr = NULL;
     state->next = malloc(sizeof(Aria_Token));
     *state->next = scanToken(&lexer);
     advance_state(state, &lexer);
