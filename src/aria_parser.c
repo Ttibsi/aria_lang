@@ -27,18 +27,26 @@ void advance_state(ParserState* state, Aria_Lexer* l) {
     *state->next = scanToken(l);
 }
 
-void state_assert(ParserState* state, int lineno, ...) {
+void state_assert(ParserState* state, int lineno, int count, ...) {
     va_list tok_types;
-    va_start(tok_types, lineno);
-    if (state->curr->type == va_arg(tok_types, TokenType)) {
-        va_end(tok_types);
-        return; 
+    TokenType arg;
+
+    va_start(tok_types, count);
+    for (int i = 0; i < count; i ++) {
+        arg = va_arg(tok_types, TokenType);
+        if (state->curr->type == arg) {
+            va_end(tok_types);
+            return; 
+        }
     }
     va_end(tok_types);
 
     fprintf(stderr, "Unexpected token %d at line %d, expected one of: ", state->curr->type, lineno);
-    va_start(tok_types, lineno);
-    fprintf(stderr, "%d ", va_arg(tok_types, TokenType));
+    va_start(tok_types, count);
+    for (int i = 0; i < count; i ++) {
+        arg = va_arg(tok_types, TokenType);
+        fprintf(stderr, "%d, ", arg);
+    }
     va_end(tok_types);
     fputc('\n', stderr);
 
@@ -46,7 +54,7 @@ void state_assert(ParserState* state, int lineno, ...) {
 }
 
 Expression parse_expression(ParserState* state, Aria_Lexer* l, float min_bp) {
-    state_assert(state, __LINE__, TOK_NUMBER, TOK_LEFT_PAREN);
+    state_assert(state, __LINE__, 2, TOK_NUMBER, TOK_LEFT_PAREN);
     Expression lhs = {0}; 
  
     switch (state->curr->type) {
@@ -60,7 +68,7 @@ Expression parse_expression(ParserState* state, Aria_Lexer* l, float min_bp) {
         case TOK_LEFT_PAREN:
             advance_state(state, l);
             lhs = parse_expression(state, l, 0); 
-            state_assert(state, __LINE__, TOK_RIGHT_PAREN, -1);
+            state_assert(state, __LINE__, 2, TOK_RIGHT_PAREN, -1);
             break;
 
         default: 
@@ -68,7 +76,7 @@ Expression parse_expression(ParserState* state, Aria_Lexer* l, float min_bp) {
     }; 
 
     // EOF 
-    if (state->next == NULL) { return lhs; }
+    if (state->next->type == TOK_EOF) { return lhs; }
 
     // end of expression
     if (state->next->type == TOK_RIGHT_PAREN) { return lhs; } 
@@ -76,8 +84,9 @@ Expression parse_expression(ParserState* state, Aria_Lexer* l, float min_bp) {
     while (true) {
         if (state->next == NULL) { break; }
         advance_state(state, l);
+        if (state->next->type == TOK_EOF) { break; }
         state_assert(
-            state, __LINE__,
+            state, __LINE__, 5,
             TOK_MINUS, TOK_PLUS, TOK_SLASH, TOK_STAR, TOK_RIGHT_PAREN
         );
 
@@ -89,7 +98,7 @@ Expression parse_expression(ParserState* state, Aria_Lexer* l, float min_bp) {
      
         // rhs 
         advance_state(state, l);
-        state_assert(state, __LINE__, TOK_NUMBER, TOK_LEFT_PAREN);
+        state_assert(state, __LINE__, 2, TOK_LEFT_PAREN, TOK_NUMBER);
 
         Expression rhs = parse_expression(state, l, bp.rhs);
 

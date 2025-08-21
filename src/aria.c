@@ -33,6 +33,7 @@ int aria_interpret(const char* name, const char* src) {
 #ifdef ARIA_DEBUG
     printf("\n=== AST ===\n"); 
     print_exprs(expr);
+    printf("\n"); 
 #endif
 
     // eval here

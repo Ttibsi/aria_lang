@@ -5,30 +5,55 @@
 
 typedef enum {
     // Single-character tokens.
-    TOK_LEFT_PAREN, TOK_RIGHT_PAREN,
-    TOK_LEFT_BRACE, TOK_RIGHT_BRACE,
-    TOK_COMMA, TOK_DOT, TOK_SEMICOLON,
-    TOK_MINUS, TOK_PLUS, TOK_SLASH, TOK_STAR,
+    TOK_LEFT_PAREN,     // 0
+    TOK_RIGHT_PAREN,    // 1
+    TOK_LEFT_BRACE,     // 2
+    TOK_RIGHT_BRACE,    // 3
+    TOK_COMMA,          // 4
+    TOK_DOT,            // 5
+    TOK_SEMICOLON,      // 6
+    TOK_MINUS,          // 7
+    TOK_PLUS,           // 8
+    TOK_SLASH,          // 9
+    TOK_STAR,           // 10
 
     // One or two character tokens.
-    TOK_BANG, TOK_BANG_EQUAL,
-    TOK_EQUAL, TOK_EQUAL_EQUAL,
-    TOK_GREATER, TOK_GREATER_EQUAL,
-    TOK_LESS, TOK_LESS_EQUAL,
+    TOK_BANG,           // 11
+    TOK_BANG_EQUAL,     // 12
+    TOK_EQUAL,          // 13
+    TOK_EQUAL_EQUAL,    // 14
+    TOK_GREATER,        // 15
+    TOK_GREATER_EQUAL,  // 16
+    TOK_LESS,           // 17
+    TOK_LESS_EQUAL,     // 18
 
     // digraphs
-    TOK_AND, TOK_OR,
+    TOK_AND,            // 19
+    TOK_OR,             // 20
 
     // Keywords.
-    TOK_CASE, TOK_CLASS, TOK_CONST, TOK_DEFAULT,
-    TOK_ELSE, TOK_FALSE, TOK_FOR, TOK_FUNC, 
-    TOK_IF, TOK_RETURN, TOK_STATIC, TOK_SWITCH,
-    TOK_TRUE, TOK_VAR,
+    TOK_CASE,           // 21
+    TOK_CLASS,          // 22
+    TOK_CONST,          // 23
+    TOK_DEFAULT,        // 24
+    TOK_ELSE,           // 25
+    TOK_FALSE,          // 26
+    TOK_FOR,            // 27
+    TOK_FUNC,           // 28
+    TOK_IF,             // 29
+    TOK_RETURN,         // 30
+    TOK_STATIC,         // 31
+    TOK_SWITCH,         // 32
+    TOK_TRUE,           // 33
+    TOK_VAR,            // 34
 
     // Literals. 
-    TOK_IDENTIFIER, TOK_STRING, TOK_NUMBER,
+    TOK_IDENTIFIER,     // 35
+    TOK_STRING,         // 36
+    TOK_NUMBER,         // 37
 
-    TOK_ERROR, TOK_EOF
+    TOK_ERROR,          // 38
+    TOK_EOF             // 39
 } TokenType;
 
 typedef struct {
