@@ -1,0 +1,19 @@
+---
+repos:
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v6.0.0
+    hooks:
+    -   id: check-case-conflict
+    -   id: check-merge-conflict
+    -   id: check-yaml
+        additional_dependencies: [ ruamel.yaml>=0.15 ]
+    -   id: end-of-file-fixer
+    -   id: trailing-whitespace
+  - repo: https://github.com/mrtazz/checkmake.git
+    rev: 0.2.2
+    hooks:
+    -   id: checkmake
+  - repo: https://github.com/sco1/brie-commit
+    rev: v1.1.0
+    hooks:
+    -   id: brie-commit

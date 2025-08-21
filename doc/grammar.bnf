@@ -1,15 +1,15 @@
 /* Top Level */
 <module> ::= <block>
 
-<decl> ::= 
+<decl> ::=
     <class_stmt>
     | <var_assign>
     | <const_assign>
     | <func_stmt>
     | <statement>
 
-/* Statements */ 
-<statement> ::= 
+/* Statements */
+<statement> ::=
     <expr_stmt>
     | <func_stmt>
     | <if_stmt>
@@ -22,7 +22,7 @@
 <expr_stmt> ::= <expression> ";"
 
 <break_stmt> ::= "break" ";"
-<case_stmt> ::= "case" <literal> ":" <statement>+ 
+<case_stmt> ::= "case" <literal> ":" <statement>+
 <class_stmt> ::= "class" <ident> ( ":" <ident> )? "{" ( <var_assign> | <const_assign> )* <func_stmt>* "}"
 <default_stmt> ::= "default" ":" <statement>+
 <export_stmt> ::= "export" <class_stmt> | "export" <func_stmt>
@@ -42,7 +42,7 @@
 <expression> ::= <assignment>
 <assignment> ::= <lvalue> "=" <logic_or> | <logic_or>
 <lvalue> ::= <ident> | <ident> "." <ident> | <ident> "[" <expression> "]"
-    
+
 <var_assign> ::= "var" <ident> "=" <logic_or>
 <const_assign> ::= "const" <ident> "=" <logic_or>
 
@@ -54,7 +54,7 @@
 <factor> ::= <unary> ( ( "/" | "*" ) <unary> )?
 <unary> ::= <unary_prefix> | <postfix>
 <postfix> ::= <primary> ( "++" | "--" )*
-<unary_prefix> ::= 
+<unary_prefix> ::=
     ("-" | "+") <num_lit>
     | "!" <boolean>
     | ("-" | "+" | "!") <expression>
@@ -66,25 +66,25 @@
 /* Primaries */
 <literal> ::= <string_lit> | <num_lit> | <boolean>
 /* Don't forget symbols here */
-<string_lit> ::= "\"" ([a-z] | [0-9] )* "\"" 
+<string_lit> ::= "\"" ([a-z] | [0-9] )* "\""
 <num_lit> ::= <nat_num> | <nat_num>? "." <digit> <digits>
-<keyword> ::= 
+<keyword> ::=
     "break"
-    | "case" 
-    | "class" 
-    | "const" 
+    | "case"
+    | "class"
+    | "const"
     | "default"
-    | "else" 
+    | "else"
     | "export"
-    | "for" 
-    | "func" 
-    |  "if" 
-    | "import" 
-    | "return" 
-    | "static" 
-    | "switch" 
+    | "for"
+    | "func"
+    |  "if"
+    | "import"
+    | "return"
+    | "static"
+    | "switch"
     | "var"
-    
+
 <param_list> ::= "(" <ident>* ")"
 
 /* Atoms */
