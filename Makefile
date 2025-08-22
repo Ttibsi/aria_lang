@@ -5,6 +5,7 @@ objects := $(patsubst src/%.c,build/%.o,$(sources))
 
 .PHONY: all
 all: aria
+	./aria -D examples/01_var.ari
 
 debug:
 	$(error   VAR is $(sources))
@@ -18,7 +19,6 @@ build/%.o: src/%.c | build
 build/main_obj.o: main.c
 	$(CC) $< -c -MMD -MP -o $@ $(CFLAGS)
 
-.DEFAULT_GOAL := aria
 aria: $(objects) build/main_obj.o
 	$(CC) $^ -o $@ $(san)
 
