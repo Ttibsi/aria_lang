@@ -3,6 +3,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <libgen.h>
+#include <string.h>
+
 
 char* file_to_string(const char* filename) {
     FILE* f = fopen(filename, "rb");
@@ -27,9 +29,28 @@ void usage() {
 }
 
 int main(int argc, char* argv[]) {
-    if (argc > 1) {
-        const char* mod_name = basename(argv[1]);
-        const char* text = file_to_string(argv[1]);
+    const char* filename = NULL;
+    
+    // Parse command line arguments
+    for (int i = 1; i < argc; i++) {
+        if (strcmp(argv[i], "-D") == 0) {
+            aria_debug_mode = 1;
+        } else if (argv[i][0] != '-') {
+            // This is the filename (first non-flag argument)
+            filename = argv[i];
+            break;
+        } else {
+            // Unknown flag
+            fprintf(stderr, "Unknown flag: %s\n", argv[i]);
+            usage();
+            return 1;
+        }
+    }
+    
+    if (filename != NULL) {
+        const char* mod_name = basename((char*)filename);
+        const char* text = file_to_string(filename);
+        
         aria_interpret(mod_name, text);
     } else {
         // TODO: Proper repl
