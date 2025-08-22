@@ -1,7 +1,7 @@
 #ifndef ARIA_H
 #define ARIA_H
 
-#define ARIA_DEBUG 1
+extern int aria_debug_mode;
 #include "aria_lexer.h"
 #include "aria_parser.h"
 

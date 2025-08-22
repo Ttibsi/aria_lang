@@ -8,17 +8,17 @@
 int aria_interpret(const char* name, const char* src) {
     Aria_Lexer lexer = {src, 0, {false, TOK_EOF, 0, 0}};
 
-#ifdef ARIA_DEBUG
-    printf("=== TOKENS ===\n");
-    Aria_Token token;
-    do {
-        token = scanToken(&lexer);
-        printf("Token: %d, start: %d, len: %d\n", token.type, token.start, token.len);
-    } while (token.type != TOK_EOF);
+    if (aria_debug_mode) {
+        printf("=== TOKENS ===\n");
+        Aria_Token token;
+        do {
+            token = scanToken(&lexer);
+            printf("Token: %d, start: %d, len: %d\n", token.type, token.start, token.len);
+        } while (token.type != TOK_EOF);
 
-    // Reset lexer for parsing
-    lexer.pc = 0;
-#endif
+        // Reset lexer for parsing
+        lexer.pc = 0;
+    }
 
     // Parse into AST
     ParserState* state = malloc(sizeof(ParserState));
@@ -30,11 +30,11 @@ int aria_interpret(const char* name, const char* src) {
 
     Expression expr = parse_expression(state, &lexer, 0.0);
 
-#ifdef ARIA_DEBUG
-    printf("\n=== AST ===\n");
-    print_exprs(expr);
-    printf("\n");
-#endif
+    if (aria_debug_mode) {
+        printf("\n=== AST ===\n");
+        print_exprs(expr);
+        printf("\n");
+    }
 
     // eval here
     // cleanup here
