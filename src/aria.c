@@ -3,6 +3,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 
+int aria_debug_mode;
+
 // TODO: Implement a hash table here from crafting interpreters for variable assignment
 
 int aria_interpret(const char* name, const char* src) {
