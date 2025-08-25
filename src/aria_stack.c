@@ -35,7 +35,6 @@ void stackPush(Stack* stack, int item) {
         return;
     }
     stack->array[++stack->top] = item;
-    printf("%d pushed to stack\n", item);
 }
 
 int stackPop(Stack* stack) {

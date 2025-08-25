@@ -5,7 +5,9 @@
 #include "aria_stack.h"
 
 typedef enum {
-    Inst_ADD,
+    INST_LOAD_CONST,
+    INST_ADD,
+    INST_MUL,
 } Instruction;
 
 typedef struct _Bytecode {
@@ -14,9 +16,11 @@ typedef struct _Bytecode {
     struct _Bytecode* prev;
 } Bytecode;
 
-void handle_operation(Bytecode* bc, Stack* stack, Expression* expr);
-void handle_atom(Bytecode* bc, Stack* stack, Expression* expr);
-void next_inst(Bytecode* bc, Instruction inst);
+Bytecode* handle_operation(Bytecode* bc, Stack* stack, Expression* expr);
+Bytecode* handle_atom(Bytecode* bc, Stack* stack, Expression* expr);
+Bytecode* next_inst(Bytecode* bc, Instruction inst);
 Bytecode* bytecode_generation(Stack* stack, Expression expr);
+void print_bytecode(Bytecode* bc);
+void free_bytecode(Bytecode* bc);
 
 #endif // ARIA_BYTECODE_H

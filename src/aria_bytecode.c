@@ -1,37 +1,49 @@
 #include "aria_bytecode.h"
+#include <stdio.h>
 #include <stdlib.h>
 
-void handle_operation(Bytecode* bc, Stack* stack, Expression* expr) {
+Bytecode* handle_operation(Bytecode* bc, Stack* stack, Expression* expr) {
     if(expr->op.lhs->type == Atom) {
-        handle_atom(bc, stack, expr->op.lhs);
+        bc = handle_atom(bc, stack, expr->op.lhs);
     } else {
-        handle_operation(bc, stack, expr->op.lhs);
+        bc = handle_operation(bc, stack, expr->op.lhs);
     }
 
     if (expr->op.rhs->type == Atom) {
-        handle_atom(bc, stack, expr->op.rhs);
+        bc = handle_atom(bc, stack, expr->op.rhs);
     } else {
-        handle_operation(bc, stack, expr->op.rhs);
+        bc = handle_operation(bc, stack, expr->op.rhs);
     }
 
     switch (expr->op.ch) {
         case '+':
-            next_inst(bc, Inst_ADD);
+            bc = next_inst(bc, INST_ADD);
             break;
+        case '*':
+            bc = next_inst(bc, INST_MUL);
     };
+
+    return bc;
 }
 
-void handle_atom(Bytecode* bc, Stack* stack, Expression* expr) {
+Bytecode* handle_atom(Bytecode* bc, Stack* stack, Expression* expr) {
+    bc = next_inst(bc, INST_LOAD_CONST);
+    stackPush(stack, expr->c);
+    return bc;
 }
 
-void next_inst(Bytecode* bc, Instruction inst) {
+Bytecode* next_inst(Bytecode* bc, Instruction inst) {
+    bc->inst = inst;
     Bytecode* new = malloc(sizeof(Bytecode));
     bc->next = new;
     new->prev = bc;
+    new->next = NULL;
+    return bc->next;
 }
 
 Bytecode* bytecode_generation(Stack* stack, Expression expr) {
     Bytecode* root = malloc(sizeof(Bytecode));
+    root->prev = NULL;
 
     if (expr.type == Atom) {
         handle_atom(root, stack, &expr);
@@ -40,4 +52,23 @@ Bytecode* bytecode_generation(Stack* stack, Expression expr) {
     }
 
     return root;
+}
+
+void print_bytecode(Bytecode* bc) {
+    printf("\n=== BYTECODE ===\n");
+    while (bc->next != NULL) {
+        printf("Instruction: %d\n", bc->inst);
+        bc = bc->next;
+    }
+}
+
+void free_bytecode(Bytecode* bc) {
+    if (bc == NULL) { return; }
+    while (bc->prev != NULL) { bc = bc->prev; }
+
+    while (bc != NULL) {
+        Bytecode* next = bc->next;
+        free(bc);
+        bc = next;
+    }
 }
