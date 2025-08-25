@@ -3,6 +3,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 
+int aria_debug_mode;
+
 // TODO: Implement a hash table here from crafting interpreters for variable assignment
 
 int aria_interpret(const char* name, const char* src) {
@@ -36,8 +38,18 @@ int aria_interpret(const char* name, const char* src) {
         printf("\n");
     }
 
-    // eval here
+    // Convert AST to bytecode
+    Stack* stack = createStack(1024);
+    Bytecode* bc = bytecode_generation(stack, expr);
+    if (aria_debug_mode) {
+        print_bytecode(bc);
+    }
+
+    // execute bytecode
+
     // cleanup here
+    freeStack(stack);
+    free_bytecode(bc);
 
     return 0;
 }
