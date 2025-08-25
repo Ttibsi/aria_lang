@@ -191,7 +191,12 @@ int onetest_exec(const onetest_test_t* tests, int test_count) {
         memset(onetest_errors, 0, sizeof(onetest_errors));
 
         /* Run the test */
-        tests[i].func();
+        int retcode = tests[i].func();
+        if (retcode) {
+            snprintf(onetest_errors[onetest_error_count], ONETEST_MAX_ERROR_LEN,
+                "Return code: %i", retcode);
+            onetest_error_count++;
+        }
 
         /* Calculate padding for output formatting */
         int name_len = strlen(tests[i].name);
@@ -205,7 +210,7 @@ int onetest_exec(const onetest_test_t* tests, int test_count) {
         }
 
         /* Print result */
-        if (onetest_error_count > 0) {
+        if (onetest_error_count > 0 || retcode > 0) {
             if (ci) {
                 printf("Failed\n");
             } else {
@@ -228,7 +233,7 @@ int onetest_exec(const onetest_test_t* tests, int test_count) {
             }
         }
 
-        if (onetest_error_count > 0) {
+        if (onetest_error_count > 0 || retcode > 0) {
             fail_counter++;
         }
     }

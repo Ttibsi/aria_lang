@@ -1,4 +1,4 @@
-CFLAGS := -Wall -Wextra -g -std=c99
+CFLAGS := -Wall -Wextra -g
 
 sources := $(wildcard src/*.c)
 objects := $(patsubst src/%.c,build/%.o,$(sources))
@@ -32,10 +32,10 @@ build/%.o: tests/%.c | build
 
 .PHONY: test
 test: $(test_objs)
-	$(CC) $^ -o $@
+	$(CC) $^ -MMD -MP -std=c23 -o $@
 
 .PHONY: clean
 clean:
 	rm -rf build
-	rm aria
-	rm test
+	if [ -f aria ]; then rm aria; fi
+	if [ -f test ]; then rm test; fi

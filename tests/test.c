@@ -8,6 +8,26 @@
 
 int main(void) {
     onetest_test_t tests[] = {
+        ONETEST_TEST(test_handleOperation),
+        ONETEST_TEST(test_handleAtom),
+        ONETEST_TEST(test_nextInst),
+        ONETEST_TEST(test_bytecodeGeneration),
+        ONETEST_TEST(test_freeBytecode),
+        ONETEST_TEST(test_match),
+        ONETEST_TEST(test_scanToken),
+        ONETEST_TEST(test_advance),
+        ONETEST_TEST(test_getTokenNumber),
+        ONETEST_TEST(test_getTokenChar),
+        ONETEST_TEST(test_parseExpression),
+        ONETEST_TEST(test_printExprs),
+        ONETEST_TEST(test_advanceState),
+        ONETEST_TEST(test_createStack),
+        ONETEST_TEST(test_isFull),
+        ONETEST_TEST(test_isEmpty),
+        ONETEST_TEST(test_stackPush),
+        ONETEST_TEST(test_stackPop),
+        ONETEST_TEST(test_stackPeek),
+        ONETEST_TEST(test_freeStack),
     };
 
     return onetest_exec(tests, sizeof(tests) / sizeof(tests[0]));
