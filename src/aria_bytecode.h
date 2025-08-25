@@ -16,11 +16,11 @@ typedef struct _Bytecode {
     struct _Bytecode* prev;
 } Bytecode;
 
-Bytecode* handle_operation(Bytecode* bc, Stack* stack, Expression* expr);
-Bytecode* handle_atom(Bytecode* bc, Stack* stack, Expression* expr);
-Bytecode* next_inst(Bytecode* bc, Instruction inst);
-Bytecode* bytecode_generation(Stack* stack, Expression expr);
-void print_bytecode(Bytecode* bc);
-void free_bytecode(Bytecode* bc);
+Bytecode* handleOperation(Bytecode* bc, Stack* stack, Expression* expr);
+Bytecode* handleAtom(Bytecode* bc, Stack* stack, Expression* expr);
+Bytecode* nextInst(Bytecode* bc, Instruction inst);
+Bytecode* bytecodeGeneration(Stack* stack, Expression expr);
+void printBytecode(Bytecode* bc);
+void freeBytecode(Bytecode* bc);
 
 #endif // ARIA_BYTECODE_H

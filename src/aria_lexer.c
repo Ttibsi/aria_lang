@@ -159,7 +159,7 @@ bool match(Aria_Lexer* l, TokenType type) {
     return false;
 }
 
-int get_token_number(Aria_Lexer* lexer, Aria_Token token) {
+int getTokenNumber(Aria_Lexer* lexer, Aria_Token token) {
     if (token.type != TOK_NUMBER) return 0;
 
     char* num_str = malloc(token.len + 1);
@@ -170,7 +170,7 @@ int get_token_number(Aria_Lexer* lexer, Aria_Token token) {
     return result;
 }
 
-char get_token_char(Aria_Lexer* lexer, Aria_Token token) {
+char getTokenChar(Aria_Lexer* lexer, Aria_Token token) {
     if (token.len == 0) return '\0';
     return lexer->source[token.start];
 }

@@ -2,37 +2,37 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-Bytecode* handle_operation(Bytecode* bc, Stack* stack, Expression* expr) {
+Bytecode* handleOperation(Bytecode* bc, Stack* stack, Expression* expr) {
     if(expr->op.lhs->type == Atom) {
-        bc = handle_atom(bc, stack, expr->op.lhs);
+        bc = handleAtom(bc, stack, expr->op.lhs);
     } else {
-        bc = handle_operation(bc, stack, expr->op.lhs);
+        bc = handleOperation(bc, stack, expr->op.lhs);
     }
 
     if (expr->op.rhs->type == Atom) {
-        bc = handle_atom(bc, stack, expr->op.rhs);
+        bc = handleAtom(bc, stack, expr->op.rhs);
     } else {
-        bc = handle_operation(bc, stack, expr->op.rhs);
+        bc = handleOperation(bc, stack, expr->op.rhs);
     }
 
     switch (expr->op.ch) {
         case '+':
-            bc = next_inst(bc, INST_ADD);
+            bc = nextInst(bc, INST_ADD);
             break;
         case '*':
-            bc = next_inst(bc, INST_MUL);
+            bc = nextInst(bc, INST_MUL);
     };
 
     return bc;
 }
 
-Bytecode* handle_atom(Bytecode* bc, Stack* stack, Expression* expr) {
-    bc = next_inst(bc, INST_LOAD_CONST);
+Bytecode* handleAtom(Bytecode* bc, Stack* stack, Expression* expr) {
+    bc = nextInst(bc, INST_LOAD_CONST);
     stackPush(stack, expr->c);
     return bc;
 }
 
-Bytecode* next_inst(Bytecode* bc, Instruction inst) {
+Bytecode* nextInst(Bytecode* bc, Instruction inst) {
     bc->inst = inst;
     Bytecode* new = malloc(sizeof(Bytecode));
     bc->next = new;
@@ -41,20 +41,20 @@ Bytecode* next_inst(Bytecode* bc, Instruction inst) {
     return bc->next;
 }
 
-Bytecode* bytecode_generation(Stack* stack, Expression expr) {
+Bytecode* bytecodeGeneration(Stack* stack, Expression expr) {
     Bytecode* root = malloc(sizeof(Bytecode));
     root->prev = NULL;
 
     if (expr.type == Atom) {
-        handle_atom(root, stack, &expr);
+        handleAtom(root, stack, &expr);
     } else {
-        handle_operation(root, stack, &expr);
+        handleOperation(root, stack, &expr);
     }
 
     return root;
 }
 
-void print_bytecode(Bytecode* bc) {
+void printBytecode(Bytecode* bc) {
     printf("\n=== BYTECODE ===\n");
     while (bc->next != NULL) {
         printf("Instruction: %d\n", bc->inst);
@@ -62,7 +62,7 @@ void print_bytecode(Bytecode* bc) {
     }
 }
 
-void free_bytecode(Bytecode* bc) {
+void freeBytecode(Bytecode* bc) {
     if (bc == NULL) { return; }
     while (bc->prev != NULL) { bc = bc->prev; }
 
