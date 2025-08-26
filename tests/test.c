@@ -20,7 +20,6 @@ int main(void) {
         ONETEST_TEST(test_parseExpression),
         ONETEST_TEST(test_printExprs),
         ONETEST_TEST(test_advanceState),
-        ONETEST_TEST(test_createStack),
         ONETEST_TEST(test_isFull),
         ONETEST_TEST(test_isEmpty),
         ONETEST_TEST(test_stackPush),

@@ -102,6 +102,25 @@ static inline void onetest_assert_ne_str_impl(const char* x, const char* y) {
     }
 }
 
+/* Pointer comparison implementations */
+static inline void onetest_assert_eq_ptr_impl(const void* x, const void* y) {
+    if (x != y) {
+        snprintf(onetest_errors[onetest_error_count], ONETEST_MAX_ERROR_LEN,
+                "%s:%d - %p does not equal %p", __FUNCTION__, __LINE__, x, y);
+        onetest_error_count++;
+        if (onetest_error_count >= ONETEST_MAX_ERRORS) onetest_error_count = ONETEST_MAX_ERRORS - 1;
+    }
+}
+
+static inline void onetest_assert_ne_ptr_impl(const void* x, const void* y) {
+    if (x == y) {
+        snprintf(onetest_errors[onetest_error_count], ONETEST_MAX_ERROR_LEN,
+                "%s:%d - %p is equal to %p", __FUNCTION__, __LINE__, x, y);
+        onetest_error_count++;
+        if (onetest_error_count >= ONETEST_MAX_ERRORS) onetest_error_count = ONETEST_MAX_ERRORS - 1;
+    }
+}
+
 /* Generic assert macros using _Generic (C23) */
 #define onetest_assert_eq(x, y) \
     _Generic((x), \
@@ -120,7 +139,10 @@ static inline void onetest_assert_ne_str_impl(const char* x, const char* y) {
         double: onetest_assert_eq_float_impl, \
         long double: onetest_assert_eq_float_impl, \
         char*: onetest_assert_eq_str_impl, \
-        const char*: onetest_assert_eq_str_impl \
+        const char*: onetest_assert_eq_str_impl, \
+        void*: onetest_assert_eq_ptr_impl, \
+        const void*: onetest_assert_eq_ptr_impl, \
+        default: onetest_assert_eq_ptr_impl \
     )(x, y)
 
 #define onetest_assert_ne(x, y) \
@@ -140,7 +162,10 @@ static inline void onetest_assert_ne_str_impl(const char* x, const char* y) {
         double: onetest_assert_ne_float_impl, \
         long double: onetest_assert_ne_float_impl, \
         char*: onetest_assert_ne_str_impl, \
-        const char*: onetest_assert_ne_str_impl \
+        const char*: onetest_assert_ne_str_impl, \
+        void*: onetest_assert_ne_ptr_impl, \
+        const void*: onetest_assert_ne_ptr_impl, \
+        default: onetest_assert_ne_ptr_impl \
     )(x, y)
 
 #define onetest_assert_true(x) \

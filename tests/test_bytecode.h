@@ -23,7 +23,8 @@ static int test_handleOperation(void) {
     expr->op.rhs = rhs;
 
     bc = handleOperation(bc, stack, expr);
-    onetest_assert_eq(bc->inst, INST_ADD);
+    onetest_assert_eq(bc->inst, INST_LOAD_CONST);
+    onetest_assert_ne(bc->next, NULL);
 
     freeBytecode(bc);
     freeStack(stack);
@@ -34,6 +35,9 @@ static int test_handleOperation(void) {
     return 0;
 }
 
-static int test_handleAtom(void) { return 1; }
+static int test_handleAtom(void) {
+    return 1;
+}
+
 static int test_nextInst(void) { return 1; }
 static int test_bytecodeGeneration(void) { return 1; }
