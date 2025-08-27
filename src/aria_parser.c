@@ -6,11 +6,6 @@
 
 #include "aria_parser.h"
 
-typedef struct {
-    float lhs;
-    float rhs;
-} BP;
-
 BP infixBindingPower(char op) {
     switch (op) {
         case '+': case '-': return (BP){.lhs = 1.0, .rhs = 1.1};
