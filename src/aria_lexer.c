@@ -60,19 +60,19 @@ Aria_Token scanStringLiteral(Aria_Lexer* l) {
 
 Aria_Token scanNumber(Aria_Lexer* l) {
     int start = l->pc - 1;
-    int length = 1;
+    int length = 0;
 
-    while (isdigit(peek(l))) {
+    do {
         advanceChar(l);
         length++;
-    }
+    } while (isdigit(peek(l)));
 
     return makeToken(l, TOK_NUMBER, start, length);
 }
 
 Aria_Token scanIdentifier(Aria_Lexer* l) {
-    int start = l->pc - 1;
-    int length = 1;
+    int start = l->pc;
+    int length = 0;
 
     while (isalnum(peek(l)) || peek(l) == '_') {
         advanceChar(l);
