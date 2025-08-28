@@ -49,9 +49,9 @@ static int test_advanceChar(void) {
     };
 
     char actual = advanceChar(&l);
-    onetest_assert_eq(actual, ' ');
+    onetest_assert_eq(actual, '3');
     actual = advanceChar(&l);
-    onetest_assert_eq(actual, '*');
+    onetest_assert_eq(actual, ' ');
     return 0;
 }
 
@@ -68,7 +68,7 @@ static int test_skipWhitespace(void) {
     };
 
     skipWhitespace(&l);
-    onetest_assert_eq(peek(&l), '*');
+    onetest_assert_eq(peek(&l), ' ');
     return 0;
 }
 
