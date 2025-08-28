@@ -67,8 +67,9 @@ static int test_skipWhitespace(void) {
         }
     };
 
+    advance(&l);
     skipWhitespace(&l);
-    onetest_assert_eq(peek(&l), ' ');
+    onetest_assert_eq(peek(&l), '+');
     return 0;
 }
 
@@ -84,10 +85,10 @@ static int test_makeToken(void) {
         }
     };
 
-    Aria_Token tkn = makeToken(&l, TOK_STAR, 2, 1);
+    Aria_Token tkn = makeToken(&l, TOK_PLUS, 2, 1);
     onetest_assert_eq(tkn.valid, true);
-    onetest_assert_eq(tkn.type, TOK_STAR);
-    onetest_assert_eq(tkn.start, 1);
+    onetest_assert_eq(tkn.type, TOK_PLUS);
+    onetest_assert_eq(tkn.start, 2);
     onetest_assert_eq(tkn.len, 1);
 
     return 0;
@@ -112,7 +113,7 @@ static int test_advance(void) {
     };
 
     advance(&l);
-    onetest_assert_eq(l.current_token.type, TOK_STAR);
+    onetest_assert_eq(l.current_token.type, TOK_NUMBER);
 
     return 0;
 }
@@ -130,7 +131,7 @@ static int test_check(void) {
     };
 
     onetest_assert_eq(check(&l, TOK_NUMBER), 1);
-    onetest_assert_eq(check(&l, TOK_STAR), 0);
+    onetest_assert_eq(check(&l, TOK_PLUS), 0);
 
     return 0;
 }
@@ -147,8 +148,9 @@ static int test_match(void) {
         }
     };
 
-    onetest_assert_eq(match(&l, TOK_NUMBER), 1);
-    onetest_assert_eq(match(&l, TOK_STAR), 1);
+    onetest_assert_true(match(&l, TOK_NUMBER) == 1);
+    advance(&l);
+    onetest_assert_true(match(&l, TOK_PLUS) == 1);
     return 0;
 }
 
