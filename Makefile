@@ -1,3 +1,4 @@
+CC := clang
 CFLAGS := -Wall -Wextra -g -MMD -MP
 
 sources := $(wildcard src/*.c)

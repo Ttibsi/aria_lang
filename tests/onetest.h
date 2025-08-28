@@ -124,6 +124,7 @@ static inline void onetest_assert_ne_ptr_impl(const void* x, const void* y) {
 /* Generic assert macros using _Generic (C23) */
 #define onetest_assert_eq(x, y) \
     _Generic((x), \
+        bool: onetest_assert_eq_int_impl, \
         int: onetest_assert_eq_int_impl, \
         long: onetest_assert_eq_int_impl, \
         long long: onetest_assert_eq_int_impl, \
@@ -147,6 +148,7 @@ static inline void onetest_assert_ne_ptr_impl(const void* x, const void* y) {
 
 #define onetest_assert_ne(x, y) \
     _Generic((x), \
+        bool: onetest_assert_ne_int_impl, \
         int: onetest_assert_ne_int_impl, \
         long: onetest_assert_ne_int_impl, \
         long long: onetest_assert_ne_int_impl, \
