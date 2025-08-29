@@ -35,6 +35,7 @@ Bytecode* handleAtom(Bytecode* bc, Stack* stack, Expression* expr) {
 Bytecode* nextInst(Bytecode* bc, Instruction inst) {
     bc->inst = inst;
     Bytecode* new = malloc(sizeof(Bytecode));
+    new->inst = -1;
     bc->next = new;
     new->prev = bc;
     new->next = NULL;
