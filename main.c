@@ -30,7 +30,7 @@ void usage() {
 
 int main(int argc, char* argv[]) {
     const char* filename = NULL;
-    
+
     // Parse command line arguments
     for (int i = 1; i < argc; i++) {
         if (strcmp(argv[i], "-D") == 0) {
@@ -46,12 +46,12 @@ int main(int argc, char* argv[]) {
             return 1;
         }
     }
-    
+
     if (filename != NULL) {
         const char* mod_name = basename((char*)filename);
         const char* text = file_to_string(filename);
-        
-        aria_interpret(mod_name, text);
+
+        ariaInterpret(mod_name, text);
     } else {
         // TODO: Proper repl
         usage();

@@ -7,7 +7,7 @@ int aria_debug_mode;
 
 // TODO: Implement a hash table here from crafting interpreters for variable assignment
 
-int aria_interpret(const char* name, const char* src) {
+int ariaInterpret(const char* name, const char* src) {
     Aria_Lexer lexer = {src, 0, {false, TOK_EOF, 0, 0}};
 
     if (aria_debug_mode) {
@@ -28,28 +28,28 @@ int aria_interpret(const char* name, const char* src) {
     state->curr = NULL;
     state->next = malloc(sizeof(Aria_Token));
     *state->next = scanToken(&lexer);
-    advance_state(state, &lexer);
+    advanceState(state, &lexer);
 
-    Expression expr = parse_expression(state, &lexer, 0.0);
+    Expression expr = parseExpression(state, &lexer, 0.0);
 
     if (aria_debug_mode) {
         printf("\n=== AST ===\n");
-        print_exprs(expr);
+        printExprs(expr);
         printf("\n");
     }
 
     // Convert AST to bytecode
     Stack* stack = createStack(1024);
-    Bytecode* bc = bytecode_generation(stack, expr);
+    Bytecode* bc = bytecodeGeneration(stack, expr);
     if (aria_debug_mode) {
-        print_bytecode(bc);
+        printBytecode(bc);
     }
 
     // execute bytecode
 
     // cleanup here
     freeStack(stack);
-    free_bytecode(bc);
+    freeBytecode(bc);
 
     return 0;
 }

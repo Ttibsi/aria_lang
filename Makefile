@@ -1,6 +1,7 @@
-CFLAGS := -Wall -Wextra -g
+CC := clang
+CFLAGS := -Wall -Wextra -g -MMD -MP
 
-sources := $(filter-out src/test.c,$(wildcard src/*.c))
+sources := $(wildcard src/*.c)
 objects := $(patsubst src/%.c,build/%.o,$(sources))
 
 .PHONY: all
@@ -14,19 +15,25 @@ build:
 	mkdir build
 
 build/%.o: src/%.c | build
-	$(CC) $< -c -MMD -MP -o $@ $(CFLAGS)
+	$(CC) $< -c -o $@ $(CFLAGS)
 
 build/main_obj.o: main.c
-	$(CC) $< -c -MMD -MP -o $@ $(CFLAGS)
+	$(CC) $< -c -o $@ $(CFLAGS)
 
 aria: $(objects) build/main_obj.o
-	$(CC) $^ -o $@ $(san)
+	$(CC) $^ -o $@
+
+##########################
 
 .PHONY: test
-test:
-	echo "todo"
+test: $(objects) | build
+	$(CC) $(CFLAGS) -std=c23 -Isrc -c tests/test.c -o build/test.o
+	$(CC) -Isrc build/test.o $^ -o $@
 
 .PHONY: clean
 clean:
 	rm -rf build
-	rm aria
+	if [ -f aria ]; then rm aria; fi
+	if [ -f test ]; then rm test; fi
+
+-include $(objects:.o=.d)

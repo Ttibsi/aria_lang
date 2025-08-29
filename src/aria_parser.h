@@ -3,6 +3,11 @@
 
 #include "aria_lexer.h"
 
+typedef struct {
+    float lhs;
+    float rhs;
+} BP;
+
 typedef enum {
     Atom,
     Operation
@@ -28,7 +33,9 @@ typedef struct {
     Aria_Token* next;
 } ParserState;
 
-Expression parse_expression(ParserState* state, Aria_Lexer* l, float min_bp);
-void print_exprs(Expression expr);
-void advance_state(ParserState* state, Aria_Lexer* l);
+BP infixBindingPower(char op);
+void advanceState(ParserState* state, Aria_Lexer* l);
+Expression parseExpression(ParserState* state, Aria_Lexer* l, float min_bp);
+void printExprs(Expression expr);
+void advanceState(ParserState* state, Aria_Lexer* l);
 #endif // ARIA_PARSER_H
