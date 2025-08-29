@@ -71,13 +71,13 @@ Aria_Token scanNumber(Aria_Lexer* l) {
 }
 
 Aria_Token scanIdentifier(Aria_Lexer* l) {
-    int start = l->pc;
+    int start = (l->pc - 1 > 0) ? l->pc : 0;
     int length = 0;
 
-    while (isalnum(peek(l)) || peek(l) == '_') {
-        advanceChar(l);
+    do {
         length++;
-    }
+        advanceChar(l);
+    } while (isalnum(peek(l)) || peek(l) == '_');
 
     // Check if it's a keyword
     for (int i = 0; i < keyword_count; i++) {
@@ -93,8 +93,8 @@ Aria_Token scanIdentifier(Aria_Lexer* l) {
 Aria_Token scanToken(Aria_Lexer* l) {
     skipWhitespace(l);
 
-    char c = advanceChar(l);
-    int start = l->pc - 1;
+    int start = l->pc;
+    char c = peek(l);
 
     if (c == '\0') {
         return makeToken(l, TOK_EOF, start, 0);
