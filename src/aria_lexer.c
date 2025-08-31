@@ -22,7 +22,7 @@ void skipWhitespace(Aria_Lexer* l) {
     }
 }
 
-Aria_Token makeToken(Aria_Lexer* l, TokenType type, int start, int length) {
+Aria_Token makeToken(TokenType type, int start, int length) {
     return (Aria_Token){
         .valid = true,
         .type = type,
@@ -35,9 +35,9 @@ Aria_Token scanEqualVariant(Aria_Lexer* l, TokenType single, TokenType equal) {
     int start = l->pc - 1;
     if (peek(l) == '=') {
         advanceChar(l);
-        return makeToken(l, equal, start, 2);
+        return makeToken(equal, start, 2);
     }
-    return makeToken(l, single, start, 1);
+    return makeToken(single, start, 1);
 }
 
 Aria_Token scanStringLiteral(Aria_Lexer* l) {
@@ -51,11 +51,11 @@ Aria_Token scanStringLiteral(Aria_Lexer* l) {
 
     if (peek(l) == '\0') {
         // TODO: Handle error case
-        return makeToken(l, TOK_EOF, start, 0);
+        return makeToken(TOK_EOF, start, 0);
     }
 
     advanceChar(l); // consume closing quote
-    return makeToken(l, TOK_STRING, start, length + 2);
+    return makeToken(TOK_STRING, start, length + 2);
 }
 
 Aria_Token scanNumber(Aria_Lexer* l) {
@@ -67,7 +67,7 @@ Aria_Token scanNumber(Aria_Lexer* l) {
         length++;
     } while (isdigit(peek(l)));
 
-    return makeToken(l, TOK_NUMBER, start, length);
+    return makeToken(TOK_NUMBER, start, length);
 }
 
 Aria_Token scanIdentifier(Aria_Lexer* l) {
@@ -83,11 +83,11 @@ Aria_Token scanIdentifier(Aria_Lexer* l) {
     for (int i = 0; i < keyword_count; i++) {
         if (keywords[i].len == length &&
             strncmp(l->source + start, keywords[i].kw, length) == 0) {
-            return makeToken(l, keywords[i].tok, start, length);
+            return makeToken(keywords[i].tok, start, length);
         }
     }
 
-    return makeToken(l, TOK_IDENTIFIER, start, length);
+    return makeToken(TOK_IDENTIFIER, start, length);
 }
 
 Aria_Token scanToken(Aria_Lexer* l) {
@@ -97,21 +97,21 @@ Aria_Token scanToken(Aria_Lexer* l) {
     char c = peek(l);
 
     if (c == '\0') {
-        return makeToken(l, TOK_EOF, start, 0);
+        return makeToken(TOK_EOF, start, 0);
     }
 
     switch (c) {
-        case '.': advanceChar(l); return makeToken(l, TOK_DOT, start, 1);
-        case ',': advanceChar(l); return makeToken(l, TOK_COMMA, start, 1);
-        case ';': advanceChar(l); return makeToken(l, TOK_SEMICOLON, start, 1);
-        case '-': advanceChar(l); return makeToken(l, TOK_MINUS, start, 1);
-        case '+': advanceChar(l); return makeToken(l, TOK_PLUS, start, 1);
-        case '*': advanceChar(l); return makeToken(l, TOK_STAR, start, 1);
-        case '/': advanceChar(l); return makeToken(l, TOK_SLASH, start, 1);
-        case '{': advanceChar(l); return makeToken(l, TOK_LEFT_BRACE, start, 1);
-        case '}': advanceChar(l); return makeToken(l, TOK_RIGHT_BRACE, start, 1);
-        case '(': advanceChar(l); return makeToken(l, TOK_LEFT_PAREN, start, 1);
-        case ')': advanceChar(l); return makeToken(l, TOK_RIGHT_PAREN, start, 1);
+        case '.': advanceChar(l); return makeToken(TOK_DOT, start, 1);
+        case ',': advanceChar(l); return makeToken(TOK_COMMA, start, 1);
+        case ';': advanceChar(l); return makeToken(TOK_SEMICOLON, start, 1);
+        case '-': advanceChar(l); return makeToken(TOK_MINUS, start, 1);
+        case '+': advanceChar(l); return makeToken(TOK_PLUS, start, 1);
+        case '*': advanceChar(l); return makeToken(TOK_STAR, start, 1);
+        case '/': advanceChar(l); return makeToken(TOK_SLASH, start, 1);
+        case '{': advanceChar(l); return makeToken(TOK_LEFT_BRACE, start, 1);
+        case '}': advanceChar(l); return makeToken(TOK_RIGHT_BRACE, start, 1);
+        case '(': advanceChar(l); return makeToken(TOK_LEFT_PAREN, start, 1);
+        case ')': advanceChar(l); return makeToken(TOK_RIGHT_PAREN, start, 1);
         case '!': advanceChar(l); return scanEqualVariant(l, TOK_BANG, TOK_BANG_EQUAL);
         case '=': advanceChar(l); return scanEqualVariant(l, TOK_EQUAL, TOK_EQUAL_EQUAL);
         case '<': advanceChar(l); return scanEqualVariant(l, TOK_LESS, TOK_LESS_EQUAL);
@@ -121,14 +121,14 @@ Aria_Token scanToken(Aria_Lexer* l) {
             if (peek(l) == '&') {
                 advanceChar(l);
                 advanceChar(l);
-                return makeToken(l, TOK_AND, start, 2);
+                return makeToken(TOK_AND, start, 2);
             }
             break;
         case '|':
             if (peek(l) == '|') {
                 advanceChar(l);
                 advanceChar(l);
-                return makeToken(l, TOK_OR, start, 2);
+                return makeToken(TOK_OR, start, 2);
             }
             break;
     }
@@ -142,7 +142,7 @@ Aria_Token scanToken(Aria_Lexer* l) {
     }
 
     // TODO: Handle error case
-    return makeToken(l, TOK_EOF, start, 0);
+    return makeToken(TOK_EOF, start, 0);
 }
 
 void advance(Aria_Lexer* l) {

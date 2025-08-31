@@ -97,7 +97,7 @@ char peek(Aria_Lexer* l);
 char peekNext(Aria_Lexer* l);
 char advanceChar(Aria_Lexer* l);
 void skipWhitespace(Aria_Lexer* l);
-Aria_Token makeToken(Aria_Lexer* l, TokenType type, int start, int length);
+Aria_Token makeToken(TokenType type, int start, int length);
 Aria_Token scanEqualVariant(Aria_Lexer* l, TokenType single, TokenType equal);
 Aria_Token scanStringLiteral(Aria_Lexer* l);
 Aria_Token scanNumber(Aria_Lexer* l);

@@ -74,18 +74,7 @@ static int test_skipWhitespace(void) {
 }
 
 static int test_makeToken(void) {
-    Aria_Lexer l = (Aria_Lexer){
-        .source = "3 + 4",
-        .pc = 0,
-        .current_token =  (Aria_Token){
-            .valid = true,
-            .type = TOK_NUMBER,
-            .start = 0,
-            .len = 1
-        }
-    };
-
-    Aria_Token tkn = makeToken(&l, TOK_PLUS, 2, 1);
+    Aria_Token tkn = makeToken(TOK_PLUS, 2, 1);
     onetest_assert_eq(tkn.valid, true);
     onetest_assert_eq(tkn.type, TOK_PLUS);
     onetest_assert_eq(tkn.start, 2);

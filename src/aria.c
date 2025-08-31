@@ -3,11 +3,16 @@
 #include <stdio.h>
 #include <stdlib.h>
 
+#include "aria_lexer.h"
+#include "aria_parser.h"
+#include "aria_bytecode.h"
+#include "aria_executor.h"
+
 int aria_debug_mode;
 
 // TODO: Implement a hash table here from crafting interpreters for variable assignment
 
-int ariaInterpret(const char* name, const char* src) {
+int ariaInterpret(const char* src) {
     Aria_Lexer lexer = {src, 0, {false, TOK_EOF, 0, 0}};
 
     if (aria_debug_mode) {
@@ -39,13 +44,15 @@ int ariaInterpret(const char* name, const char* src) {
     }
 
     // Convert AST to bytecode
-    Stack* stack = createStack(1024);
-    Bytecode* bc = bytecodeGeneration(stack, expr);
+    Bytecode* bc = bytecodeGeneration(expr);
     if (aria_debug_mode) {
         printBytecode(bc);
+        printf("\n");
     }
 
     // execute bytecode
+    Stack* stack = ariaExecute(bc);
+    printf("Result: %d\n", stackPeek(stack));
 
     // cleanup here
     freeStack(stack);

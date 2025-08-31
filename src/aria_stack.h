@@ -5,11 +5,11 @@
 
 typedef struct {
     int top;
-    unsigned capacity;
+    int capacity;
     int* array;
 } Stack;
 
-Stack* createStack(unsigned int capacity);
+Stack* createStack(int capacity);
 int isFull(Stack* stack);
 int isEmpty(Stack* stack);
 void stackPush(Stack* stack, int item);

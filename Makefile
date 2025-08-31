@@ -1,5 +1,5 @@
 CC := clang
-CFLAGS := -Wall -Wextra -g -MMD -MP
+CFLAGS := -Wall -Wextra -g -MMD -MP -std=c23
 
 sources := $(wildcard src/*.c)
 objects := $(patsubst src/%.c,build/%.o,$(sources))
@@ -7,9 +7,6 @@ objects := $(patsubst src/%.c,build/%.o,$(sources))
 .PHONY: all
 all: aria
 	./aria -D examples/01_var.ari
-
-debug:
-	$(error   VAR is $(sources))
 
 build:
 	mkdir build
@@ -27,7 +24,7 @@ aria: $(objects) build/main_obj.o
 
 .PHONY: test
 test: $(objects) | build
-	$(CC) $(CFLAGS) -std=c23 -Isrc -c tests/test.c -o build/test.o
+	$(CC) $(CFLAGS) -Isrc -c tests/test.c -o build/test.o
 	$(CC) -Isrc build/test.o $^ -o $@
 
 .PHONY: clean
