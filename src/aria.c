@@ -12,7 +12,7 @@ int aria_debug_mode;
 
 // TODO: Implement a hash table here from crafting interpreters for variable assignment
 
-int ariaInterpret(const char* name, const char* src) {
+int ariaInterpret(const char* src) {
     Aria_Lexer lexer = {src, 0, {false, TOK_EOF, 0, 0}};
 
     if (aria_debug_mode) {

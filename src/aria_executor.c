@@ -6,22 +6,24 @@ Stack* ariaExecute(Bytecode* bc) {
     Stack* stack = createStack(1024);
 
     do {
-        int a;
-        int b;
-
         switch (bc->inst) {
             case INST_LOAD_CONST:
                 stackPush(stack, bc->value);
                 break;
-            case INST_ADD:
-                b = stackPop(stack);
-                a = stackPop(stack);
-                stackPush(stack, a + b);
+            case INST_ADD: {
+                    int b = stackPop(stack);
+                    int a = stackPop(stack);
+                    stackPush(stack, a + b);
+                }
+
                 break;
-            case INST_MUL:
-                b = stackPop(stack);
-                a = stackPop(stack);
-                stackPush(stack, a*b);
+            case INST_MUL: {
+                    int b = stackPop(stack);
+                    int a = stackPop(stack);
+                    stackPush(stack, a*b);
+                }
+                break;
+            case INST_NULL:
                 break;
         }
 

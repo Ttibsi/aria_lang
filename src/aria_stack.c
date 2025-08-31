@@ -5,7 +5,7 @@
 #include <limits.h>
 
 // Function to create a stack of given capacity.
-Stack* createStack(unsigned int capacity) {
+Stack* createStack(int capacity) {
     Stack* stack = (Stack*)malloc(sizeof(Stack));
     if (!stack) {
         return NULL;

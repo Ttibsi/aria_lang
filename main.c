@@ -48,10 +48,9 @@ int main(int argc, char* argv[]) {
     }
 
     if (filename != NULL) {
-        const char* mod_name = basename((char*)filename);
         const char* text = file_to_string(filename);
 
-        ariaInterpret(mod_name, text);
+        ariaInterpret(text);
     } else {
         // TODO: Proper repl
         usage();
