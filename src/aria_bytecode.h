@@ -7,6 +7,8 @@ typedef enum {
     INST_LOAD_CONST,
     INST_ADD,
     INST_MUL,
+
+    INST_NULL,
 } Instruction;
 
 typedef struct _Bytecode {

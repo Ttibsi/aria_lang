@@ -35,7 +35,7 @@ Bytecode* nextInst(Bytecode* bc, Instruction inst, int value) {
     bc->inst = inst;
     bc->value = value;
     Bytecode* new = malloc(sizeof(Bytecode));
-    new->inst = -1;
+    new->inst = INST_NULL;
     bc->next = new;
     new->prev = bc;
     new->next = NULL;
