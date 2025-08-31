@@ -51,7 +51,7 @@ int ariaInterpret(const char* name, const char* src) {
     }
 
     // execute bytecode
-    Stack* stack = aria_execute(bc);
+    Stack* stack = ariaExecute(bc);
     printf("Result: %d\n", stackPeek(stack));
 
     // cleanup here

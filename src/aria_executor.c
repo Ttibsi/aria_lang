@@ -2,10 +2,10 @@
 
 #include "aria_executor.h"
 
-Stack* aria_execute(Bytecode* bc) {
+Stack* ariaExecute(Bytecode* bc) {
     Stack* stack = createStack(1024);
 
-    while (bc->next != NULL) {
+    do {
         int a;
         int b;
 
@@ -26,7 +26,7 @@ Stack* aria_execute(Bytecode* bc) {
         }
 
         bc = bc->next;
-    }
+    } while (bc != NULL);
 
     return stack;
 }

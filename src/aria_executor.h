@@ -4,6 +4,6 @@
 #include "aria_bytecode.h"
 #include "aria_stack.h"
 
-Stack* aria_execute(Bytecode* bc);
+Stack* ariaExecute(Bytecode* bc);
 
 #endif // ARIA_EXECUTOR_H
