@@ -16,11 +16,10 @@ Bytecode* handleOperation(Bytecode* bc, Expression* expr) {
     }
 
     switch (expr->op.ch) {
-        case '+':
-            bc = nextInst(bc, INST_ADD, 0);
-            break;
-        case '*':
-            bc = nextInst(bc, INST_MUL, 0);
+        case '+': bc = nextInst(bc, INST_ADD, 0); break;
+        case '-': bc = nextInst(bc, INST_SUB, 0); break;
+        case '*': bc = nextInst(bc, INST_MUL, 0); break;
+        case '/': bc = nextInst(bc, INST_DIV, 0); break;
     };
 
     return bc;

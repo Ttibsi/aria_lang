@@ -6,6 +6,7 @@
 #include "test_stack.h"
 #include "test_parser.h"
 #include "test_executor.h"
+#include "test_interpreter.h"
 
 int main(void) {
     onetest_test_t tests[] = {
@@ -37,6 +38,12 @@ int main(void) {
         ONETEST_TEST(test_stackPop),
         ONETEST_TEST(test_stackPeek),
         ONETEST_TEST(test_ariaExecute),
+        // test_interpreter.h
+        ONETEST_TEST(test_add),
+        ONETEST_TEST(test_subtract),
+        ONETEST_TEST(test_multiplication),
+        ONETEST_TEST(test_division),
+        ONETEST_TEST(test_brackets)
     };
 
     return onetest_exec(tests, sizeof(tests) / sizeof(tests[0]));

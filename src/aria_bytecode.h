@@ -6,7 +6,9 @@
 typedef enum {
     INST_LOAD_CONST,
     INST_ADD,
+    INST_SUB,
     INST_MUL,
+    INST_DIV,
 
     INST_NULL,
 } Instruction;
