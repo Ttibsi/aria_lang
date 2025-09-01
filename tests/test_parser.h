@@ -3,10 +3,10 @@
 
 static int test_infixBindingPower(void) {
     BP ret = infixBindingPower('+');
-    onetest_assert_eq(ret.lhs, 1.0);
+    onetest_assert(ret.lhs == 1.0);
 
     BP ret2 = infixBindingPower('/');
-    onetest_assert_eq(ret2.rhs, 2.1f);
+    onetest_assert(ret2.rhs == 2.1f);
     return 0;
 }
 
@@ -78,7 +78,7 @@ static int test_parseExpression(void) {
 
         Expression expr = parseExpression(state, &l, 0);
 
-        onetest_assert_eq(expr.type, Atom);
+        onetest_assert(expr.type == Atom);
 
         free(state->curr);
         free(state->next);
@@ -122,7 +122,7 @@ static int test_parseExpression(void) {
         Expression expr = parseExpression(state, &l, 0);
 
         // Just test that we got an atom back
-        onetest_assert_eq(expr.type, Atom);
+        onetest_assert(expr.type == Atom);
 
         free(state->curr);
         free(state->next);

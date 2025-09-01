@@ -22,9 +22,9 @@ static int test_handleOperation(void) {
 
     bc = handleOperation(bc, expr);
     // We're at the end of the chain here
-    onetest_assert_true(bc->inst == INST_NULL);
-    onetest_assert_true(bc->prev != NULL);
-    onetest_assert_true(bc->prev->inst == INST_ADD);
+    onetest_assert(bc->inst == INST_NULL);
+    onetest_assert(bc->prev != NULL);
+    onetest_assert(bc->prev->inst == INST_ADD);
 
     freeBytecode(bc);
     free(expr);
@@ -41,7 +41,7 @@ static int test_handleAtom(void) {
     expr->c = 5;
 
     bc = handleAtom(bc, expr);
-    onetest_assert_true(bc->prev->value == 5);
+    onetest_assert(bc->prev->value == 5);
     return 0;
 }
 
@@ -51,9 +51,9 @@ static int test_nextInst(void) {
 
     bc = nextInst(bc, INST_LOAD_CONST, 5);
 
-    onetest_assert_true(bc->prev->inst == INST_LOAD_CONST);
-    onetest_assert_true(bc->inst == INST_NULL);
-    onetest_assert_true(bc->next == NULL);
+    onetest_assert(bc->prev->inst == INST_LOAD_CONST);
+    onetest_assert(bc->inst == INST_NULL);
+    onetest_assert(bc->next == NULL);
     return 0;
 }
 
@@ -67,9 +67,9 @@ static int test_bytecodeGeneration(void) {
     expr->c = 42;
 
     Bytecode* bc1 = bytecodeGeneration(*expr);
-    onetest_assert_true(bc1->inst == INST_LOAD_CONST);
-    onetest_assert_true(bc1->value == 42);
-    onetest_assert_true(bc1->prev == NULL); // Should be root
+    onetest_assert(bc1->inst == INST_LOAD_CONST);
+    onetest_assert(bc1->value == 42);
+    onetest_assert(bc1->prev == NULL); // Should be root
     freeBytecode(bc1);
 
     // Test 2: Simple addition operation (5 + 3)
@@ -86,18 +86,18 @@ static int test_bytecodeGeneration(void) {
     Bytecode* bc2 = bytecodeGeneration(*expr);
 
     // Should be at root, first instruction should be LOAD_CONST for lhs
-    onetest_assert_true(bc2->inst == INST_LOAD_CONST);
-    onetest_assert_true(bc2->prev == NULL); // Root node
+    onetest_assert(bc2->inst == INST_LOAD_CONST);
+    onetest_assert(bc2->prev == NULL); // Root node
 
     // Navigate through the bytecode chain
     Bytecode* current = bc2;
-    onetest_assert_true(current->inst == INST_LOAD_CONST); // Load first operand
-    onetest_assert_true(current->value == 5);
+    onetest_assert(current->inst == INST_LOAD_CONST); // Load first operand
+    onetest_assert(current->value == 5);
     current = current->next;
-    onetest_assert_true(current->inst == INST_LOAD_CONST); // Load second operand
-    onetest_assert_true(current->value == 3);
+    onetest_assert(current->inst == INST_LOAD_CONST); // Load second operand
+    onetest_assert(current->value == 3);
     current = current->next;
-    onetest_assert_true(current->inst == INST_ADD); // Add operation
+    onetest_assert(current->inst == INST_ADD); // Add operation
 
     freeBytecode(bc2);
 
@@ -113,7 +113,7 @@ static int test_bytecodeGeneration(void) {
     while (current->next != NULL) {
         current = current->next;
     }
-    onetest_assert_true(current->inst == INST_NULL);
+    onetest_assert(current->inst == INST_NULL);
 
     freeBytecode(bc3);
     free(lhs);

@@ -8,7 +8,7 @@ static int test_ariaExecute(void) {
     bc->value = 5;
     bc->next = NULL;
     Stack* stack = ariaExecute(bc);
-    onetest_assert_true(stackPeek(stack) == 5);
+    onetest_assert(stackPeek(stack) == 5);
     freeStack(stack);
 
     bc->next = malloc(sizeof(Bytecode));
@@ -18,7 +18,7 @@ static int test_ariaExecute(void) {
     bc->next->next->inst = INST_ADD;
 
     stack = ariaExecute(bc);
-    onetest_assert_true(stackPeek(stack) == 8);
+    onetest_assert(stackPeek(stack) == 8);
 
     freeStack(stack);
     freeBytecode(bc);
