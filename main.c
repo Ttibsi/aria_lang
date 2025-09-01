@@ -50,7 +50,8 @@ int main(int argc, char* argv[]) {
     if (filename != NULL) {
         const char* text = file_to_string(filename);
 
-        ariaInterpret(text);
+        int result = ariaInterpret(text);
+        printf("result: %d\n", result);
     } else {
         // TODO: Proper repl
         usage();
