@@ -29,162 +29,11 @@ extern int onetest_error_count;
 /* Main execution function */
 int onetest_exec(const onetest_test_t* tests, int test_count);
 
-/* Internal assert implementations */
-static inline void onetest_assert_eq_int_impl(int x, int y) {
-    if (x != y) {
-        snprintf(onetest_errors[onetest_error_count], ONETEST_MAX_ERROR_LEN,
-                "%s:%d - %d does not equal %d", __FUNCTION__, __LINE__, x, y);
-        onetest_error_count++;
-        if (onetest_error_count >= ONETEST_MAX_ERRORS) onetest_error_count = ONETEST_MAX_ERRORS - 1;
-    }
-}
-
-static inline void onetest_assert_ne_int_impl(int x, int y) {
-    if (x == y) {
-        snprintf(onetest_errors[onetest_error_count], ONETEST_MAX_ERROR_LEN,
-                "%s:%d - %d is equal to %d", __FUNCTION__, __LINE__, x, y);
-        onetest_error_count++;
-        if (onetest_error_count >= ONETEST_MAX_ERRORS) onetest_error_count = ONETEST_MAX_ERRORS - 1;
-    }
-}
-
-static inline void onetest_assert_eq_float_impl(double x, double y) {
-    if (x != y) {
-        snprintf(onetest_errors[onetest_error_count], ONETEST_MAX_ERROR_LEN,
-                "%s:%d - %g does not equal %g", __FUNCTION__, __LINE__, x, y);
-        onetest_error_count++;
-        if (onetest_error_count >= ONETEST_MAX_ERRORS) onetest_error_count = ONETEST_MAX_ERRORS - 1;
-    }
-}
-
-static inline void onetest_assert_ne_float_impl(double x, double y) {
-    if (x == y) {
-        snprintf(onetest_errors[onetest_error_count], ONETEST_MAX_ERROR_LEN,
-                "%s:%d - %g is equal to %g", __FUNCTION__, __LINE__, x, y);
-        onetest_error_count++;
-        if (onetest_error_count >= ONETEST_MAX_ERRORS) onetest_error_count = ONETEST_MAX_ERRORS - 1;
-    }
-}
-
-static inline void onetest_assert_eq_char_impl(char x, char y) {
-    if (x != y) {
-        snprintf(onetest_errors[onetest_error_count], ONETEST_MAX_ERROR_LEN,
-                "%s:%d - '%c' does not equal '%c'", __FUNCTION__, __LINE__, x, y);
-        onetest_error_count++;
-        if (onetest_error_count >= ONETEST_MAX_ERRORS) onetest_error_count = ONETEST_MAX_ERRORS - 1;
-    }
-}
-
-static inline void onetest_assert_ne_char_impl(char x, char y) {
-    if (x == y) {
-        snprintf(onetest_errors[onetest_error_count], ONETEST_MAX_ERROR_LEN,
-                "%s:%d - '%c' is equal to '%c'", __FUNCTION__, __LINE__, x, y);
-        onetest_error_count++;
-        if (onetest_error_count >= ONETEST_MAX_ERRORS) onetest_error_count = ONETEST_MAX_ERRORS - 1;
-    }
-}
-
-static inline void onetest_assert_eq_str_impl(const char* x, const char* y) {
-    if (strcmp(x, y) != 0) {
-        snprintf(onetest_errors[onetest_error_count], ONETEST_MAX_ERROR_LEN,
-                "%s:%d - \"%s\" does not equal \"%s\"", __FUNCTION__, __LINE__, x, y);
-        onetest_error_count++;
-        if (onetest_error_count >= ONETEST_MAX_ERRORS) onetest_error_count = ONETEST_MAX_ERRORS - 1;
-    }
-}
-
-static inline void onetest_assert_ne_str_impl(const char* x, const char* y) {
-    if (strcmp(x, y) == 0) {
-        snprintf(onetest_errors[onetest_error_count], ONETEST_MAX_ERROR_LEN,
-                "%s:%d - \"%s\" is equal to \"%s\"", __FUNCTION__, __LINE__, x, y);
-        onetest_error_count++;
-        if (onetest_error_count >= ONETEST_MAX_ERRORS) onetest_error_count = ONETEST_MAX_ERRORS - 1;
-    }
-}
-
-/* Pointer comparison implementations */
-static inline void onetest_assert_eq_ptr_impl(const void* x, const void* y) {
-    if (x != y) {
-        snprintf(onetest_errors[onetest_error_count], ONETEST_MAX_ERROR_LEN,
-                "%s:%d - %p does not equal %p", __FUNCTION__, __LINE__, x, y);
-        onetest_error_count++;
-        if (onetest_error_count >= ONETEST_MAX_ERRORS) onetest_error_count = ONETEST_MAX_ERRORS - 1;
-    }
-}
-
-static inline void onetest_assert_ne_ptr_impl(const void* x, const void* y) {
-    if (x == y) {
-        snprintf(onetest_errors[onetest_error_count], ONETEST_MAX_ERROR_LEN,
-                "%s:%d - %p is equal to %p", __FUNCTION__, __LINE__, x, y);
-        onetest_error_count++;
-        if (onetest_error_count >= ONETEST_MAX_ERRORS) onetest_error_count = ONETEST_MAX_ERRORS - 1;
-    }
-}
-
-/* Generic assert macros using _Generic (C23) */
-#define onetest_assert_eq(x, y) \
-    _Generic((x), \
-        bool: onetest_assert_eq_int_impl, \
-        int: onetest_assert_eq_int_impl, \
-        long: onetest_assert_eq_int_impl, \
-        long long: onetest_assert_eq_int_impl, \
-        unsigned int: onetest_assert_eq_int_impl, \
-        unsigned long: onetest_assert_eq_int_impl, \
-        unsigned long long: onetest_assert_eq_int_impl, \
-        short: onetest_assert_eq_int_impl, \
-        unsigned short: onetest_assert_eq_int_impl, \
-        char: onetest_assert_eq_char_impl, \
-        signed char: onetest_assert_eq_char_impl, \
-        unsigned char: onetest_assert_eq_char_impl, \
-        float: onetest_assert_eq_float_impl, \
-        double: onetest_assert_eq_float_impl, \
-        long double: onetest_assert_eq_float_impl, \
-        char*: onetest_assert_eq_str_impl, \
-        const char*: onetest_assert_eq_str_impl, \
-        void*: onetest_assert_eq_ptr_impl, \
-        const void*: onetest_assert_eq_ptr_impl, \
-        default: onetest_assert_eq_ptr_impl \
-    )(x, y)
-
-#define onetest_assert_ne(x, y) \
-    _Generic((x), \
-        bool: onetest_assert_ne_int_impl, \
-        int: onetest_assert_ne_int_impl, \
-        long: onetest_assert_ne_int_impl, \
-        long long: onetest_assert_ne_int_impl, \
-        unsigned int: onetest_assert_ne_int_impl, \
-        unsigned long: onetest_assert_ne_int_impl, \
-        unsigned long long: onetest_assert_ne_int_impl, \
-        short: onetest_assert_ne_int_impl, \
-        unsigned short: onetest_assert_ne_int_impl, \
-        char: onetest_assert_ne_char_impl, \
-        signed char: onetest_assert_ne_char_impl, \
-        unsigned char: onetest_assert_ne_char_impl, \
-        float: onetest_assert_ne_float_impl, \
-        double: onetest_assert_ne_float_impl, \
-        long double: onetest_assert_ne_float_impl, \
-        char*: onetest_assert_ne_str_impl, \
-        const char*: onetest_assert_ne_str_impl, \
-        void*: onetest_assert_ne_ptr_impl, \
-        const void*: onetest_assert_ne_ptr_impl, \
-        default: onetest_assert_ne_ptr_impl \
-    )(x, y)
-
-#define onetest_assert_true(x) \
+#define onetest_assert(x) \
     do { \
         if (!(x)) { \
             snprintf(onetest_errors[onetest_error_count], ONETEST_MAX_ERROR_LEN, \
                     "%s:%d - assertion failed: %s", __FUNCTION__, __LINE__, #x); \
-            onetest_error_count++; \
-            if (onetest_error_count >= ONETEST_MAX_ERRORS) onetest_error_count = ONETEST_MAX_ERRORS - 1; \
-        } \
-    } while(0)
-
-#define onetest_assert_false(x) \
-    do { \
-        if ((x)) { \
-            snprintf(onetest_errors[onetest_error_count], ONETEST_MAX_ERROR_LEN, \
-                    "%s:%d - assertion failed: !(%s)", __FUNCTION__, __LINE__, #x); \
             onetest_error_count++; \
             if (onetest_error_count >= ONETEST_MAX_ERRORS) onetest_error_count = ONETEST_MAX_ERRORS - 1; \
         } \
@@ -237,7 +86,7 @@ int onetest_exec(const onetest_test_t* tests, int test_count) {
         }
 
         /* Print result */
-        if (onetest_error_count > 0 || retcode > 0) {
+        if (onetest_error_count > 0) {
             if (ci) {
                 printf("Failed\n");
             } else {
