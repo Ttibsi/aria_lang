@@ -7,6 +7,7 @@
 #include "test_parser.h"
 #include "test_executor.h"
 #include "test_interpreter.h"
+#include "test_hash.h"
 
 int main(void) {
     onetest_test_t tests[] = {
@@ -43,7 +44,13 @@ int main(void) {
         ONETEST_TEST(test_subtract),
         ONETEST_TEST(test_multiplication),
         ONETEST_TEST(test_division),
-        ONETEST_TEST(test_brackets)
+        ONETEST_TEST(test_brackets),
+        // test_hash.h
+        ONETEST_TEST(test_mapCreate),
+        ONETEST_TEST(test_mapInsert),
+        ONETEST_TEST(test_mapRemove),
+        ONETEST_TEST(test_mapFind),
+        ONETEST_TEST(test_hash),
     };
 
     return onetest_exec(tests, sizeof(tests) / sizeof(tests[0]));
