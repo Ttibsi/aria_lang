@@ -32,5 +32,6 @@ clean:
 	rm -rf build
 	if [ -f aria ]; then rm aria; fi
 	if [ -f test ]; then rm test; fi
+	if [ -f core ]; then rm core; fi
 
 -include $(objects:.o=.d)
