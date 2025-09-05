@@ -47,10 +47,11 @@ int main(void) {
         ONETEST_TEST(test_brackets),
         // test_hash.h
         ONETEST_TEST(test_mapCreate),
+        ONETEST_TEST(test_hash),
         ONETEST_TEST(test_mapInsert),
         ONETEST_TEST(test_mapRemove),
+        ONETEST_TEST(test_mapExists),
         ONETEST_TEST(test_mapFind),
-        ONETEST_TEST(test_hash),
     };
 
     return onetest_exec(tests, sizeof(tests) / sizeof(tests[0]));
