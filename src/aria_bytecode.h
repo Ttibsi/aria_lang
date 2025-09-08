@@ -9,6 +9,7 @@ typedef enum {
     INST_SUB,
     INST_MUL,
     INST_DIV,
+    INST_PRINT,
 
     INST_NULL,
 } Instruction;

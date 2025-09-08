@@ -49,15 +49,29 @@ void stateAssert(ParserState* state, int lineno, int count, ...) {
 }
 
 Expression parseExpression(ParserState* state, Aria_Lexer* l, float min_bp) {
-    stateAssert(state, __LINE__, 2, TOK_NUMBER, TOK_LEFT_PAREN);
+    stateAssert(state, __LINE__, 3, TOK_NUMBER, TOK_LEFT_PAREN, TOK_PRINT);
     Expression lhs = {0};
 
     switch (state->curr->type) {
         case TOK_NUMBER:
             lhs = (Expression){
                 .type = Atom,
-                .c = getTokenNumber(l, *state->curr)
+                .atom = {
+                    .c = getTokenNumber(l, *state->curr),
+                    .stmt_type = STMT_LOAD
+                },
             };
+            break;
+
+        case TOK_PRINT:
+            lhs = (Expression){
+                .type = Atom,
+                .atom = {
+                    .c = getTokenNumber(l, *state->next),
+                    .stmt_type = STMT_PRINT
+                },
+            };
+            advanceState(state, l);
             break;
 
         case TOK_LEFT_PAREN:
@@ -119,6 +133,6 @@ void printExprs(Expression expr) {
         printf(")");
     } else {
         // Atom
-        printf(" %i ", expr.c);
+        printf(" %i ", expr.atom.c);
     }
 }

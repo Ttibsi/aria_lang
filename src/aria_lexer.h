@@ -41,6 +41,7 @@ typedef enum {
     TOK_FOR,            // 27
     TOK_FUNC,           // 28
     TOK_IF,             // 29
+    TOK_PRINT,          // 30
     TOK_RETURN,         // 30
     TOK_STATIC,         // 31
     TOK_SWITCH,         // 32
@@ -85,6 +86,7 @@ static const Keyword keywords[] = {
     { "for",     3,  TOK_FOR      },  // 27
     { "func",    4,  TOK_FUNC     },  // 28
     { "if",      2,  TOK_IF       },  // 29
+    { "print",   5,  TOK_PRINT    },
     { "return",  6,  TOK_RETURN   },  // 30
     { "static",  6,  TOK_STATIC   },  // 31
     { "switch",  6,  TOK_SWITCH   },  // 32

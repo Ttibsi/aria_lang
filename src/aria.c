@@ -52,11 +52,11 @@ int ariaInterpret(const char* src) {
 
     // execute bytecode
     Stack* stack = ariaExecute(bc);
-    int result = stackPeek(stack);
+    // int result = stackPeek(stack);
 
     // cleanup here
     freeStack(stack);
     freeBytecode(bc);
 
-    return result;
+    return 0;
 }
