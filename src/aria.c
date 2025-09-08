@@ -52,6 +52,8 @@ int ariaInterpret(const char* src) {
 
     // execute bytecode
     Stack* stack = ariaExecute(bc);
+
+    if (isEmpty(stack)) { stackPush(stack, 0); }
     int result = stackPeek(stack);
 
     // cleanup here

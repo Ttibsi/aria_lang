@@ -45,6 +45,7 @@ int main(void) {
         ONETEST_TEST(test_multiplication),
         ONETEST_TEST(test_division),
         ONETEST_TEST(test_brackets),
+        ONETEST_TEST(test_printing),
         // test_hash.h
         ONETEST_TEST(test_mapCreate),
         ONETEST_TEST(test_hash),

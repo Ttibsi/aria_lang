@@ -49,9 +49,7 @@ int main(int argc, char* argv[]) {
 
     if (filename != NULL) {
         const char* text = file_to_string(filename);
-
-        int result = ariaInterpret(text);
-        printf("result: %d\n", result);
+        ariaInterpret(text);
     } else {
         // TODO: Proper repl
         usage();

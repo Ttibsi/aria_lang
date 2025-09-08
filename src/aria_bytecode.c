@@ -26,7 +26,10 @@ Bytecode* handleOperation(Bytecode* bc, Expression* expr) {
 }
 
 Bytecode* handleAtom(Bytecode* bc, Expression* expr) {
-    bc = nextInst(bc, INST_LOAD_CONST, expr->c);
+    switch (expr->atom.stmt_type) {
+        case STMT_LOAD: bc = nextInst(bc, INST_LOAD_CONST, expr->atom.c); break;
+        case STMT_PRINT: bc = nextInst(bc, INST_PRINT, expr->atom.c); break;
+    }
     return bc;
 }
 

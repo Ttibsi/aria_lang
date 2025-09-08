@@ -1,4 +1,5 @@
 #include <stddef.h>
+#include <stdio.h>
 
 #include "aria_executor.h"
 
@@ -30,9 +31,12 @@ Stack* ariaExecute(Bytecode* bc) {
                     int a = stackPop(stack);
                     stackPush(stack, a/b);
                 } break;
+            case INST_PRINT:
+                printf("%d\n", bc->value);
+                break;
             case INST_NULL:
                 break;
-        }
+            }
 
         bc = bc->next;
     } while (bc != NULL);

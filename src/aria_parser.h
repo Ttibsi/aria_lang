@@ -9,6 +9,11 @@ typedef struct {
 } BP;
 
 typedef enum {
+    STMT_LOAD,
+    STMT_PRINT
+} StmtType;
+
+typedef enum {
     Atom,
     Operation
 } ExprType;
@@ -17,7 +22,10 @@ struct Expr;
 typedef struct Expr {
     ExprType type;
     union {
-        int c;
+        struct {
+            int c;
+            StmtType stmt_type;
+        } atom;
 
         struct {
             char ch;
