@@ -11,9 +11,9 @@ static int test_handleOperation(void) {
     Expression* rhs = malloc(sizeof(Expression));
 
     lhs->type = Atom;
-    lhs->c = 5;
+    lhs->atom.c = 5;
     rhs->type = Atom;
-    rhs->c = 2;
+    rhs->atom.c = 2;
 
     expr->type = Operation;
     expr->op.ch = '+';
@@ -38,7 +38,7 @@ static int test_handleAtom(void) {
     Bytecode* bc = malloc(sizeof(Bytecode));
     Expression* expr = malloc(sizeof(Expression));
     expr->type = Atom;
-    expr->c = 5;
+    expr->atom.c = 5;
 
     bc = handleAtom(bc, expr);
     onetest_assert(bc->prev->value == 5);
@@ -64,7 +64,7 @@ static int test_bytecodeGeneration(void) {
 
     // Test 1: Simple atom expression
     expr->type = Atom;
-    expr->c = 42;
+    expr->atom.c = 42;
 
     Bytecode* bc1 = bytecodeGeneration(*expr);
     onetest_assert(bc1->inst == INST_LOAD_CONST);
@@ -74,9 +74,9 @@ static int test_bytecodeGeneration(void) {
 
     // Test 2: Simple addition operation (5 + 3)
     lhs->type = Atom;
-    lhs->c = 5;
+    lhs->atom.c = 5;
     rhs->type = Atom;
-    rhs->c = 3;
+    rhs->atom.c = 3;
 
     expr->type = Operation;
     expr->op.ch = '+';
@@ -102,8 +102,8 @@ static int test_bytecodeGeneration(void) {
     freeBytecode(bc2);
 
     // Test 3: Simple multiplication operation (7 * 2)
-    lhs->c = 7;
-    rhs->c = 2;
+    lhs->atom.c = 7;
+    rhs->atom.c = 2;
     expr->op.ch = '*';
 
     Bytecode* bc3 = bytecodeGeneration(*expr);

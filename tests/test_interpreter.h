@@ -31,3 +31,9 @@ static int test_brackets(void) {
     onetest_assert(result == 69);
     return 0;
 }
+
+static int test_printing(void) {
+    int result = ariaInterpret("print 5;");
+    onetest_assert(result == 0);
+    return 0;
+}
