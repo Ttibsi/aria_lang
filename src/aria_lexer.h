@@ -37,24 +37,26 @@ typedef enum {
     TOK_CONST,          // 23
     TOK_DEFAULT,        // 24
     TOK_ELSE,           // 25
-    TOK_FALSE,          // 26
-    TOK_FOR,            // 27
-    TOK_FUNC,           // 28
-    TOK_IF,             // 29
-    TOK_PRINT,          // 30
-    TOK_RETURN,         // 30
-    TOK_STATIC,         // 31
-    TOK_SWITCH,         // 32
-    TOK_TRUE,           // 33
-    TOK_VAR,            // 34
+    TOK_EXPORT,         // 26
+    TOK_FALSE,          // 27
+    TOK_FOR,            // 28
+    TOK_FUNC,           // 29
+    TOK_IF,             // 30
+    TOK_IMPORT,         // 31
+    TOK_PRINT,          // 32
+    TOK_RETURN,         // 33
+    TOK_STATIC,         // 34
+    TOK_SWITCH,         // 35
+    TOK_TRUE,           // 36
+    TOK_VAR,            // 37
 
     // Literals.
-    TOK_IDENTIFIER,     // 35
-    TOK_STRING,         // 36
-    TOK_NUMBER,         // 37
+    TOK_IDENTIFIER,     // 38
+    TOK_STRING,         // 39
+    TOK_NUMBER,         // 40
 
-    TOK_ERROR,          // 38
-    TOK_EOF             // 39
+    TOK_ERROR,          // 41
+    TOK_EOF             // 42
 } TokenType;
 
 typedef struct {
@@ -67,6 +69,7 @@ typedef struct {
 typedef struct {
     const char* source;
     int pc; // program counter
+    Aria_Token first_token;
     Aria_Token current_token;
 } Aria_Lexer;
 
@@ -82,16 +85,18 @@ static const Keyword keywords[] = {
     { "const",   5,  TOK_CONST    },  // 23
     { "default", 7,  TOK_DEFAULT  },  // 24
     { "else",    4,  TOK_ELSE     },  // 25
-    { "false",   5,  TOK_FALSE    },  // 26
-    { "for",     3,  TOK_FOR      },  // 27
-    { "func",    4,  TOK_FUNC     },  // 28
-    { "if",      2,  TOK_IF       },  // 29
-    { "print",   5,  TOK_PRINT    },
-    { "return",  6,  TOK_RETURN   },  // 30
-    { "static",  6,  TOK_STATIC   },  // 31
-    { "switch",  6,  TOK_SWITCH   },  // 32
-    { "true",    4,  TOK_TRUE     },  // 33
-    { "var",     3,  TOK_VAR      },  // 34
+    { "export",  6,  TOK_EXPORT   },  // 26
+    { "false",   5,  TOK_FALSE    },  // 27
+    { "for",     3,  TOK_FOR      },  // 28
+    { "func",    4,  TOK_FUNC     },  // 29
+    { "if",      2,  TOK_IF       },  // 30
+    { "import",  6,  TOK_IMPORT   },  // 31
+    { "print",   5,  TOK_PRINT    },  // 32
+    { "return",  6,  TOK_RETURN   },  // 33
+    { "static",  6,  TOK_STATIC   },  // 34
+    { "switch",  6,  TOK_SWITCH   },  // 35
+    { "true",    4,  TOK_TRUE     },  // 36
+    { "var",     3,  TOK_VAR      },  // 37
 };
 static const int keyword_count = sizeof(keywords) / sizeof(keywords[0]);
 

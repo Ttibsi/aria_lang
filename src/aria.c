@@ -4,7 +4,7 @@
 #include <stdlib.h>
 
 #include "aria_lexer.h"
-#include "aria_parser.h"
+#include "aria_parser2.h"
 #include "aria_bytecode.h"
 #include "aria_executor.h"
 
@@ -13,7 +13,7 @@ int aria_debug_mode;
 // TODO: Implement a hash table here from crafting interpreters for variable assignment
 
 int ariaInterpret(const char* src) {
-    Aria_Lexer lexer = {src, 0, {false, TOK_EOF, 0, 0}};
+    Aria_Lexer lexer = {src, 0, {false, TOK_EOF, 0, 0}, {false, TOK_EOF, 0, 0}};
 
     if (aria_debug_mode) {
         printf("=== TOKENS ===\n");
@@ -28,20 +28,24 @@ int ariaInterpret(const char* src) {
     }
 
     // Parse into AST
-    ParserState* state = malloc(sizeof(ParserState));
-    state->prev = NULL;
-    state->curr = NULL;
-    state->next = malloc(sizeof(Aria_Token));
-    *state->next = scanToken(&lexer);
-    advanceState(state, &lexer);
+    // ParserState* state = malloc(sizeof(ParserState));
+    // state->prev = NULL;
+    // state->curr = NULL;
+    // state->next = malloc(sizeof(Aria_Token));
+    // *state->next = scanToken(&lexer);
+    // advanceState(state, &lexer);
 
-    Expression expr = parseExpression(state, &lexer, 0.0);
+    // Expression expr = parseExpression(state, &lexer, 0.0);
+    ASTNode ast = ariaParse(&lexer);
 
     if (aria_debug_mode) {
         printf("\n=== AST ===\n");
-        printExprs(expr);
+        printAST(ast);
+        // printExprs(expr);
         printf("\n");
     }
+
+    return 0;
 
     // Convert AST to bytecode
     Bytecode* bc = bytecodeGeneration(expr);
