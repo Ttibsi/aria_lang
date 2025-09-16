@@ -37,6 +37,7 @@ ASTNode parseFunc(Aria_Lexer* l) {
     strcpy(node.func.func_name, l->source + l->current_token.start);
 
     // arguments
+    while (peek(l) != TOK_RIGHT_BRACE) { /* TODO */ }
 
     // body
     while (
