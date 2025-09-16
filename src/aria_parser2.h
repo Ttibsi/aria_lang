@@ -2,9 +2,11 @@
 #define ARIA_PARSER_H
 
 #include "aria_lexer.h"
+#include "aria_buffer.h"
 
 typedef enum {
     AST_BLOCK,
+    AST_FUNC,
     AST_ERR,
 } ASTType;
 

@@ -1,6 +1,8 @@
 #ifndef ARIA_BUFFER_H
 #define ARIA_BUFFER_H
 
+#include <stdint.h>
+
 typedef struct {
     uint32_t size;
     uint32_t capacity;
