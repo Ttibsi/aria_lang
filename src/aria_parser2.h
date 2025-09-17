@@ -18,7 +18,7 @@ typedef struct _ASTNode {
         } block;
 
         struct {
-            const char* func_name;
+            char* func_name;
             Aria_Token args[8];
             Aria_Buffer body;
         } func;

@@ -5,7 +5,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-void parsingError(void) { assert(0 && "Parsing error"); }
+void parsingError(const char* msg) { assert(0 && msg); }
 
 ASTNode parseExpression(Aria_Lexer* l) {
     switch (peek(l)) {
@@ -17,10 +17,10 @@ ASTNode parseExpression(Aria_Lexer* l) {
         case TOK_SWITCH: break;
         case TOK_VAR: break;
         case TOK_IDENTIFIER: break;
-        default: parsingError(); break;
+        default: parsingError("Incorrect token found in parseExpression"); break;
     };
 
-    parsingError();
+    parsingError("Incorrect token found in parseExpression");
     return (ASTNode){.type = AST_ERR};
 }
 
@@ -29,24 +29,34 @@ ASTNode parseClass(Aria_Lexer* l) { assert(0 && "TODO"); }
 ASTNode parseExport(Aria_Lexer* l) { assert(0 && "TODO"); }
 
 ASTNode parseFunc(Aria_Lexer* l) {
-    if (!match(l, TOK_FUNC)) { parsingError(); }
+    if (!match(l, TOK_FUNC)) { parsingError("parseFunc called with incorrect token"); }
     ASTNode node = createNode(AST_FUNC);
 
     // function name
     node.func.func_name = malloc(sizeof(char) * l->current_token.len + 1);
     strcpy(node.func.func_name, l->source + l->current_token.start);
+    advance(l);
 
     // arguments
-    while (peek(l) != TOK_RIGHT_BRACE) { /* TODO */ }
+    if (!match(l, TOK_LEFT_BRACE)) { parsingError("Function name not followed by open bracket"); }
+    int args_idx = 0;
+    while (!check(l, TOK_RIGHT_BRACE)) {
+        if (!check(l, TOK_IDENTIFIER)) { parsingError("function args contain non-identifiers"); }
+        if (args_idx >= 8) { parsingError("Function has too many arguments"); }
+        //TODO
+
+        args_idx++;
+    }
 
     // body
     while (
-        peek(l) != TOK_FUNC ||
-        peek(l) != TOK_CLASS ||
-        peek(l) != TOK_EXPORT ||
-        peek(l) != TOK_IMPORT
+        check(l, TOK_FUNC) ||
+        check(l, TOK_CLASS) ||
+        check(l, TOK_EXPORT) ||
+        check(l, TOK_IMPORT)
     ) {
-        bufferInsert(node.func.body, parseExpression(l));
+        ASTNode node = parseExpression(l);
+        bufferInsert(node.func.body, (void*)&node);
     }
 
     return node;
@@ -55,18 +65,6 @@ ASTNode parseFunc(Aria_Lexer* l) {
 ASTNode parseImport(Aria_Lexer* l) { assert(0 && "TODO"); }
 
 ASTNode ariaParse(Aria_Lexer* l) {
-    // if (!(
-    //     check(l, TOK_CLASS) ||
-    //     check(l, TOK_EXPORT) ||
-    //     check(l, TOK_FUNC) ||
-    //     check(l, TOK_IMPORT) ||
-    //     check(l, TOK_ERROR) ||
-    //     check(l, TOK_EOF)
-    // )) {
-    //     fprintf(stderr, "Unexpected token at line %d\n", __LINE__);
-    //     assert(0);
-    // }
-    //
     switch (l->current_token.type) {
         case TOK_CLASS:
             return parseClass(l);
