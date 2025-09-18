@@ -1,6 +1,7 @@
 #define ONETEST_IMPLEMENTATION
 #include "onetest.h"
 
+#include "test_buffer.h"
 #include "test_bytecode.h"
 #include "test_lexer.h"
 #include "test_stack.h"
@@ -53,6 +54,11 @@ int main(void) {
         ONETEST_TEST(test_mapRemove),
         ONETEST_TEST(test_mapExists),
         ONETEST_TEST(test_mapFind),
+        // test_buffer.h
+        ONETEST_TEST(test_bufferCreate),
+        ONETEST_TEST(test_bufferFree),
+        ONETEST_TEST(test_bufferInsert),
+        ONETEST_TEST(test_bufferGet),
     };
 
     return onetest_exec(tests, sizeof(tests) / sizeof(tests[0]));
