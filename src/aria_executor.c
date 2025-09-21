@@ -1,3 +1,4 @@
+#if 0
 #include <stddef.h>
 #include <stdio.h>
 
@@ -43,3 +44,4 @@ Stack* ariaExecute(Bytecode* bc) {
 
     return stack;
 }
+#endif

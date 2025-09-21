@@ -3,6 +3,7 @@
 
 #include <stdint.h>
 #include <stdlib.h>
+#include <string.h>
 
 typedef struct {
     uint32_t size;
@@ -11,14 +12,14 @@ typedef struct {
     void* items;
 } Aria_Buffer;
 
-Aria_Buffer bufferCreate(uint32_t elem_size, uint32_t cap);
-void bufferFree(Aria_Buffer buf);
-void bufferInsert(Aria_Buffer buf, void* elem);
-void* bufferGet(Aria_Buffer buf, uint32_t idx);
+static Aria_Buffer bufferCreate(uint32_t elem_size, uint32_t cap);
+static void bufferFree(Aria_Buffer buf);
+static void bufferInsert(Aria_Buffer* buf, void* elem);
+static void* bufferGet(Aria_Buffer buf, uint32_t idx);
 
 #ifdef ARIA_BUFFER_IMPL
 
-Aria_Buffer bufferCreate(uint32_t elem_size, uint32_t cap) {
+static Aria_Buffer bufferCreate(uint32_t elem_size, uint32_t cap) {
     Aria_Buffer buf = {
         .size = 0,
         .capacity = cap,
@@ -29,24 +30,24 @@ Aria_Buffer bufferCreate(uint32_t elem_size, uint32_t cap) {
     return buf;
 }
 
-void bufferFree(Aria_Buffer buf) {
+static void bufferFree(Aria_Buffer buf) {
     free(buf.items);
     buf.capacity = 0;
 }
 
-void bufferInsert(Aria_Buffer buf, void* elem) {
-    if (buf.size == buf.capacity) {
-        buf.capacity *= 2;
-        realloc(buf.items, buf.capacity);
+static void bufferInsert(Aria_Buffer* buf, void* elem) {
+    if (buf->size == buf->capacity) {
+        buf->capacity *= 2;
+        realloc(buf->items, buf->capacity);
     }
 
-    buf.items[buf.size] = elem;
-    buf.size++;
+    memcpy(buf->items + (buf->elem_size * buf->size), elem, buf->elem_size);
+    buf->size++;
 }
 
-void* bufferGet(Aria_Buffer buf, uint32_t idx) {
+static void* bufferGet(Aria_Buffer buf, uint32_t idx) {
     if (idx > buf.size) { return NULL; }
-    return buf[idx];
+    return buf.items + (buf.elem_size * idx);
 }
 
 #endif // ARIA_BUFFER_IMPL

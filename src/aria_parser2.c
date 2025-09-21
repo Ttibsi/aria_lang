@@ -56,7 +56,7 @@ ASTNode parseFunc(Aria_Lexer* l) {
         check(l, TOK_IMPORT)
     ) {
         ASTNode node = parseExpression(l);
-        bufferInsert(node.func.body, (void*)&node);
+        bufferInsert(&node.func.body, (void*)&node);
     }
 
     return node;
