@@ -7,16 +7,31 @@
 
 void parsingError(const char* msg) { assert(0 && msg); }
 
+ASTNode parseConst(Aria_Lexer* l) { assert(0 && "TODO"); }
+ASTNode parseFor(Aria_Lexer* l) { assert(0 && "TODO"); }
+ASTNode parseIf(Aria_Lexer* l) { assert(0 && "TODO"); }
+ASTNode parsePrint(Aria_Lexer* l) { assert(0 && "TODO"); }
+
+ASTNode parseReturn(Aria_Lexer* l) {
+    ASTNode node = createNode(AST_VALUE);
+    node.value = getTokenNumber(l, l->current_token);
+    return node;
+
+}
+ASTNode parseSwitch(Aria_Lexer* l) { assert(0 && "TODO"); }
+ASTNode parseVar(Aria_Lexer* l) { assert(0 && "TODO"); }
+ASTNode parseIdentifier(Aria_Lexer* l) { assert(0 && "TODO"); }
+
 ASTNode parseExpression(Aria_Lexer* l) {
     switch (peek(l)) {
-        case TOK_CONST: break;
-        case TOK_FOR: break;
-        case TOK_IF: break;
-        case TOK_PRINT: break;
-        case TOK_RETURN: break;
-        case TOK_SWITCH: break;
-        case TOK_VAR: break;
-        case TOK_IDENTIFIER: break;
+        case TOK_CONST: parseConst(l); break;
+        case TOK_FOR: parseFor(l); break;
+        case TOK_IF: parseIf(l); break;
+        case TOK_PRINT: parsePrint(l); break;
+        case TOK_RETURN: parseReturn(l); break;
+        case TOK_SWITCH: parseSwitch(l); break;
+        case TOK_VAR: parseVar(l); break;
+        case TOK_IDENTIFIER: parseIdentifier(l); break;
         default: parsingError("Incorrect token found in parseExpression"); break;
     };
 

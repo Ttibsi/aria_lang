@@ -8,6 +8,8 @@
 typedef enum {
     AST_BLOCK,
     AST_FUNC,
+    AST_VALUE,
+
     AST_ERR,
 } ASTType;
 
@@ -23,6 +25,8 @@ typedef struct _ASTNode {
             Aria_Token args[8];
             Aria_Buffer body;
         } func;
+
+        int value;
     };
 } ASTNode;
 
