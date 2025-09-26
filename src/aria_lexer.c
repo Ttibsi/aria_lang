@@ -1,6 +1,9 @@
+#define ARIA_BUFFER_IMPL
 #include "aria_lexer.h"
+#include "aria_buffer.h"
 
 #include <ctype.h>
+#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 
@@ -96,10 +99,7 @@ Aria_Token scanToken(Aria_Lexer* l) {
     int start = l->pc;
     char c = peek(l);
 
-    if (c == '\0') {
-        return makeToken(TOK_EOF, start, 0);
-    }
-
+    if (c == '\0') { return makeToken(TOK_EOF, start, 0); }
     switch (c) {
         case '.': advanceChar(l); return makeToken(TOK_DOT, start, 1);
         case ',': advanceChar(l); return makeToken(TOK_COMMA, start, 1);
@@ -133,24 +133,19 @@ Aria_Token scanToken(Aria_Lexer* l) {
             break;
     }
 
-    if (isdigit(c)) {
-        return scanNumber(l);
-    }
-
-    if (isalpha(c) || c == '_') {
-        return scanIdentifier(l);
-    }
+    if (isdigit(c)) { return scanNumber(l); }
+    if (isalpha(c) || c == '_') { return scanIdentifier(l); }
 
     // TODO: Handle error case
     return makeToken(TOK_EOF, start, 0);
 }
 
 void advance(Aria_Lexer* l) {
-    l->current_token = scanToken(l);
+    l->buf_index++;
 }
 
 bool check(Aria_Lexer* l, TokenType type) {
-    return l->current_token.type == type;
+    return ((Aria_Token*)bufferGet(l->tokens, l->buf_index))->type == type;
 }
 
 bool match(Aria_Lexer* l, TokenType type) {
@@ -175,4 +170,24 @@ int getTokenNumber(Aria_Lexer* lexer, Aria_Token token) {
 char getTokenChar(Aria_Lexer* lexer, Aria_Token token) {
     if (token.len == 0) return '\0';
     return lexer->source[token.start];
+}
+
+void printTokens(Aria_Lexer* l) {
+    printf("=== TOKENS ===\n");
+    for (int i = 0; i < l->tokens.size; i++) {
+        Aria_Token* tok = bufferGet(l->tokens, i);
+        printf("Token: %d, start: %d, len: %d\n", tok->type, tok->start, tok->len);
+    }
+}
+
+Aria_Lexer ariaTokenize(const char* src) {
+    Aria_Lexer lexer = {src, 0, bufferCreate(sizeof(Aria_Token), 64), 0};
+
+    do {
+        Aria_Token token = scanToken(&lexer);
+        bufferInsert(&lexer.tokens, &token);
+    } while(((Aria_Token*)bufferPeek(lexer.tokens))->type != TOK_EOF);
+
+    lexer.pc = 0;
+    return lexer;
 }

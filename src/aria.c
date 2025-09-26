@@ -9,22 +9,9 @@
 
 int aria_debug_mode;
 
-// TODO: Implement a hash table here from crafting interpreters for variable assignment
-
 int ariaInterpret(const char* src) {
-    Aria_Lexer lexer = {src, 0, {false, TOK_EOF, 0, 0}, {false, TOK_EOF, 0, 0}};
-
-    if (aria_debug_mode) {
-        printf("=== TOKENS ===\n");
-        Aria_Token token;
-        do {
-            token = scanToken(&lexer);
-            printf("Token: %d, start: %d, len: %d\n", token.type, token.start, token.len);
-        } while (token.type != TOK_EOF);
-
-        // Reset lexer for parsing
-        lexer.pc = 0;
-    }
+    Aria_Lexer lexer = ariaTokenize(src);
+    if (aria_debug_mode) { printTokens(&lexer); }
 
     ASTNode ast = ariaParse(&lexer);
 

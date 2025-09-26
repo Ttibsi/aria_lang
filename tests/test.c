@@ -15,6 +15,7 @@ int main(void) {
         ONETEST_TEST(test_bufferCreate),
         ONETEST_TEST(test_bufferInsert),
         ONETEST_TEST(test_bufferGet),
+        ONETEST_TEST(test_bufferPeek),
         // test_bytecode.h
         // ONETEST_TEST(test_handleOperation),
         // ONETEST_TEST(test_handleAtom),

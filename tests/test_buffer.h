@@ -36,3 +36,7 @@ static int test_bufferGet(void) {
     bufferFree(buf);
     return 0;
 }
+
+static int test_bufferPeek(void) {
+    return 1;
+}

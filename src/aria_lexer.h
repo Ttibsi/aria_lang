@@ -3,6 +3,8 @@
 
 #include <stdbool.h>
 
+#include "aria_buffer.h"
+
 typedef enum {
     // Single-character tokens.
     TOK_LEFT_PAREN,     // 0
@@ -59,18 +61,20 @@ typedef enum {
     TOK_EOF             // 42
 } TokenType;
 
-typedef struct {
+typedef struct _Aria_Token {
     bool valid;
     TokenType type;
     int start;
     int len;
+    struct _Aria_Token* next;
+    struct _Aria_Token* prev;
 } Aria_Token;
 
 typedef struct {
     const char* source;
     int pc; // program counter
-    Aria_Token first_token;
-    Aria_Token current_token;
+    Aria_Buffer tokens;
+    int buf_index;
 } Aria_Lexer;
 
 typedef struct {
@@ -115,5 +119,7 @@ bool check(Aria_Lexer* l, TokenType type);
 bool match(Aria_Lexer* l, TokenType type);
 int getTokenNumber(Aria_Lexer* lexer, Aria_Token token);
 char getTokenChar(Aria_Lexer* lexer, Aria_Token token);
+void printTokens(Aria_Lexer* l);
+Aria_Lexer ariaTokenize(const char* src);
 
 #endif // ARIA_LEXER_H

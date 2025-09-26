@@ -16,6 +16,7 @@ static Aria_Buffer bufferCreate(uint32_t elem_size, uint32_t cap);
 static void bufferFree(Aria_Buffer buf);
 static void bufferInsert(Aria_Buffer* buf, void* elem);
 static void* bufferGet(Aria_Buffer buf, uint32_t idx);
+static void* bufferPeek(Aria_Buffer buf);
 
 #ifdef ARIA_BUFFER_IMPL
 
@@ -48,6 +49,10 @@ static void bufferInsert(Aria_Buffer* buf, void* elem) {
 static void* bufferGet(Aria_Buffer buf, uint32_t idx) {
     if (idx > buf.size) { return NULL; }
     return buf.items + (buf.elem_size * idx);
+}
+
+static void* bufferPeek(Aria_Buffer buf) {
+    return buf.items + (buf.elem_size * buf.size);
 }
 
 #endif // ARIA_BUFFER_IMPL

@@ -14,7 +14,7 @@ ASTNode parsePrint(Aria_Lexer* l) { assert(0 && "TODO"); }
 
 ASTNode parseReturn(Aria_Lexer* l) {
     ASTNode node = createNode(AST_VALUE);
-    node.value = getTokenNumber(l, l->current_token);
+    node.value = getTokenNumber(l, *(Aria_Token*)bufferGet(l->tokens, l->buf_index));
     return node;
 
 }
@@ -48,8 +48,9 @@ ASTNode parseFunc(Aria_Lexer* l) {
     ASTNode node = createNode(AST_FUNC);
 
     // function name
-    node.func.func_name = malloc(sizeof(char) * l->current_token.len + 1);
-    strcpy(node.func.func_name, l->source + l->current_token.start);
+    Aria_Token* curr_token = bufferGet(l->tokens, l->buf_index);
+    node.func.func_name = malloc(sizeof(char) * curr_token->len + 1);
+    strcpy(node.func.func_name, l->source + curr_token->start);
     advance(l);
 
     // arguments
@@ -80,7 +81,8 @@ ASTNode parseFunc(Aria_Lexer* l) {
 ASTNode parseImport(Aria_Lexer* l) { assert(0 && "TODO"); }
 
 ASTNode ariaParse(Aria_Lexer* l) {
-    switch (l->current_token.type) {
+    Aria_Token* curr_token = bufferGet(l->tokens, l->buf_index);
+    switch (curr_token->type) {
         case TOK_CLASS:
             return parseClass(l);
         case TOK_EXPORT:
@@ -122,5 +124,44 @@ ASTNode createNode(ASTType type) {
 }
 
 void printAST(ASTNode ast) {
-    assert(0 && "TODO");
+    switch (ast.type) {
+        case AST_BLOCK:
+            printf("Block {\n");
+            for (int i = 0; i < ast.block.buf.size; i++) {
+                ASTNode* node = (ASTNode*)bufferGet(ast.block.buf, i);
+                printf("  ");
+                printAST(*node);
+            }
+            printf("}\n");
+            break;
+
+        case AST_FUNC:
+            printf("Function: %s\n", ast.func.func_name ? ast.func.func_name : "<unnamed>");
+            printf("Arguments: ");
+            for (int i = 0; i < 8 && ast.func.args[i].type != TOK_EOF; i++) {
+                // Assuming args are stored as tokens, print based on token content
+                printf("arg%d ", i);
+            }
+            printf("\n");
+            printf("Body {\n");
+            for (int i = 0; i < ast.func.body.size; i++) {
+                ASTNode* node = (ASTNode*)bufferGet(ast.func.body, i);
+                printf("  ");
+                printAST(*node);
+            }
+            printf("}\n");
+            break;
+
+        case AST_VALUE:
+            printf("Value: %d\n", ast.value);
+            break;
+
+        case AST_ERR:
+            printf("Error Node\n");
+            break;
+
+        default:
+            printf("Unknown AST Node Type: %d\n", ast.type);
+            break;
+    }
 }
