@@ -52,7 +52,8 @@ static void* bufferGet(Aria_Buffer buf, uint32_t idx) {
 }
 
 static void* bufferPeek(Aria_Buffer buf) {
-    return buf.items + (buf.elem_size * buf.size);
+    if (buf.size == 0) { return NULL; }
+    return buf.items + (buf.elem_size * (buf.size - 1));
 }
 
 #endif // ARIA_BUFFER_IMPL

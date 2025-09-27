@@ -66,8 +66,6 @@ typedef struct _Aria_Token {
     TokenType type;
     int start;
     int len;
-    struct _Aria_Token* next;
-    struct _Aria_Token* prev;
 } Aria_Token;
 
 typedef struct {
