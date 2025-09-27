@@ -54,9 +54,9 @@ ASTNode parseFunc(Aria_Lexer* l) {
     advance(l);
 
     // arguments
-    if (!match(l, TOK_LEFT_BRACE)) { parsingError("Function name not followed by open bracket"); }
+    if (!match(l, TOK_LEFT_PAREN)) { parsingError("Function name not followed by open bracket"); }
     int args_idx = 0;
-    while (!check(l, TOK_RIGHT_BRACE)) {
+    while (!check(l, TOK_RIGHT_PAREN)) {
         if (!check(l, TOK_IDENTIFIER)) { parsingError("function args contain non-identifiers"); }
         if (args_idx >= 8) { parsingError("Function has too many arguments"); }
         //TODO
