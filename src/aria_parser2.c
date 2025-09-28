@@ -18,6 +18,7 @@ ASTNode parsePrint(Aria_Lexer* l) { assert(0 && "TODO"); }
 
 ASTNode parseReturn(Aria_Lexer* l) {
     ASTNode node = createNode(AST_VALUE);
+    advance(l); // go from the return keyword to the value to return
     node.value = getTokenNumber(l, *(Aria_Token*)bufferGet(l->tokens, l->buf_index));
     return node;
 }
@@ -27,16 +28,16 @@ ASTNode parseVar(Aria_Lexer* l) { assert(0 && "TODO"); }
 ASTNode parseIdentifier(Aria_Lexer* l) { assert(0 && "TODO"); }
 
 ASTNode parseExpression(Aria_Lexer* l) {
-    switch (peek(l)) {
-        case TOK_CONST: parseConst(l); break;
-        case TOK_FOR: parseFor(l); break;
-        case TOK_IF: parseIf(l); break;
-        case TOK_PRINT: parsePrint(l); break;
-        case TOK_RETURN: parseReturn(l); break;
-        case TOK_SWITCH: parseSwitch(l); break;
-        case TOK_VAR: parseVar(l); break;
-        case TOK_IDENTIFIER: parseIdentifier(l); break;
-        default: parsingError("Incorrect token found in parseExpression\n"); break;
+    switch (((Aria_Token*)bufferGet(l->tokens, l->buf_index))->type) {
+        case TOK_CONST: return parseConst(l); break;
+        case TOK_FOR: return parseFor(l); break;
+        case TOK_IF: return parseIf(l); break;
+        case TOK_PRINT: return parsePrint(l); break;
+        case TOK_RETURN: return parseReturn(l); break;
+        case TOK_SWITCH: return parseSwitch(l); break;
+        case TOK_VAR: return parseVar(l); break;
+        case TOK_IDENTIFIER: return parseIdentifier(l); break;
+        default: parsingError("Incorrect token found in parseExpression (default)\n"); break;
     };
 
     parsingError("Incorrect token found in parseExpression\n");
@@ -49,6 +50,8 @@ ASTNode parseExport(Aria_Lexer* l) { assert(0 && "TODO"); }
 
 ASTNode parseBlock(Aria_Lexer* l) {
     ASTNode node = createNode(AST_BLOCK);
+    advance(l); // TOK_LEFT_BRACE
+    advance(l); // Move to the first expression
 
     while (!(
         check(l, TOK_FUNC) ||
@@ -85,6 +88,8 @@ ASTNode parseFunc(Aria_Lexer* l) {
         args_idx++;
         advance(l);
     }
+
+    advance(l); // TOK_RIGHT_PAREN
 
     // Fill the rest of the 8 arguments
     while (args_idx < 8) {
