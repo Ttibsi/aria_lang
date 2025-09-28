@@ -20,6 +20,8 @@ ASTNode parseReturn(Aria_Lexer* l) {
     ASTNode node = createNode(AST_VALUE);
     advance(l); // go from the return keyword to the value to return
     node.value = getTokenNumber(l, *(Aria_Token*)bufferGet(l->tokens, l->buf_index));
+    advance(l); // consume number
+    advance(l); // consume semicolon
     return node;
 }
 
@@ -51,7 +53,6 @@ ASTNode parseExport(Aria_Lexer* l) { assert(0 && "TODO"); }
 ASTNode parseBlock(Aria_Lexer* l) {
     ASTNode node = createNode(AST_BLOCK);
     advance(l); // TOK_LEFT_BRACE
-    advance(l); // Move to the first expression
 
     while (!(
         check(l, TOK_FUNC) ||
@@ -61,6 +62,8 @@ ASTNode parseBlock(Aria_Lexer* l) {
     )) {
         ASTNode expr = parseExpression(l);
         bufferInsert(&node.block.buf, (void*)&expr);
+
+        if (check(l, TOK_RIGHT_BRACE)) { break; }
     }
 
     return node;
