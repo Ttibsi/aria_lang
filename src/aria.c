@@ -17,8 +17,7 @@ int ariaInterpret(const char* src) {
 
     if (aria_debug_mode) {
         printf("\n=== AST ===\n");
-        printAST(ast);
-        // printExprs(expr);
+        printAST(ast, 0);
         printf("\n");
     }
 

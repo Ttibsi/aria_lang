@@ -5,7 +5,11 @@
 #include <stdlib.h>
 #include <string.h>
 
-void parsingError(const char* msg) { assert(0 && msg); }
+#define parsingError(msg) \
+    do { \
+        fprintf(stderr, msg); \
+        assert(0); \
+    } while(0)
 
 ASTNode parseConst(Aria_Lexer* l) { assert(0 && "TODO"); }
 ASTNode parseFor(Aria_Lexer* l) { assert(0 && "TODO"); }
@@ -16,8 +20,8 @@ ASTNode parseReturn(Aria_Lexer* l) {
     ASTNode node = createNode(AST_VALUE);
     node.value = getTokenNumber(l, *(Aria_Token*)bufferGet(l->tokens, l->buf_index));
     return node;
-
 }
+
 ASTNode parseSwitch(Aria_Lexer* l) { assert(0 && "TODO"); }
 ASTNode parseVar(Aria_Lexer* l) { assert(0 && "TODO"); }
 ASTNode parseIdentifier(Aria_Lexer* l) { assert(0 && "TODO"); }
@@ -32,10 +36,10 @@ ASTNode parseExpression(Aria_Lexer* l) {
         case TOK_SWITCH: parseSwitch(l); break;
         case TOK_VAR: parseVar(l); break;
         case TOK_IDENTIFIER: parseIdentifier(l); break;
-        default: parsingError("Incorrect token found in parseExpression"); break;
+        default: parsingError("Incorrect token found in parseExpression\n"); break;
     };
 
-    parsingError("Incorrect token found in parseExpression");
+    parsingError("Incorrect token found in parseExpression\n");
     return (ASTNode){.type = AST_ERR};
 }
 
@@ -43,37 +47,54 @@ ASTNode parseClass(Aria_Lexer* l) { assert(0 && "TODO"); }
 
 ASTNode parseExport(Aria_Lexer* l) { assert(0 && "TODO"); }
 
+ASTNode parseBlock(Aria_Lexer* l) {
+    ASTNode node = createNode(AST_BLOCK);
+
+    while (!(
+        check(l, TOK_FUNC) ||
+        check(l, TOK_CLASS) ||
+        check(l, TOK_EXPORT) ||
+        check(l, TOK_IMPORT)
+    )) {
+        ASTNode expr = parseExpression(l);
+        bufferInsert(&node.block.buf, (void*)&expr);
+    }
+
+    return node;
+}
+
 ASTNode parseFunc(Aria_Lexer* l) {
-    if (!match(l, TOK_FUNC)) { parsingError("parseFunc called with incorrect token"); }
+    if (!match(l, TOK_FUNC)) { parsingError("parseFunc called with incorrect token\n"); }
     ASTNode node = createNode(AST_FUNC);
 
     // function name
     Aria_Token* curr_token = bufferGet(l->tokens, l->buf_index);
     node.func.func_name = malloc(sizeof(char) * curr_token->len + 1);
-    strcpy(node.func.func_name, l->source + curr_token->start);
+    memcpy(node.func.func_name, l->source + curr_token->start, curr_token->len);
+    node.func.func_name[curr_token->len + 1] = '\0';
     advance(l);
 
     // arguments
-    if (!match(l, TOK_LEFT_PAREN)) { parsingError("Function name not followed by open bracket"); }
+    if (!match(l, TOK_LEFT_PAREN)) { parsingError("Function name not followed by open bracket\n"); }
     int args_idx = 0;
     while (!check(l, TOK_RIGHT_PAREN)) {
-        if (!check(l, TOK_IDENTIFIER)) { parsingError("function args contain non-identifiers"); }
-        if (args_idx >= 8) { parsingError("Function has too many arguments"); }
-        //TODO
+        if (!check(l, TOK_IDENTIFIER)) { parsingError("function args contain non-identifiers\n"); }
+        if (args_idx >= 8) { parsingError("Function has too many arguments\n"); }
 
+        node.func.args[args_idx] = *(Aria_Token*)bufferGet(l->tokens, l->buf_index);
+        args_idx++;
+        advance(l);
+    }
+
+    // Fill the rest of the 8 arguments
+    while (args_idx < 8) {
+        node.func.args[args_idx] = (Aria_Token){false, TOK_ERROR, -1. -1};
         args_idx++;
     }
 
     // body
-    while (
-        check(l, TOK_FUNC) ||
-        check(l, TOK_CLASS) ||
-        check(l, TOK_EXPORT) ||
-        check(l, TOK_IMPORT)
-    ) {
-        ASTNode node = parseExpression(l);
-        bufferInsert(&node.func.body, (void*)&node);
-    }
+    ASTNode body = parseBlock(l);
+    node.func.body = &body;
 
     return node;
 }
@@ -114,7 +135,7 @@ ASTNode createNode(ASTType type) {
                 .type = type,
                 .func = {
                     .func_name = NULL,
-                    .body = bufferCreate(sizeof(ASTNode), 32)
+                    .body = NULL
                 }
             };
 
@@ -123,45 +144,34 @@ ASTNode createNode(ASTType type) {
     };
 }
 
-void printAST(ASTNode ast) {
+void printAST(ASTNode ast, size_t indent) {
     switch (ast.type) {
         case AST_BLOCK:
-            printf("Block {\n");
-            for (int i = 0; i < ast.block.buf.size; i++) {
-                ASTNode* node = (ASTNode*)bufferGet(ast.block.buf, i);
-                printf("  ");
-                printAST(*node);
+            Aria_Buffer buf = ast.block.buf;
+            for (uint32_t i = 0; i < buf.size; i++) {
+                printAST(*(ASTNode*)bufferGet(buf, i), indent);
             }
-            printf("}\n");
             break;
 
         case AST_FUNC:
-            printf("Function: %s\n", ast.func.func_name ? ast.func.func_name : "<unnamed>");
-            printf("Arguments: ");
-            for (int i = 0; i < 8 && ast.func.args[i].type != TOK_EOF; i++) {
-                // Assuming args are stored as tokens, print based on token content
-                printf("arg%d ", i);
+            printf("% *@Function Node: {%s}", indent, ast.func.func_name);
+
+            // Arguments
+            for(int i = 0; i < 8; i++) {
+                if (ast.func.args[i].type == TOK_ERROR) { break; }
+                printf("% *@Argument: {%s}\n", indent + 2, ast.func.args[i]);
             }
-            printf("\n");
-            printf("Body {\n");
-            for (int i = 0; i < ast.func.body.size; i++) {
-                ASTNode* node = (ASTNode*)bufferGet(ast.func.body, i);
-                printf("  ");
-                printAST(*node);
-            }
-            printf("}\n");
+
+            printf("% *@Function Body\n", indent + 2);
+            printAST(*ast.func.body, indent + 4);
             break;
 
         case AST_VALUE:
-            printf("Value: %d\n", ast.value);
+            printf("% *@Value: {%d}", indent, ast.value);
             break;
-
         case AST_ERR:
-            printf("Error Node\n");
+            printf("% *@Error Node", indent);
             break;
-
         default:
-            printf("Unknown AST Node Type: %d\n", ast.type);
-            break;
     }
 }
