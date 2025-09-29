@@ -38,5 +38,17 @@ static int test_bufferGet(void) {
 }
 
 static int test_bufferPeek(void) {
-    return 1;
+    Aria_Buffer buf = bufferCreate(sizeof(int), 8);
+    int* num = (int*)malloc(sizeof(int));
+    *num = 1;
+    bufferInsert(&buf, num);
+
+    *num = 2;
+    bufferInsert(&buf, num);
+
+    *num = 3;
+    bufferInsert(&buf, num);
+
+    onetest_assert(*(int*)bufferPeek(buf) == 3);
+    return 0;
 }
