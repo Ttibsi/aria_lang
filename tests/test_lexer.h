@@ -6,12 +6,8 @@ static int test_peek(void) {
     Aria_Lexer l = (Aria_Lexer){
         .source = "3 + 4",
         .pc = 0,
-        .current_token =  (Aria_Token){
-            .valid = true,
-            .type = TOK_NUMBER,
-            .start = 0,
-            .len = 1
-        }
+        .tokens = bufferCreate(sizeof(Aria_Token), 8),
+        .buf_index = 0
     };
 
     char actual = peek(&l);
@@ -23,12 +19,8 @@ static int test_peekNext(void) {
     Aria_Lexer l = (Aria_Lexer){
         .source = "3 + 4",
         .pc = 0,
-        .current_token =  (Aria_Token){
-            .valid = true,
-            .type = TOK_NUMBER,
-            .start = 0,
-            .len = 1
-        }
+        .tokens = bufferCreate(sizeof(Aria_Token), 8),
+        .buf_index = 0
     };
 
     char actual = peekNext(&l);
@@ -40,12 +32,8 @@ static int test_advanceChar(void) {
     Aria_Lexer l = (Aria_Lexer){
         .source = "3 + 4",
         .pc = 0,
-        .current_token =  (Aria_Token){
-            .valid = true,
-            .type = TOK_NUMBER,
-            .start = 0,
-            .len = 1
-        }
+        .tokens = bufferCreate(sizeof(Aria_Token), 8),
+        .buf_index = 0
     };
 
     char actual = advanceChar(&l);
@@ -59,12 +47,8 @@ static int test_skipWhitespace(void) {
     Aria_Lexer l = (Aria_Lexer){
         .source = "3 + 4",
         .pc = 0,
-        .current_token =  (Aria_Token){
-            .valid = true,
-            .type = TOK_NUMBER,
-            .start = 0,
-            .len = 1
-        }
+        .tokens = bufferCreate(sizeof(Aria_Token), 8),
+        .buf_index = 0
     };
 
     advance(&l);
@@ -87,12 +71,8 @@ static int test_scanEqualVariant(void) {
     Aria_Lexer l = (Aria_Lexer){
         .source = "!=",
         .pc = 1,
-        .current_token =  (Aria_Token){
-            .valid = true,
-            .type = TOK_NUMBER,
-            .start = 0,
-            .len = 1
-        }
+        .tokens = bufferCreate(sizeof(Aria_Token), 8),
+        .buf_index = 0
     };
 
     Aria_Token tok = scanEqualVariant(&l, TOK_BANG, TOK_BANG_EQUAL);
@@ -110,12 +90,8 @@ static int test_scanStringLiteral(void) {
     Aria_Lexer l1 = (Aria_Lexer){
         .source = "\"hello\"",
         .pc = 1,  // positioned after opening quote
-        .current_token = (Aria_Token){
-            .valid = true,
-            .type = TOK_STRING,
-            .start = 0,
-            .len = 1
-        }
+        .tokens = bufferCreate(sizeof(Aria_Token), 8),
+        .buf_index = 0
     };
 
     Aria_Token tok1 = scanStringLiteral(&l1);
@@ -129,12 +105,8 @@ static int test_scanStringLiteral(void) {
     Aria_Lexer l2 = (Aria_Lexer){
         .source = "\"\"",
         .pc = 1,  // positioned after opening quote
-        .current_token = (Aria_Token){
-            .valid = true,
-            .type = TOK_STRING,
-            .start = 0,
-            .len = 1
-        }
+        .tokens = bufferCreate(sizeof(Aria_Token), 8),
+        .buf_index = 0
     };
 
     Aria_Token tok2 = scanStringLiteral(&l2);
@@ -148,12 +120,8 @@ static int test_scanStringLiteral(void) {
     Aria_Lexer l3 = (Aria_Lexer){
         .source = "\"hello world 123!@#\"",
         .pc = 1,  // positioned after opening quote
-        .current_token = (Aria_Token){
-            .valid = true,
-            .type = TOK_STRING,
-            .start = 0,
-            .len = 1
-        }
+        .tokens = bufferCreate(sizeof(Aria_Token), 8),
+        .buf_index = 0
     };
 
     Aria_Token tok3 = scanStringLiteral(&l3);
@@ -167,12 +135,8 @@ static int test_scanStringLiteral(void) {
     Aria_Lexer l4 = (Aria_Lexer){
         .source = "\"unterminated",
         .pc = 1,  // positioned after opening quote
-        .current_token = (Aria_Token){
-            .valid = true,
-            .type = TOK_STRING,
-            .start = 0,
-            .len = 1
-        }
+        .tokens = bufferCreate(sizeof(Aria_Token), 8),
+        .buf_index = 0
     };
 
     Aria_Token tok4 = scanStringLiteral(&l4);
@@ -188,12 +152,8 @@ static int test_scanNumber(void) {
     Aria_Lexer l = (Aria_Lexer){
         .source = "123 + 45",
         .pc = 0,
-        .current_token =  (Aria_Token){
-            .valid = true,
-            .type = TOK_NUMBER,
-            .start = 0,
-            .len = 1
-        }
+        .tokens = bufferCreate(sizeof(Aria_Token), 8),
+        .buf_index = 0
     };
 
     Aria_Token tok = scanNumber(&l);
@@ -207,12 +167,8 @@ static int test_scanIdentifier(void) {
     Aria_Lexer l = (Aria_Lexer){
         .source = "var temp",
         .pc = 0,
-        .current_token =  (Aria_Token){
-            .valid = true,
-            .type = TOK_NUMBER,
-            .start = 0,
-            .len = 1
-        }
+        .tokens = bufferCreate(sizeof(Aria_Token), 8),
+        .buf_index = 0
     };
 
     Aria_Token tok = scanIdentifier(&l);
@@ -233,12 +189,8 @@ static int test_scanToken(void) {
     Aria_Lexer l = (Aria_Lexer){
         .source = "3 + 4",
         .pc = 0,
-        .current_token = (Aria_Token){
-            .valid = true,
-            .type = TOK_NUMBER,
-            .start = 0,
-            .len = 1
-        }
+        .tokens = bufferCreate(sizeof(Aria_Token), 8),
+        .buf_index = 0
     };
 
     // Test 1: Number token
@@ -288,16 +240,13 @@ static int test_advance(void) {
     Aria_Lexer l = (Aria_Lexer){
         .source = "3 + 4",
         .pc = 0,
-        .current_token =  (Aria_Token){
-            .valid = true,
-            .type = TOK_NUMBER,
-            .start = 0,
-            .len = 1
-        }
+        .tokens = bufferCreate(sizeof(Aria_Token), 8),
+        .buf_index = 0
     };
 
     advance(&l);
-    onetest_assert(l.current_token.type == TOK_NUMBER);
+    Aria_Token* tok = (Aria_Token*)bufferGet(l.tokens, l.buf_index);
+    onetest_assert(tok->type == TOK_NUMBER);
 
     return 0;
 }
@@ -306,12 +255,8 @@ static int test_check(void) {
     Aria_Lexer l = (Aria_Lexer){
         .source = "3 + 4",
         .pc = 0,
-        .current_token =  (Aria_Token){
-            .valid = true,
-            .type = TOK_NUMBER,
-            .start = 0,
-            .len = 1
-        }
+        .tokens = bufferCreate(sizeof(Aria_Token), 8),
+        .buf_index = 0
     };
 
     onetest_assert(check(&l, TOK_NUMBER) == 1);
@@ -324,12 +269,8 @@ static int test_match(void) {
     Aria_Lexer l = (Aria_Lexer){
         .source = "3 + 4",
         .pc = 0,
-        .current_token =  (Aria_Token){
-            .valid = true,
-            .type = TOK_NUMBER,
-            .start = 0,
-            .len = 1
-        }
+        .tokens = bufferCreate(sizeof(Aria_Token), 8),
+        .buf_index = 0
     };
 
     onetest_assert(match(&l, TOK_NUMBER) == 1);
@@ -342,15 +283,12 @@ static int test_getTokenNumber(void) {
     Aria_Lexer l = (Aria_Lexer){
         .source = "3 + 4",
         .pc = 0,
-        .current_token =  (Aria_Token){
-            .valid = true,
-            .type = TOK_NUMBER,
-            .start = 0,
-            .len = 1
-        }
+        .tokens = bufferCreate(sizeof(Aria_Token), 8),
+        .buf_index = 0
     };
 
-    onetest_assert(getTokenNumber(&l, l.current_token) == 3);
+    int tok_num = getTokenNumber(&l, *(Aria_Token*)bufferGet(l.tokens, l.buf_index));
+    onetest_assert(tok_num == 3);
     return 0;
 }
 
@@ -358,14 +296,11 @@ static int test_getTokenChar(void) {
     Aria_Lexer l = (Aria_Lexer){
         .source = "Hello",
         .pc = 0,
-        .current_token =  (Aria_Token){
-            .valid = true,
-            .type = TOK_STRING,
-            .start = 0,
-            .len = 1
-        }
+        .tokens = bufferCreate(sizeof(Aria_Token), 8),
+        .buf_index = 0
     };
 
-    onetest_assert(getTokenChar(&l, l.current_token) == 'H');
+    char tok_char = getTokenChar(&l, *(Aria_Token*)bufferGet(l.tokens, l.buf_index));
+    onetest_assert(tok_char == 'H');
     return 0;
 }
