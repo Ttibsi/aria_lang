@@ -90,6 +90,7 @@ ASTNode parseFunc(Aria_Lexer* l) {
         node.func.args[args_idx] = *(Aria_Token*)bufferGet(l->tokens, l->buf_index);
         args_idx++;
         advance(l);
+        if (check(l, TOK_COMMA)) { advance(l); } // Skip commas
     }
 
     advance(l); // TOK_RIGHT_PAREN
