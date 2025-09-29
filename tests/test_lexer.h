@@ -51,7 +51,7 @@ static int test_skipWhitespace(void) {
         .buf_index = 0
     };
 
-    advance(&l);
+    advanceChar(&l);
     skipWhitespace(&l);
     onetest_assert(peek(&l) == '+');
     return 0;
