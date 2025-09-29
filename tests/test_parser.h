@@ -4,14 +4,6 @@
 #include "aria_lexer.h"
 #include "aria_parser.h"
 
-#define CREATE_LEXER(src) \
-Aria_Lexer l = (Aria_Lexer){ \
-        .source = src, \
-        .pc = 0, \
-        .tokens = bufferCreate(sizeof(Aria_Token), 8), \
-        .buf_index = 0 \
-    };
-
 static int test_parseConst(void) { return 1; }
 static int test_parseFor(void) { return 1; }
 static int test_parseIf(void) { return 1; }
@@ -29,7 +21,6 @@ static int test_parseReturn(void) {
 static int test_parseSwitch(void) { return 1; }
 static int test_parseVar(void) { return 1; }
 static int test_parseIdentifier(void) { return 1; }
-static int test_parseExpression(void) { return 1; }
 static int test_parseClass(void) { return 1; }
 static int test_parseExport(void) { return 1; }
 static int test_parseBlock(void) {
@@ -65,5 +56,9 @@ static int test_parseFunc(void) {
 }
 
 static int test_parseImport(void) { return 1; }
-static int test_ariaParse(void) { return 1; }
-static int test_createNode(void) { return 1; }
+static int test_createNode(void) {
+    ASTNode node = createNode(AST_FUNC);
+    onetest_assert(node.type = AST_FUNC);
+    onetest_assert(node.func.func_name == NULL);
+    return 0;
+}

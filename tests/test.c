@@ -52,13 +52,11 @@ int main(void) {
         ONETEST_TEST(test_parseSwitch),
         ONETEST_TEST(test_parseVar),
         ONETEST_TEST(test_parseIdentifier),
-        ONETEST_TEST(test_parseExpression),
         ONETEST_TEST(test_parseClass),
         ONETEST_TEST(test_parseExport),
         ONETEST_TEST(test_parseBlock),
         ONETEST_TEST(test_parseFunc),
         ONETEST_TEST(test_parseImport),
-        ONETEST_TEST(test_ariaParse),
         ONETEST_TEST(test_createNode),
 
         // test_bytecode.h
