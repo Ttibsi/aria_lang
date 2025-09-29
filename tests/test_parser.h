@@ -1,3 +1,4 @@
+#include <string.h>
 #include "onetest.h"
 
 #include "aria_lexer.h"
@@ -16,28 +17,53 @@ static int test_parseFor(void) { return 1; }
 static int test_parseIf(void) { return 1; }
 static int test_parsePrint(void) { return 1; }
 static int test_parseReturn(void) {
-    CREATE_LEXER("return 69;");
+    Aria_Lexer lexer = ariaTokenize("return 69;");
+    ASTNode node = parseReturn(&lexer);
 
-    Aria_Token tok = (Aria_Token){true, TOK_RETURN, 0, 6};
-    bufferInsert(&l.tokens, &tok);
-
-    tok = (Aria_Token){true, TOK_NUMBER, 7, 2};
-    bufferInsert(&l.tokens, &tok);
-
-    ASTNode node = parseReturn(&l);
     onetest_assert(node.type == AST_VALUE);
     onetest_assert(node.value == 69);
 
     return 0;
 }
+
 static int test_parseSwitch(void) { return 1; }
 static int test_parseVar(void) { return 1; }
 static int test_parseIdentifier(void) { return 1; }
 static int test_parseExpression(void) { return 1; }
 static int test_parseClass(void) { return 1; }
 static int test_parseExport(void) { return 1; }
-static int test_parseBlock(void) { return 1; }
-static int test_parseFunc(void) { return 1; }
+static int test_parseBlock(void) {
+    Aria_Lexer lexer = ariaTokenize("{ return 800; return 85; }");
+    ASTNode node = parseBlock(&lexer);
+
+    onetest_assert(node.type == AST_BLOCK);
+    onetest_assert(node.block.buf.size == 2);
+
+    ASTNode last_node = *(ASTNode*)bufferPeek(node.block.buf);
+    onetest_assert(last_node.type == AST_VALUE);
+    onetest_assert(last_node.value == 85);
+
+    return 0;
+}
+
+static int test_parseFunc(void) {
+    Aria_Lexer lexer = ariaTokenize("func foo() { return 42; }");
+    ASTNode node = parseFunc(&lexer);
+
+    onetest_assert(node.type == AST_FUNC);
+    onetest_assert(strcmp(node.func.func_name, "foo") == 0);
+
+    ASTNode body = *node.func.body;
+    onetest_assert(body.type == AST_BLOCK);
+    onetest_assert(body.block.buf.size == 1);
+
+    ASTNode last_node = *(ASTNode*)bufferPeek(body.block.buf);
+    onetest_assert(last_node.type == AST_VALUE);
+    onetest_assert(last_node.value == 42);
+
+    return 0;
+}
+
 static int test_parseImport(void) { return 1; }
 static int test_ariaParse(void) { return 1; }
 static int test_createNode(void) { return 1; }
