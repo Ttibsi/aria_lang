@@ -77,7 +77,7 @@ ASTNode parseFunc(Aria_Lexer* l) {
     Aria_Token* curr_token = bufferGet(l->tokens, l->buf_index);
     node.func.func_name = malloc(sizeof(char) * curr_token->len + 1);
     memcpy(node.func.func_name, l->source + curr_token->start, curr_token->len);
-    node.func.func_name[curr_token->len + 1] = '\0';
+    node.func.func_name[curr_token->len] = '\0';
     advance(l);
 
     // arguments
@@ -101,8 +101,9 @@ ASTNode parseFunc(Aria_Lexer* l) {
     }
 
     // body
-    ASTNode body = parseBlock(l);
-    node.func.body = &body;
+    ASTNode* body = malloc(sizeof(ASTNode));
+    *body = parseBlock(l);
+    node.func.body = body;
 
     return node;
 }
