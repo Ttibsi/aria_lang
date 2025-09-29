@@ -174,7 +174,7 @@ char getTokenChar(Aria_Lexer* lexer, Aria_Token token) {
 
 void printTokens(Aria_Lexer* l) {
     printf("=== TOKENS ===\n");
-    for (int i = 0; i < l->tokens.size; i++) {
+    for (uint32_t i = 0; i < l->tokens.size; i++) {
         Aria_Token* tok = bufferGet(l->tokens, i);
         printf("Token: %d, start: %d, len: %d\n", tok->type, tok->start, tok->len);
     }

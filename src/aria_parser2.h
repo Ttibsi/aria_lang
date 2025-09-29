@@ -35,6 +35,6 @@ typedef struct _ASTNode {
 
 ASTNode ariaParse(Aria_Lexer* l);
 ASTNode createNode(ASTType type);
-void printAST(ASTNode ast, size_t indent);
+void printAST(ASTNode ast, int indent, Aria_Lexer* l);
 
 #endif // ARIA_PARSER_H

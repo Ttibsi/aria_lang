@@ -147,39 +147,54 @@ ASTNode createNode(ASTType type) {
                 }
             };
 
+        case AST_VALUE:
+            return (ASTNode){
+                .type = type,
+                .value = 0
+            };
+
         case AST_ERR:
             return (ASTNode){.type = type};
     };
+
+    return (ASTNode){.type = -1};
 }
 
-void printAST(ASTNode ast, size_t indent) {
+void printAST(ASTNode ast, int indent, Aria_Lexer* l) {
     switch (ast.type) {
         case AST_BLOCK:
             Aria_Buffer buf = ast.block.buf;
             for (uint32_t i = 0; i < buf.size; i++) {
-                printAST(*(ASTNode*)bufferGet(buf, i), indent);
+                printAST(*(ASTNode*)bufferGet(buf, i), indent, l);
             }
             break;
 
         case AST_FUNC:
-            printf("% *@Function Node: {%s}", indent, ast.func.func_name);
+            printf("%*s@Function Node: {%s}\n", indent, " ", ast.func.func_name);
 
             // Arguments
             for(int i = 0; i < 8; i++) {
                 if (ast.func.args[i].type == TOK_ERROR) { break; }
-                printf("% *@Argument: {%s}\n", indent + 2, ast.func.args[i]);
+                printf(
+                    "%*s@Argument: {%.*s}\n",
+                    indent + 2,
+                    " ",
+                    ast.func.args[i].len,
+                    l->source + ast.func.args[i].start
+                );
             }
 
-            printf("% *@Function Body\n", indent + 2);
-            printAST(*ast.func.body, indent + 4);
+            printf("%*s@Function Body\n", indent + 2, " ");
+            printAST(*ast.func.body, indent + 4, l);
             break;
 
         case AST_VALUE:
-            printf("% *@Value: {%d}", indent, ast.value);
+            printf("%*s@Value: {%d}\n", indent, " ", ast.value);
             break;
         case AST_ERR:
-            printf("% *@Error Node", indent);
+            printf("%*s@Error\n", indent, " ");
             break;
         default:
+            break;
     }
 }
