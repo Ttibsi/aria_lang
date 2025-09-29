@@ -3,7 +3,7 @@
 #include <stdio.h>
 
 #include "aria_lexer.h"
-#include "aria_parser2.h"
+#include "aria_parser.h"
 // #include "aria_bytecode.h"
 // #include "aria_executor.h"
 

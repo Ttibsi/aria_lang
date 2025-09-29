@@ -1,7 +1,7 @@
 #ifndef ARIA_BYTECODE_H
 #define ARIA_BYTECODE_H
 
-#include "aria_parser2.h"
+#include "aria_parser.h"
 
 typedef enum {
     INST_LOAD_CONST,
