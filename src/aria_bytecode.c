@@ -1,3 +1,4 @@
+#if 0
 #include "aria_bytecode.h"
 #include <stdio.h>
 #include <stdlib.h>
@@ -75,3 +76,4 @@ void freeBytecode(Bytecode* bc) {
         bc = next;
     }
 }
+#endif

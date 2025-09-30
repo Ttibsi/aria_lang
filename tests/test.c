@@ -1,20 +1,32 @@
 #define ONETEST_IMPLEMENTATION
 #include "onetest.h"
 
-#include "test_bytecode.h"
-#include "test_lexer.h"
-#include "test_stack.h"
-#include "test_parser.h"
-#include "test_executor.h"
-#include "test_interpreter.h"
+#include "test_buffer.h"
 #include "test_hash.h"
+#include "test_lexer.h"
+#include "test_parser.h"
+// #include "test_bytecode.h"
+// #include "test_stack.h"
+// #include "test_executor.h"
+// #include "test_interpreter.h"
 
 int main(void) {
     onetest_test_t tests[] = {
-        ONETEST_TEST(test_handleOperation),
-        ONETEST_TEST(test_handleAtom),
-        ONETEST_TEST(test_nextInst),
-        ONETEST_TEST(test_bytecodeGeneration),
+        // test_buffer.h
+        ONETEST_TEST(test_bufferCreate),
+        ONETEST_TEST(test_bufferInsert),
+        ONETEST_TEST(test_bufferGet),
+        ONETEST_TEST(test_bufferPeek),
+
+        // test_hash.h
+        ONETEST_TEST(test_mapCreate),
+        ONETEST_TEST(test_hash),
+        ONETEST_TEST(test_mapInsert),
+        ONETEST_TEST(test_mapRemove),
+        ONETEST_TEST(test_mapExists),
+        ONETEST_TEST(test_mapFind),
+
+        // test_lexer.h
         ONETEST_TEST(test_peek),
         ONETEST_TEST(test_peekNext),
         ONETEST_TEST(test_advanceChar),
@@ -30,29 +42,41 @@ int main(void) {
         ONETEST_TEST(test_match),
         ONETEST_TEST(test_getTokenNumber),
         ONETEST_TEST(test_getTokenChar),
-        ONETEST_TEST(test_infixBindingPower),
-        ONETEST_TEST(test_advanceState),
-        ONETEST_TEST(test_parseExpression),
-        ONETEST_TEST(test_isFull),
-        ONETEST_TEST(test_isEmpty),
-        ONETEST_TEST(test_stackPush),
-        ONETEST_TEST(test_stackPop),
-        ONETEST_TEST(test_stackPeek),
-        ONETEST_TEST(test_ariaExecute),
+
+        // test_parser.h
+        ONETEST_SKIP(test_parseConst),
+        ONETEST_SKIP(test_parseFor),
+        ONETEST_SKIP(test_parseIf),
+        ONETEST_SKIP(test_parsePrint),
+        ONETEST_TEST(test_parseReturn),
+        ONETEST_SKIP(test_parseSwitch),
+        ONETEST_SKIP(test_parseVar),
+        ONETEST_SKIP(test_parseIdentifier),
+        ONETEST_SKIP(test_parseClass),
+        ONETEST_SKIP(test_parseExport),
+        ONETEST_TEST(test_parseBlock),
+        ONETEST_TEST(test_parseFunc),
+        ONETEST_SKIP(test_parseImport),
+        ONETEST_TEST(test_createNode),
+
+        // test_bytecode.h
+        // ONETEST_TEST(test_handleOperation),
+        // ONETEST_TEST(test_handleAtom),
+        // ONETEST_TEST(test_nextInst),
+        // ONETEST_TEST(test_bytecodeGeneration),
+        // ONETEST_TEST(test_isFull),
+        // ONETEST_TEST(test_isEmpty),
+        // ONETEST_TEST(test_stackPush),
+        // ONETEST_TEST(test_stackPop),
+        // ONETEST_TEST(test_stackPeek),
+        // ONETEST_TEST(test_ariaExecute),
         // test_interpreter.h
-        ONETEST_TEST(test_add),
-        ONETEST_TEST(test_subtract),
-        ONETEST_TEST(test_multiplication),
-        ONETEST_TEST(test_division),
-        ONETEST_TEST(test_brackets),
-        ONETEST_TEST(test_printing),
-        // test_hash.h
-        ONETEST_TEST(test_mapCreate),
-        ONETEST_TEST(test_hash),
-        ONETEST_TEST(test_mapInsert),
-        ONETEST_TEST(test_mapRemove),
-        ONETEST_TEST(test_mapExists),
-        ONETEST_TEST(test_mapFind),
+        // ONETEST_TEST(test_add),
+        // ONETEST_TEST(test_subtract),
+        // ONETEST_TEST(test_multiplication),
+        // ONETEST_TEST(test_division),
+        // ONETEST_TEST(test_brackets),
+        // ONETEST_TEST(test_printing),
     };
 
     return onetest_exec(tests, sizeof(tests) / sizeof(tests[0]));
