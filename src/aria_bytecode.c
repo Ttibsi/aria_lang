@@ -1,79 +1,70 @@
-#if 0
+#define ARIA_BUFFER_IMPL
 #include "aria_bytecode.h"
+
+#include <stddef.h>
 #include <stdio.h>
-#include <stdlib.h>
 
-Bytecode* handleOperation(Bytecode* bc, Expression* expr) {
-    if(expr->op.lhs->type == Atom) {
-        bc = handleAtom(bc, expr->op.lhs);
-    } else {
-        bc = handleOperation(bc, expr->op.lhs);
+// TODO: handle parameters -- first elems on the stack?
+Aria_Chunk compileFunc(ASTNode node) {
+    Aria_Chunk chunk = {node.func.func_name, bufferCreate(sizeof(Aria_Bytecode), 64)};
+    Aria_Buffer body = node.func.body->block.buf;
+
+    for (size_t i = 0; i < body.size; i++) {
+        ASTNode* body_node = bufferGet(body, i);
+        switch (body_node->type) {
+            case AST_VALUE:
+                Aria_Bytecode inst = (Aria_Bytecode){OP_STORE_CONST, body_node->value};
+                bufferInsert(&chunk.buf, (void*)&inst);
+                break;
+            default: break;
+        }
     }
 
-    if (expr->op.rhs->type == Atom) {
-        bc = handleAtom(bc, expr->op.rhs);
-    } else {
-        bc = handleOperation(bc, expr->op.rhs);
+    return chunk;
+}
+
+Aria_Module ariaCompile(ASTNode node) {
+    Aria_Module mod = {"main", bufferCreate(sizeof(Aria_Bytecode), 64)};
+
+    if (node.type == AST_FUNC) {
+        Aria_Chunk chunk = compileFunc(node);
+        bufferInsert(&mod.buf, (void*)&chunk);
     }
 
-    switch (expr->op.ch) {
-        case '+': bc = nextInst(bc, INST_ADD, 0); break;
-        case '-': bc = nextInst(bc, INST_SUB, 0); break;
-        case '*': bc = nextInst(bc, INST_MUL, 0); break;
-        case '/': bc = nextInst(bc, INST_DIV, 0); break;
-    };
-
-    return bc;
+    return mod;
 }
 
-Bytecode* handleAtom(Bytecode* bc, Expression* expr) {
-    switch (expr->atom.stmt_type) {
-        case STMT_LOAD: bc = nextInst(bc, INST_LOAD_CONST, expr->atom.c); break;
-        case STMT_PRINT: bc = nextInst(bc, INST_PRINT, expr->atom.c); break;
-    }
-    return bc;
-}
-
-Bytecode* nextInst(Bytecode* bc, Instruction inst, int value) {
-    bc->inst = inst;
-    bc->value = value;
-    Bytecode* new = malloc(sizeof(Bytecode));
-    new->inst = INST_NULL;
-    bc->next = new;
-    new->prev = bc;
-    new->next = NULL;
-    return bc->next;
-}
-
-Bytecode* bytecodeGeneration(Expression expr) {
-    Bytecode* root = malloc(sizeof(Bytecode));
-    root->prev = NULL;
-
-    if (expr.type == Atom) {
-        handleAtom(root, &expr);
-    } else {
-        handleOperation(root, &expr);
+const char* opcodeDisplay(Opcode op) {
+    switch (op) {
+        case OP_STORE_CONST: return "OP_STORE_CONST";
     }
 
-    return root;
+    return "";
 }
 
-void printBytecode(Bytecode* bc) {
-    printf("\n=== BYTECODE ===\n");
-    while (bc->next != NULL) {
-        printf("Instruction: %d Value: %d\n", bc->inst, bc->value);
-        bc = bc->next;
+void printModule(Aria_Module mod) {
+    printf("Module: %s\n", mod.name);
+    for (size_t i = 0; i < mod.buf.size; i++) {
+        Aria_Chunk* chunk = bufferGet(mod.buf, i);
+        printf("  Chunk: %s\n", chunk->name);
+
+        for (size_t j = 0; j < chunk->buf.size; j++) {
+            Aria_Bytecode* inst = bufferGet(chunk->buf, j);
+            char display[4];
+            if (inst->operand) {
+                snprintf(display, 4, "%d", inst->operand);
+            } else {
+                display[0] = ' ';
+                display[1] = '\0';
+            }
+
+            printf(
+                "    %s: %s\n",
+                opcodeDisplay(inst->op),
+                display
+            );
+
+        }
+
     }
 }
-
-void freeBytecode(Bytecode* bc) {
-    if (bc == NULL) { return; }
-    while (bc->prev != NULL) { bc = bc->prev; }
-
-    while (bc != NULL) {
-        Bytecode* next = bc->next;
-        free(bc);
-        bc = next;
-    }
-}
-#endif

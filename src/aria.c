@@ -4,7 +4,7 @@
 
 #include "aria_lexer.h"
 #include "aria_parser.h"
-// #include "aria_bytecode.h"
+#include "aria_bytecode.h"
 // #include "aria_executor.h"
 
 int aria_debug_mode;
@@ -18,18 +18,17 @@ int ariaInterpret(const char* src) {
     if (aria_debug_mode) {
         printf("\n=== AST ===\n");
         printAST(ast, 0, &lexer);
-        printf("\n");
+    }
+
+    Aria_Module main_mod = ariaCompile(ast);
+
+    if (aria_debug_mode) {
+        printf("\n=== BYTECODE ===\n");
+        printModule(main_mod);
     }
 
     return 0;
 
-    // // Convert AST to bytecode
-    // Bytecode* bc = bytecodeGeneration(expr);
-    // if (aria_debug_mode) {
-    //     printBytecode(bc);
-    //     printf("\n");
-    // }
-    //
     // // execute bytecode
     // Stack* stack = ariaExecute(bc);
     //
