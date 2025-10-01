@@ -27,7 +27,7 @@ typedef struct {
 typedef struct {
     char* name;
 
-    // Aria_Buffer<Aria_Chunk>
+    // Aria_Buffer<Aria_Chunk*>
     Aria_Buffer buf;
 } Aria_Module;
 

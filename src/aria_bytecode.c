@@ -6,16 +6,24 @@
 
 // TODO: handle parameters -- first elems on the stack?
 Aria_Chunk compileFunc(ASTNode node) {
-    Aria_Chunk chunk = {node.func.func_name, bufferCreate(sizeof(Aria_Bytecode), 64)};
+    // need to duplicate for memory reasons
+    char* chunk_name = strdup(node.func.func_name);
+
+    Aria_Chunk chunk = {
+        .name = chunk_name,
+        .buf = bufferCreate(sizeof(Aria_Bytecode), 64)
+    };
+
     Aria_Buffer body = node.func.body->block.buf;
 
     for (size_t i = 0; i < body.size; i++) {
         ASTNode* body_node = bufferGet(body, i);
         switch (body_node->type) {
-            case AST_VALUE:
+            case AST_VALUE: {
                 Aria_Bytecode inst = (Aria_Bytecode){OP_STORE_CONST, body_node->value};
                 bufferInsert(&chunk.buf, (void*)&inst);
                 break;
+            }
             default: break;
         }
     }
@@ -24,11 +32,11 @@ Aria_Chunk compileFunc(ASTNode node) {
 }
 
 Aria_Module ariaCompile(ASTNode node) {
-    Aria_Module mod = {"main", bufferCreate(sizeof(Aria_Bytecode), 64)};
+    Aria_Module mod = {"main", bufferCreate(sizeof(Aria_Chunk*), 64)};
 
     if (node.type == AST_FUNC) {
         Aria_Chunk chunk = compileFunc(node);
-        bufferInsert(&mod.buf, (void*)&chunk);
+        bufferInsert(&mod.buf, &chunk);
     }
 
     return mod;
