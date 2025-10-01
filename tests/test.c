@@ -5,8 +5,7 @@
 #include "test_hash.h"
 #include "test_lexer.h"
 #include "test_parser.h"
-// #include "test_bytecode.h"
-// #include "test_stack.h"
+#include "test_bytecode.h"
 // #include "test_executor.h"
 // #include "test_interpreter.h"
 
@@ -60,16 +59,11 @@ int main(void) {
         ONETEST_TEST(test_createNode),
 
         // test_bytecode.h
-        // ONETEST_TEST(test_handleOperation),
-        // ONETEST_TEST(test_handleAtom),
-        // ONETEST_TEST(test_nextInst),
-        // ONETEST_TEST(test_bytecodeGeneration),
-        // ONETEST_TEST(test_isFull),
-        // ONETEST_TEST(test_isEmpty),
-        // ONETEST_TEST(test_stackPush),
-        // ONETEST_TEST(test_stackPop),
-        // ONETEST_TEST(test_stackPeek),
-        // ONETEST_TEST(test_ariaExecute),
+        ONETEST_TEST(test_compileFunc),
+        ONETEST_TEST(test_opcodeDisplay),
+        ONETEST_TEST(test_ariaCompile),
+        ONETEST_TEST(test_bufferChunkInsert),
+
         // test_interpreter.h
         // ONETEST_TEST(test_add),
         // ONETEST_TEST(test_subtract),
