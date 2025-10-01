@@ -42,10 +42,7 @@ typedef struct {
         buf->items = realloc(buf->items, buf->capacity * buf->elem_size);
     }
 
-    void* copy_elem = malloc(buf->elem_size);
-    memcpy(copy_elem, elem, buf->elem_size);
-
-    memcpy(buf->items + (buf->elem_size * buf->size), copy_elem, buf->elem_size);
+    memcpy(buf->items + (buf->elem_size * buf->size), elem, buf->elem_size);
     buf->size++;
 }
 

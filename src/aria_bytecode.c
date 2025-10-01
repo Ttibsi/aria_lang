@@ -36,10 +36,24 @@ Aria_Module ariaCompile(ASTNode node) {
 
     if (node.type == AST_FUNC) {
         Aria_Chunk chunk = compileFunc(node);
-        bufferInsert(&mod.buf, &chunk);
+        bufferChunkInsert(&mod.buf, &chunk);
     }
 
     return mod;
+}
+
+// "Overload" for bufferInsert for Aria_Chunk -- so we can deep copy in
+void bufferChunkInsert(Aria_Buffer* buf, Aria_Chunk* elem) {
+    if (buf->size == buf->capacity) {
+        buf->capacity *= 2;
+        buf->items = realloc(buf->items, buf->capacity * buf->elem_size);
+    }
+
+    memcpy(buf->items + (buf->elem_size * buf->size), elem, buf->elem_size);
+    buf->size++;
+
+    Aria_Chunk* top = bufferPeek(*buf);
+    memcpy(&top->buf, &elem->buf, sizeof(Aria_Buffer));
 }
 
 const char* opcodeDisplay(Opcode op) {
