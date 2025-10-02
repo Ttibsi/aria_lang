@@ -305,6 +305,8 @@ static int test_match(void) {
     return 0;
 }
 
+static int test_getCurrToken_type(void) { return 1; }
+
 static int test_getTokenNumber(void) {
     Aria_Lexer l = (Aria_Lexer){
         .source = "3 + 4",

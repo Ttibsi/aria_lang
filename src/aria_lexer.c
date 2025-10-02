@@ -156,6 +156,10 @@ bool match(Aria_Lexer* l, TokenType type) {
     return false;
 }
 
+TokenType getCurrTokenType(Aria_Lexer *l) {
+    return ((Aria_Token*)bufferGet(l->tokens, l->buf_index))->type;
+}
+
 int getTokenNumber(Aria_Lexer* lexer, Aria_Token token) {
     if (token.type != TOK_NUMBER) return 0;
 

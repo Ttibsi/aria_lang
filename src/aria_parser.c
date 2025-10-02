@@ -112,27 +112,39 @@ ASTNode parseFunc(Aria_Lexer* l) {
 ASTNode parseImport(Aria_Lexer* l) { assert(0 && "TODO"); }
 
 ASTNode ariaParse(Aria_Lexer* l) {
-    Aria_Token* curr_token = bufferGet(l->tokens, l->buf_index);
-    switch (curr_token->type) {
-        case TOK_CLASS:
-            return parseClass(l);
-        case TOK_EXPORT:
-            return parseExport(l);
-        case TOK_FUNC:
-            return parseFunc(l);
-        case TOK_IMPORT:
-            return parseImport(l);
-        case TOK_ERROR:
-        default:
-            break;
-    };
+    ASTNode module = createNode(AST_MODULE);
 
-    return createNode(AST_ERR);
+    while (!check(l, TOK_EOF)) {
+        ASTNode inner = (ASTNode){.type = AST_ERR};
+
+        switch (getCurrTokenType(l)) {
+            case TOK_CLASS:
+                inner = parseClass(l);
+                break;
+            case TOK_EXPORT:
+                inner = parseExport(l);
+                break;
+            case TOK_FUNC:
+                inner = parseFunc(l);
+                advance(l); // TOK_RIGHT_BRACE
+                break;
+            case TOK_IMPORT:
+                inner = parseImport(l);
+                break;
+            case TOK_ERROR:
+            default:
+                break;
+        };
+
+        bufferInsert(&module.block.buf, &inner);
+    }
+
+    return module;
 }
 
 ASTNode createNode(ASTType type) {
     switch (type) {
-        case AST_BLOCK:
+        case AST_BLOCK: case AST_MODULE:
             return (ASTNode){
                 .type = type,
                 .block = {
@@ -164,7 +176,7 @@ ASTNode createNode(ASTType type) {
 
 void printAST(ASTNode ast, int indent, Aria_Lexer* l) {
     switch (ast.type) {
-        case AST_BLOCK:
+        case AST_BLOCK: case AST_MODULE:
             Aria_Buffer buf = ast.block.buf;
             for (uint32_t i = 0; i < buf.size; i++) {
                 printAST(*(ASTNode*)bufferGet(buf, i), indent, l);

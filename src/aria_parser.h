@@ -11,6 +11,7 @@ typedef enum {
     AST_BLOCK,
     AST_FUNC,
     AST_VALUE,
+    AST_MODULE,
 
     AST_ERR,
 } ASTType;
