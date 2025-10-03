@@ -9,7 +9,7 @@
 
 int aria_debug_mode;
 
-int ariaInterpret(const char* src) {
+int ariaInterpret(char* src) {
     Aria_Lexer* lexer = ariaTokenize(src);
     if (aria_debug_mode) { printTokens(lexer); }
 

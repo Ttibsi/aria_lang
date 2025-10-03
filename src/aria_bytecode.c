@@ -10,7 +10,8 @@ Aria_Chunk* compileFunc(ASTNode* node) {
     // need to duplicate for memory reasons
 
     Aria_Chunk* chunk = malloc(sizeof(Aria_Chunk));
-    chunk->name = strdup(node->func.func_name);
+    chunk->name = malloc(strlen(node->func.func_name));
+    strcpy(chunk->name, node->func.func_name);
     chunk->buf = bufferCreate(sizeof(Aria_Bytecode), 64);
 
     Aria_Buffer* body = node->func.body->block.buf;

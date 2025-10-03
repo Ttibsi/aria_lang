@@ -184,9 +184,10 @@ void printTokens(Aria_Lexer* l) {
     }
 }
 
-Aria_Lexer* ariaTokenize(const char* src) {
+Aria_Lexer* ariaTokenize(char* src) {
     Aria_Lexer* lexer = malloc(sizeof(Aria_Lexer));
-    lexer->source = strdup(src);
+    lexer->source = malloc(strlen(src));
+    strcpy(lexer->source, src);
     lexer->pc = 0;
     lexer->tokens = bufferCreate(sizeof(Aria_Token), 64);
     lexer->buf_index = 0;

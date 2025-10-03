@@ -3,6 +3,6 @@
 
 extern int aria_debug_mode;
 
-int ariaInterpret(const char* src);
+int ariaInterpret(char* src);
 
 #endif // ARIA_H
