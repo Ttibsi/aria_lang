@@ -10,17 +10,17 @@
 int aria_debug_mode;
 
 int ariaInterpret(const char* src) {
-    Aria_Lexer lexer = ariaTokenize(src);
-    if (aria_debug_mode) { printTokens(&lexer); }
+    Aria_Lexer* lexer = ariaTokenize(src);
+    if (aria_debug_mode) { printTokens(lexer); }
 
-    ASTNode ast = ariaParse(&lexer);
+    ASTNode ast = ariaParse(lexer);
 
     if (aria_debug_mode) {
         printf("\n=== AST ===\n");
-        printAST(ast, 0, &lexer);
+        printAST(ast, 0, lexer);
     }
 
-    Aria_Module main_mod = ariaCompile(ast);
+    Aria_Module* main_mod = ariaCompile(&ast);
 
     if (aria_debug_mode) {
         printf("\n=== BYTECODE ===\n");

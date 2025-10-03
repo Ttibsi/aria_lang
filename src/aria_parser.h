@@ -21,7 +21,7 @@ typedef struct _ASTNode {
     union {
         struct {
             // Aria_Buffer<ASTNode>
-            Aria_Buffer buf;
+            Aria_Buffer* buf;
         } block;
 
         struct {

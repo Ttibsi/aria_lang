@@ -61,7 +61,7 @@ ASTNode parseBlock(Aria_Lexer* l) {
         check(l, TOK_IMPORT)
     )) {
         ASTNode expr = parseExpression(l);
-        bufferInsert(&node.block.buf, (void*)&expr);
+        bufferInsert(node.block.buf, (void*)&expr);
 
         if (check(l, TOK_RIGHT_BRACE)) { break; }
     }
@@ -136,7 +136,7 @@ ASTNode ariaParse(Aria_Lexer* l) {
                 break;
         };
 
-        bufferInsert(&module.block.buf, &inner);
+        bufferInsert(module.block.buf, &inner);
     }
 
     return module;
@@ -177,8 +177,8 @@ ASTNode createNode(ASTType type) {
 void printAST(ASTNode ast, int indent, Aria_Lexer* l) {
     switch (ast.type) {
         case AST_BLOCK: case AST_MODULE:
-            Aria_Buffer buf = ast.block.buf;
-            for (uint32_t i = 0; i < buf.size; i++) {
+            Aria_Buffer* buf = ast.block.buf;
+            for (uint32_t i = 0; i < buf->size; i++) {
                 printAST(*(ASTNode*)bufferGet(buf, i), indent, l);
             }
             break;

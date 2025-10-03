@@ -52,3 +52,5 @@ static int test_bufferPeek(void) {
     onetest_assert(*(int*)bufferPeek(buf) == 3);
     return 0;
 }
+
+static int test_bufferCopy(void) { return 1; }

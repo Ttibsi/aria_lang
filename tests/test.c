@@ -16,6 +16,7 @@ int main(void) {
         ONETEST_TEST(test_bufferInsert),
         ONETEST_TEST(test_bufferGet),
         ONETEST_TEST(test_bufferPeek),
+        ONETEST_TEST(test_bufferCopy),
 
         // test_hash.h
         ONETEST_TEST(test_mapCreate),
