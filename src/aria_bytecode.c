@@ -5,14 +5,17 @@
 #include <stdio.h>
 #include <assert.h>
 
+#define STACK_HEIGHT 64
+
 // TODO: handle parameters -- first elems on the stack?
 Aria_Chunk* compileFunc(ASTNode* node) {
     // need to duplicate for memory reasons
 
     Aria_Chunk* chunk = malloc(sizeof(Aria_Chunk));
-    chunk->name = malloc(strlen(node->func.func_name));
+    chunk->name = malloc(strlen(node->func.func_name) + 1);
     strcpy(chunk->name, node->func.func_name);
     chunk->buf = bufferCreate(sizeof(Aria_Bytecode), 64);
+    chunk->stack = bufferCreate(sizeof(Aria_Bytecode), STACK_HEIGHT);
 
     Aria_Buffer* body = node->func.body->block.buf;
 
@@ -90,10 +93,10 @@ Aria_Chunk* bufferChunkGet(const Aria_Buffer* buf, uint32_t idx) {
         deep_copy->name = NULL;
     }
 
-    deep_copy->buf = malloc(sizeof(Aria_Buffer));
+    deep_copy->buf = bufferCreate(sizeof(Aria_Bytecode), 1);
     bufferCopy(deep_copy->buf, original->buf);
 
-    deep_copy->stack = malloc(sizeof(Aria_Buffer));
+    deep_copy->stack = bufferCreate(sizeof(Aria_Bytecode), 1);
     bufferCopy(deep_copy->stack, original->stack);
 
     return deep_copy;
