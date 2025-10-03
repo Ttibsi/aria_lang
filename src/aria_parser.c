@@ -97,7 +97,7 @@ ASTNode parseFunc(Aria_Lexer* l) {
 
     // Fill the rest of the 8 arguments
     while (args_idx < 8) {
-        node.func.args[args_idx] = (Aria_Token){false, TOK_ERROR, -1. -1};
+        node.func.args[args_idx] = (Aria_Token){false, TOK_ERROR, -1, -1};
         args_idx++;
     }
 
