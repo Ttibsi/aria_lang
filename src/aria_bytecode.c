@@ -39,7 +39,7 @@ Aria_Chunk* compileFunc(ASTNode* node) {
 Aria_Module* ariaCompile(ASTNode* node) {
     Aria_Module* mod = malloc(sizeof(Aria_Module));
     mod->name = "main";
-    mod->buf = bufferCreate(sizeof(Aria_Chunk*), 64);
+    mod->buf = bufferCreate(sizeof(Aria_Chunk), 64);
 
     assert(node->type == AST_MODULE);
     Aria_Buffer* module_buf = node->block.buf;
@@ -86,17 +86,13 @@ Aria_Chunk* bufferChunkGet(const Aria_Buffer* buf, uint32_t idx) {
     Aria_Chunk* deep_copy = malloc(sizeof(Aria_Chunk));
 
     // Deep copy the name using strcpy
-    if (original->name) {
-        deep_copy->name = malloc(strlen(original->name) + 1);
-        strcpy(deep_copy->name, original->name);
-    } else {
-        deep_copy->name = NULL;
-    }
+    deep_copy->name = malloc(strlen(original->name) + 1);
+    strcpy(deep_copy->name, original->name);
 
-    deep_copy->buf = bufferCreate(sizeof(Aria_Bytecode), 1);
+    deep_copy->buf = bufferCreate(sizeof(Aria_Bytecode), 64);
     bufferCopy(deep_copy->buf, original->buf);
 
-    deep_copy->stack = bufferCreate(sizeof(Aria_Bytecode), 1);
+    deep_copy->stack = bufferCreate(sizeof(Aria_Bytecode), 64);
     bufferCopy(deep_copy->stack, original->stack);
 
     return deep_copy;

@@ -5,6 +5,7 @@
 #include "aria_parser.h"
 
 typedef enum {
+    FOO,
     OP_STORE_CONST,
 } Opcode;
 

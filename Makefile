@@ -1,5 +1,5 @@
 CC := clang
-CFLAGS := -Wall -Wextra -g -MMD -MP -std=c23 -fsanitize=address
+CFLAGS := -Wall -Wextra -g -MMD -MP -std=c23
 
 sources := $(wildcard src/*.c)
 # objects := $(patsubst src/%.c,build/%.o,$(sources))
@@ -19,7 +19,7 @@ build/main_obj.o: main.c
 	$(CC) $< -c -o $@ $(CFLAGS)
 
 aria: $(objects) build/main_obj.o
-	$(CC) $^ -o $@ -fsanitize=address
+	$(CC) $^ -o $@
 
 ##########################
 
