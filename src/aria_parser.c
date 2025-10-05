@@ -184,13 +184,13 @@ void printAST(ASTNode ast, int indent, Aria_Lexer* l) {
             break;
 
         case AST_FUNC:
-            printf("%*s@Function Node: {%s}\n", indent, "", ast.func.func_name);
+            printf("%*s@Function Node: { %s }\n", indent, "", ast.func.func_name);
 
             // Arguments
             for(int i = 0; i < 8; i++) {
                 if (ast.func.args[i].type == TOK_ERROR) { break; }
                 printf(
-                    "%*s@Argument: {%.*s}\n",
+                    "%*s@Argument: { %.*s }\n",
                     indent + 2,
                     " ",
                     ast.func.args[i].len,
@@ -203,7 +203,7 @@ void printAST(ASTNode ast, int indent, Aria_Lexer* l) {
             break;
 
         case AST_VALUE:
-            printf("%*s@Value: {%d}\n", indent, "", ast.value);
+            printf("%*s@Value: { %d }\n", indent, "", ast.value);
             break;
         case AST_ERR:
             printf("%*s@Error\n", indent, "");
