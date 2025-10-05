@@ -6,4 +6,3 @@
 static int test_compileFunc(void) { return 1; }
 static int test_opcodeDisplay(void) { return 1; }
 static int test_ariaCompile(void) { return 1; }
-static int test_bufferChunkInsert(void) { return 1; }

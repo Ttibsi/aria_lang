@@ -64,7 +64,6 @@ int main(void) {
         ONETEST_TEST(test_compileFunc),
         ONETEST_TEST(test_opcodeDisplay),
         ONETEST_TEST(test_ariaCompile),
-        ONETEST_TEST(test_bufferChunkInsert),
 
         // test_interpreter.h
         // ONETEST_TEST(test_add),

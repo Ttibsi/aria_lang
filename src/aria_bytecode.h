@@ -5,7 +5,6 @@
 #include "aria_parser.h"
 
 typedef enum {
-    FOO,
     OP_STORE_CONST,
 } Opcode;
 
@@ -36,7 +35,6 @@ typedef struct {
 Aria_Chunk* compileFunc(ASTNode* node);
 const char* opcodeDisplay(Opcode op);
 Aria_Module* ariaCompile(ASTNode* node);
-void bufferChunkInsert(Aria_Buffer* buf, const Aria_Chunk* elem);
 void printModule(const Aria_Module* mod);
 
 #endif // ARIA_BYTECODE_H

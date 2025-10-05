@@ -35,7 +35,7 @@ static Map* mapCreate() {
 // FNV-1a standard hashing formula sourced from craftinginterpreters
 static uint32_t hash(const char* key) {
     uint32_t hash = 2166136261u;
-    for (int i = 0; i < strlen(key); i++) {
+    for (size_t i = 0; i < strlen(key); i++) {
         hash ^= (uint8_t)key[i];
         hash *= 16777619;
     }

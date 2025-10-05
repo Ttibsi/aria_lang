@@ -245,13 +245,13 @@ static int test_advance(void) {
     };
 
     Aria_Token tok1 = (Aria_Token){true, TOK_NUMBER, 0, 1};
-    bufferInsert(&l.tokens, &tok1);
+    bufferInsert(l.tokens, &tok1);
 
     Aria_Token tok2 = (Aria_Token){true, TOK_PLUS, 2, 1};
-    bufferInsert(&l.tokens, &tok2);
+    bufferInsert(l.tokens, &tok2);
 
     Aria_Token tok3 = (Aria_Token){true, TOK_NUMBER, 4, 1};
-    bufferInsert(&l.tokens, &tok3);
+    bufferInsert(l.tokens, &tok3);
 
     advance(&l);
     Aria_Token* tok = (Aria_Token*)bufferGet(l.tokens, l.buf_index);
@@ -269,13 +269,13 @@ static int test_check(void) {
     };
 
     Aria_Token tok1 = (Aria_Token){true, TOK_NUMBER, 0, 1};
-    bufferInsert(&l.tokens, &tok1);
+    bufferInsert(l.tokens, &tok1);
 
     Aria_Token tok2 = (Aria_Token){true, TOK_PLUS, 2, 1};
-    bufferInsert(&l.tokens, &tok2);
+    bufferInsert(l.tokens, &tok2);
 
     Aria_Token tok3 = (Aria_Token){true, TOK_NUMBER, 4, 1};
-    bufferInsert(&l.tokens, &tok3);
+    bufferInsert(l.tokens, &tok3);
 
     onetest_assert(check(&l, TOK_NUMBER) == 1);
     onetest_assert(check(&l, TOK_PLUS) == 0);
@@ -292,20 +292,20 @@ static int test_match(void) {
     };
 
     Aria_Token tok1 = (Aria_Token){true, TOK_NUMBER, 0, 1};
-    bufferInsert(&l.tokens, &tok1);
+    bufferInsert(l.tokens, &tok1);
 
     Aria_Token tok2 = (Aria_Token){true, TOK_PLUS, 2, 1};
-    bufferInsert(&l.tokens, &tok2);
+    bufferInsert(l.tokens, &tok2);
 
     Aria_Token tok3 = (Aria_Token){true, TOK_NUMBER, 4, 1};
-    bufferInsert(&l.tokens, &tok3);
+    bufferInsert(l.tokens, &tok3);
 
     onetest_assert(match(&l, TOK_NUMBER));
     onetest_assert(match(&l, TOK_PLUS));
     return 0;
 }
 
-static int test_getCurrToken_type(void) { return 1; }
+static int test_getCurrTokenType(void) { return 1; }
 
 static int test_getTokenNumber(void) {
     Aria_Lexer l = (Aria_Lexer){
@@ -316,13 +316,13 @@ static int test_getTokenNumber(void) {
     };
 
     Aria_Token tok1 = (Aria_Token){true, TOK_NUMBER, 0, 1};
-    bufferInsert(&l.tokens, &tok1);
+    bufferInsert(l.tokens, &tok1);
 
     Aria_Token tok2 = (Aria_Token){true, TOK_PLUS, 2, 1};
-    bufferInsert(&l.tokens, &tok2);
+    bufferInsert(l.tokens, &tok2);
 
     Aria_Token tok3 = (Aria_Token){true, TOK_NUMBER, 4, 1};
-    bufferInsert(&l.tokens, &tok3);
+    bufferInsert(l.tokens, &tok3);
 
     int tok_num = getTokenNumber(&l, *(Aria_Token*)bufferGet(l.tokens, l.buf_index));
     onetest_assert(tok_num == 3);
@@ -338,7 +338,7 @@ static int test_getTokenChar(void) {
     };
 
     Aria_Token tok1 = (Aria_Token){true, TOK_STRING, 0, 5};
-    bufferInsert(&l.tokens, &tok1);
+    bufferInsert(l.tokens, &tok1);
 
     char tok_char = getTokenChar(&l, *(Aria_Token*)bufferGet(l.tokens, l.buf_index));
     onetest_assert(tok_char == 'H');
