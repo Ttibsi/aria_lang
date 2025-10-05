@@ -9,15 +9,16 @@ typedef enum {
     OP_STORE_CONST,
 } Opcode;
 
-typedef struct {
+typedef struct _Bytecode {
     Opcode op;
     int operand;
+    struct _Bytecode* next;
+    struct _Bytecode* prev;
 } Aria_Bytecode;
 
 typedef struct {
     char* name;
-    // Aria_Buffer<Aria_Bytecode>
-    Aria_Buffer* buf;
+    Aria_Bytecode* buf;
 
     // Aria_Buffer<int>
     Aria_Buffer* stack;

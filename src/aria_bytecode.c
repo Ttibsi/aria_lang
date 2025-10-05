@@ -14,10 +14,11 @@ Aria_Chunk* compileFunc(ASTNode* node) {
     Aria_Chunk* chunk = malloc(sizeof(Aria_Chunk));
     chunk->name = malloc(strlen(node->func.func_name) + 1);
     strcpy(chunk->name, node->func.func_name);
-    chunk->buf = bufferCreate(sizeof(Aria_Bytecode), 64);
+    chunk->buf = NULL;
     chunk->stack = bufferCreate(sizeof(Aria_Bytecode), STACK_HEIGHT);
 
     Aria_Buffer* body = node->func.body->block.buf;
+    Aria_Bytecode* current = chunk->buf;
 
     for (size_t i = 0; i < body->size; i++) {
         ASTNode* body_node = bufferGet(body, i);
@@ -26,7 +27,18 @@ Aria_Chunk* compileFunc(ASTNode* node) {
                 Aria_Bytecode* inst = malloc(sizeof(Aria_Bytecode));
                 inst->op = OP_STORE_CONST;
                 inst->operand = body_node->value;
-                bufferInsert(chunk->buf, inst);
+                inst->next = NULL;
+                inst->prev = NULL;
+
+                if (current == NULL) {
+                    current = inst;
+                    chunk->buf = current;
+                } else {
+                    current->next = inst;
+                    inst->prev = current;
+                    current = inst;
+                }
+
                 break;
             }
             default: break;
@@ -50,52 +62,13 @@ Aria_Module* ariaCompile(ASTNode* node) {
         switch (child->type) {
             case AST_FUNC:
                 Aria_Chunk* chunk = compileFunc(child);
-                bufferChunkInsert(mod->buf, chunk);
+                bufferInsert(mod->buf, chunk);
                 break;
         }
 
     }
 
     return mod;
-}
-
-// "Overload" for bufferInsert for Aria_Chunk -- so we can deep copy in
-void bufferChunkInsert(Aria_Buffer* buf, const Aria_Chunk* elem) {
-    if (buf->size == buf->capacity) {
-        buf->capacity *= 2;
-        buf->items = realloc(buf->items, buf->capacity * buf->elem_size);
-    }
-
-    Aria_Chunk* dest_addr = (Aria_Chunk*)(buf->items + (buf->size * buf->elem_size));
-
-    // Shallow copy
-    *dest_addr =  *elem;
-    // Deep copy buffers
-    bufferCopy(dest_addr->buf, elem->buf);
-    bufferCopy(dest_addr->stack, elem->stack);
-
-    buf->size++;
-}
-
-Aria_Chunk* bufferChunkGet(const Aria_Buffer* buf, uint32_t idx) {
-    if (idx >= buf->size) { return NULL; }
-
-    Aria_Chunk* original = (Aria_Chunk*)(buf->items + (buf->elem_size * idx));
-
-    // Allocate a new Aria_Chunk for deep copy
-    Aria_Chunk* deep_copy = malloc(sizeof(Aria_Chunk));
-
-    // Deep copy the name using strcpy
-    deep_copy->name = malloc(strlen(original->name) + 1);
-    strcpy(deep_copy->name, original->name);
-
-    deep_copy->buf = bufferCreate(sizeof(Aria_Bytecode), 64);
-    bufferCopy(deep_copy->buf, original->buf);
-
-    deep_copy->stack = bufferCreate(sizeof(Aria_Bytecode), 64);
-    bufferCopy(deep_copy->stack, original->stack);
-
-    return deep_copy;
 }
 
 const char* opcodeDisplay(Opcode op) {
@@ -110,14 +83,14 @@ const char* opcodeDisplay(Opcode op) {
 void printModule(const Aria_Module* mod) {
     printf("Module: %s\n", mod->name);
     for (size_t i = 0; i < mod->buf->size; i++) {
-        Aria_Chunk* chunk = bufferChunkGet(mod->buf, i);
+        Aria_Chunk* chunk = bufferGet(mod->buf, i);
         printf("  Chunk: %s\n", chunk->name);
 
-        for (size_t j = 0; j < chunk->buf->size; j++) {
-            Aria_Bytecode* inst = bufferGet(chunk->buf, j);
+        Aria_Bytecode* buf = chunk->buf;
+        while (buf != NULL) {
             char display[4];
-            if (inst->operand) {
-                snprintf(display, 4, "%d", inst->operand);
+            if (buf->operand) {
+                snprintf(display, 4, "%d", buf->operand);
             } else {
                 display[0] = ' ';
                 display[1] = '\0';
@@ -125,10 +98,12 @@ void printModule(const Aria_Module* mod) {
 
             printf(
                 "    %s: %s\n",
-                opcodeDisplay(inst->op),
+                opcodeDisplay(buf->op),
                 display
             );
 
+
+            buf = buf->next;
         }
 
     }
