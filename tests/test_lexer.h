@@ -305,7 +305,13 @@ static int test_match(void) {
     return 0;
 }
 
-static int test_getCurrTokenType(void) { return 1; }
+static int test_getCurrTokenType(void) {
+    Aria_Lexer* lexer = ariaTokenize("func foo() { return 42; }");
+    onetest_assert(getCurrTokenType(lexer) == TOK_FUNC);
+    advance(lexer);
+    onetest_assert(getCurrTokenType(lexer) == TOK_IDENTIFIER);
+    return 0;
+}
 
 static int test_getTokenNumber(void) {
     Aria_Lexer l = (Aria_Lexer){
