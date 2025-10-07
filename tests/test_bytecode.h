@@ -27,4 +27,23 @@ static int test_opcodeDisplay(void) {
     return 0;
 }
 
-static int test_ariaCompile(void) { return 1; }
+static int test_ariaCompile(void) {
+    Aria_Lexer* lexer = ariaTokenize("func foo(bar) { return 42; } func main(argv) { return 69; }");
+    ASTNode ast = ariaParse(lexer);
+    Aria_Module* mod = ariaCompile(&ast);
+
+    onetest_assert(strcmp(mod->name, "main") == 0);
+    onetest_assert(mod->buf->size == 2);
+
+    Aria_Chunk* first_chunk = bufferGet(mod->buf, 0);
+    onetest_assert(strcmp(first_chunk->name, "foo") == 0);
+    onetest_assert(first_chunk->buf->op == OP_STORE_CONST);
+    onetest_assert(first_chunk->buf->operand == 42);
+
+    Aria_Chunk* second_chunk = bufferGet(mod->buf, 1);
+    onetest_assert(strcmp(second_chunk->name, "main") == 0);
+    onetest_assert(second_chunk->buf->op == OP_STORE_CONST);
+    onetest_assert(second_chunk->buf->operand == 69);
+
+    return 0;
+}
