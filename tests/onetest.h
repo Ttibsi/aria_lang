@@ -81,9 +81,7 @@ static inline void print_errors(int ci) {
     }
 }
 
-static inline void summary_msg(int fail, int skip, double ms, char* out) {
-    size_t outsz = sizeof(out);
-
+static inline void summary_msg(int fail, int skip, double ms, char* out, size_t outsz) {
     if (fail == 0) {
         if (skip)
             snprintf(out, outsz, " All tests passed (%d skipped) in %.2fms ", skip, ms);
@@ -96,7 +94,7 @@ static inline void summary_msg(int fail, int skip, double ms, char* out) {
             snprintf(out, outsz, " 1 test failed in %.2fms ", ms);
     } else {
         if (skip)
-            snprintf(out, outsz, "%d tests failed (%d skipped) in %.2fms ", fail, skip, ms);
+            snprintf(out, outsz, " %d tests failed (%d skipped) in %.2fms ", fail, skip, ms);
         else
             snprintf(out, outsz, " %d tests failed in %.2fms ", fail, ms);
     }
@@ -159,7 +157,7 @@ int onetest_exec(const onetest_test_t* tests, int test_count) {
     double duration = end_time - start_time;
 
     char msg[128];
-    summary_msg(fail_counter, skip_counter, duration, msg);
+    summary_msg(fail_counter, skip_counter, duration, msg, 128);
 
     int msg_len   = strlen(msg);
     int line_size = (79 - msg_len) / 2;
