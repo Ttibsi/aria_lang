@@ -47,6 +47,12 @@ int onetest_exec(const onetest_test_t* tests, int test_count);
 char onetest_errors[ONETEST_MAX_ERRORS][ONETEST_MAX_ERROR_LEN];
 int onetest_error_count = 0;
 
+typedef struct {
+    int pass;
+    int skip;
+    int fail;
+} Counters;
+
 /* Check if running in CI environment */
 static int onetest_is_ci(void) {
     return getenv("CI") != NULL;
@@ -81,29 +87,28 @@ static inline void print_errors(int ci) {
     }
 }
 
-static inline void summary_msg(int fail, int skip, double ms, char* out, size_t outsz) {
-    if (fail == 0) {
-        if (skip)
-            snprintf(out, outsz, " All tests passed (%d skipped) in %.2fms ", skip, ms);
+static inline void summary_msg(Counters counters, double ms, char* out, size_t outsz) {
+    if (counters.fail == 0) {
+        if (counters.skip)
+            snprintf(out, outsz, " %d tests passed (%d skipped) in %.2fms ", counters.pass, counters.skip, ms);
         else
-            snprintf(out, outsz, " All tests passed in %.2fms ", ms);
-    } else if (fail == 1) {
-        if (skip)
-            snprintf(out, outsz, " 1 test failed (%d skipped) in %.2fms ", skip, ms);
+            snprintf(out, outsz, " %d tests passed in %.2fms ", counters.pass, ms);
+    } else if (counters.fail == 1) {
+        if (counters.skip)
+            snprintf(out, outsz, " 1 test failed (%d skipped) in %.2fms ", counters.skip, ms);
         else
             snprintf(out, outsz, " 1 test failed in %.2fms ", ms);
     } else {
-        if (skip)
-            snprintf(out, outsz, " %d tests failed (%d skipped) in %.2fms ", fail, skip, ms);
+        if (counters.skip)
+            snprintf(out, outsz, " %d tests failed (%d skipped) in %.2fms ", counters.fail, counters.skip, ms);
         else
-            snprintf(out, outsz, " %d tests failed in %.2fms ", fail, ms);
+            snprintf(out, outsz, " %d tests failed in %.2fms ", counters.fail, ms);
     }
 }
 
 int onetest_exec(const onetest_test_t* tests, int test_count) {
     int ci          = onetest_is_ci();
-    int fail_counter = 0;
-    int skip_counter = 0;
+    Counters counters = {0, 0, 0};
     double start_time = onetest_get_time_ms();
 
     for (int i = 0; i < test_count; ++i) {
@@ -113,7 +118,7 @@ int onetest_exec(const onetest_test_t* tests, int test_count) {
 
         int retcode = 0;
         if (tests[i].skip) {
-            ++skip_counter;
+            ++counters.skip;
         } else {
             retcode = tests[i].func();
             if (retcode) {
@@ -139,6 +144,7 @@ int onetest_exec(const onetest_test_t* tests, int test_count) {
         } else {
             const char *col = status_color(ci, "\x1b[42m");
             print_status(tests[i].name, padding, "Passed", col);
+            ++counters.pass;
         }
 
         /* ----- print any errors ----- */
@@ -148,7 +154,7 @@ int onetest_exec(const onetest_test_t* tests, int test_count) {
 
         /* ----- count failures ----- */
         if (onetest_error_count > 0 || retcode > 0) {
-            ++fail_counter;
+            ++counters.fail;
         }
     }
 
@@ -157,11 +163,11 @@ int onetest_exec(const onetest_test_t* tests, int test_count) {
     double duration = end_time - start_time;
 
     char msg[128];
-    summary_msg(fail_counter, skip_counter, duration, msg, 128);
+    summary_msg(counters, duration, msg, 128);
 
     int msg_len   = strlen(msg);
     int line_size = (79 - msg_len) / 2;
-    const char *color = status_color(ci, fail_counter ? "\x1b[31m" : "\x1b[32m");
+    const char *color = status_color(ci, counters.fail ? "\x1b[31m" : "\x1b[32m");
 
     printf("%s", color);
     for (int i = 0; i < line_size + (msg_len % 2 ? 0 : 1); ++i) putchar('=');
@@ -170,7 +176,7 @@ int onetest_exec(const onetest_test_t* tests, int test_count) {
     if (!ci) printf("\x1b[0m");
     putchar('\n');
 
-    return fail_counter;
+    return counters.fail;
 }
 
 #endif /* ONETEST_IMPLEMENTATION */
