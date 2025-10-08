@@ -6,6 +6,7 @@
 
 typedef enum {
     OP_STORE_CONST,
+    OP_NULL,
 } Opcode;
 
 typedef struct _Bytecode {
@@ -18,9 +19,6 @@ typedef struct _Bytecode {
 typedef struct {
     char* name;
     Aria_Bytecode* buf;
-
-    // Aria_Buffer<int>
-    Aria_Buffer* stack;
 } Aria_Chunk;
 
 // Modules should only contain top-level constructs, such as functions,
