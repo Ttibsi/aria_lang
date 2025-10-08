@@ -5,7 +5,9 @@
 #include "aria_lexer.h"
 #include "aria_parser.h"
 #include "aria_bytecode.h"
-// #include "aria_executor.h"
+#include "aria_executor.h"
+#define ARIA_STACK_IMPL
+#include "aria_stack.h"
 
 int aria_debug_mode;
 
@@ -27,17 +29,15 @@ int ariaInterpret(char* src) {
         printModule(main_mod);
     }
 
-    return 0;
+    // execute bytecode
+    Stack* stack = ariaExecute(main_mod);
 
-    // // execute bytecode
-    // Stack* stack = ariaExecute(bc);
-    //
-    // if (isEmpty(stack)) { stackPush(stack, 0); }
-    // int result = stackPeek(stack);
-    //
-    // // cleanup here
-    // freeStack(stack);
-    // freeBytecode(bc);
+    if (isEmpty(stack)) { stackPush(stack, 1); }
+    int result = stackPeek(stack);
 
-    // return result;
+    // cleanup here
+    //freeStack(stack);
+    //freeBytecode(bc);
+
+    return result;
 }
