@@ -1,7 +1,6 @@
 #ifndef ARIA_PARSER_H
 #define ARIA_PARSER_H
 
-#define ARIA_BUFFER_IMPL
 #include "aria_lexer.h"
 #include "aria_buffer.h"
 
