@@ -1,4 +1,3 @@
-#define ARIA_BUFFER_IMPL
 #include "aria_buffer.h"
 
 #include "onetest.h"
