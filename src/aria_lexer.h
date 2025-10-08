@@ -69,9 +69,9 @@ typedef struct _Aria_Token {
 } Aria_Token;
 
 typedef struct {
-    const char* source;
+    char* source;
     int pc; // program counter
-    Aria_Buffer tokens;
+    Aria_Buffer* tokens;
     int buf_index;
 } Aria_Lexer;
 
@@ -115,9 +115,10 @@ Aria_Token scanToken(Aria_Lexer* l);
 void advance(Aria_Lexer* l);
 bool check(Aria_Lexer* l, TokenType type);
 bool match(Aria_Lexer* l, TokenType type);
+TokenType getCurrTokenType(Aria_Lexer* l);
 int getTokenNumber(Aria_Lexer* lexer, Aria_Token token);
 char getTokenChar(Aria_Lexer* lexer, Aria_Token token);
 void printTokens(Aria_Lexer* l);
-Aria_Lexer ariaTokenize(const char* src);
+Aria_Lexer* ariaTokenize(char* src);
 
 #endif // ARIA_LEXER_H

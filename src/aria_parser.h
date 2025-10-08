@@ -11,6 +11,7 @@ typedef enum {
     AST_BLOCK,
     AST_FUNC,
     AST_VALUE,
+    AST_MODULE,
 
     AST_ERR,
 } ASTType;
@@ -20,7 +21,7 @@ typedef struct _ASTNode {
     union {
         struct {
             // Aria_Buffer<ASTNode>
-            Aria_Buffer buf;
+            Aria_Buffer* buf;
         } block;
 
         struct {

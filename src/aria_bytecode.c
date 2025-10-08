@@ -1,79 +1,110 @@
-#if 0
+#define ARIA_BUFFER_IMPL
 #include "aria_bytecode.h"
+
+#include <stddef.h>
 #include <stdio.h>
-#include <stdlib.h>
+#include <assert.h>
 
-Bytecode* handleOperation(Bytecode* bc, Expression* expr) {
-    if(expr->op.lhs->type == Atom) {
-        bc = handleAtom(bc, expr->op.lhs);
-    } else {
-        bc = handleOperation(bc, expr->op.lhs);
+#define STACK_HEIGHT 64
+
+// TODO: handle parameters -- first elems on the stack?
+Aria_Chunk* compileFunc(ASTNode* node) {
+    // need to duplicate for memory reasons
+
+    Aria_Chunk* chunk = malloc(sizeof(Aria_Chunk));
+    chunk->name = malloc(strlen(node->func.func_name) + 1);
+    strcpy(chunk->name, node->func.func_name);
+    chunk->buf = NULL;
+    chunk->stack = bufferCreate(sizeof(Aria_Bytecode), STACK_HEIGHT);
+
+    Aria_Buffer* body = node->func.body->block.buf;
+    Aria_Bytecode* current = chunk->buf;
+
+    for (size_t i = 0; i < body->size; i++) {
+        ASTNode* body_node = bufferGet(body, i);
+        switch (body_node->type) {
+            case AST_VALUE: {
+                Aria_Bytecode* inst = malloc(sizeof(Aria_Bytecode));
+                inst->op = OP_STORE_CONST;
+                inst->operand = body_node->value;
+                inst->next = NULL;
+                inst->prev = NULL;
+
+                if (current == NULL) {
+                    current = inst;
+                    chunk->buf = current;
+                } else {
+                    current->next = inst;
+                    inst->prev = current;
+                    current = inst;
+                }
+
+                break;
+            }
+            default: break;
+        }
     }
 
-    if (expr->op.rhs->type == Atom) {
-        bc = handleAtom(bc, expr->op.rhs);
-    } else {
-        bc = handleOperation(bc, expr->op.rhs);
+    return chunk;
+}
+
+Aria_Module* ariaCompile(ASTNode* node) {
+    Aria_Module* mod = malloc(sizeof(Aria_Module));
+    mod->name = "main";
+    mod->buf = bufferCreate(sizeof(Aria_Chunk), 64);
+
+    assert(node->type == AST_MODULE);
+    Aria_Buffer* module_buf = node->block.buf;
+
+    for (size_t i = 0; i < module_buf->size; i++) {
+        ASTNode* child = (ASTNode*)bufferGet(module_buf, i);
+
+        switch (child->type) {
+            case AST_FUNC:
+                Aria_Chunk* chunk = compileFunc(child);
+                bufferInsert(mod->buf, chunk);
+                break;
+        }
+
     }
 
-    switch (expr->op.ch) {
-        case '+': bc = nextInst(bc, INST_ADD, 0); break;
-        case '-': bc = nextInst(bc, INST_SUB, 0); break;
-        case '*': bc = nextInst(bc, INST_MUL, 0); break;
-        case '/': bc = nextInst(bc, INST_DIV, 0); break;
-    };
-
-    return bc;
+    return mod;
 }
 
-Bytecode* handleAtom(Bytecode* bc, Expression* expr) {
-    switch (expr->atom.stmt_type) {
-        case STMT_LOAD: bc = nextInst(bc, INST_LOAD_CONST, expr->atom.c); break;
-        case STMT_PRINT: bc = nextInst(bc, INST_PRINT, expr->atom.c); break;
-    }
-    return bc;
-}
-
-Bytecode* nextInst(Bytecode* bc, Instruction inst, int value) {
-    bc->inst = inst;
-    bc->value = value;
-    Bytecode* new = malloc(sizeof(Bytecode));
-    new->inst = INST_NULL;
-    bc->next = new;
-    new->prev = bc;
-    new->next = NULL;
-    return bc->next;
-}
-
-Bytecode* bytecodeGeneration(Expression expr) {
-    Bytecode* root = malloc(sizeof(Bytecode));
-    root->prev = NULL;
-
-    if (expr.type == Atom) {
-        handleAtom(root, &expr);
-    } else {
-        handleOperation(root, &expr);
+const char* opcodeDisplay(Opcode op) {
+    switch (op) {
+        case OP_STORE_CONST: return "OP_STORE_CONST";
+        default: return "UNKNOWN";
     }
 
-    return root;
+    return "";
 }
 
-void printBytecode(Bytecode* bc) {
-    printf("\n=== BYTECODE ===\n");
-    while (bc->next != NULL) {
-        printf("Instruction: %d Value: %d\n", bc->inst, bc->value);
-        bc = bc->next;
+void printModule(const Aria_Module* mod) {
+    printf("Module: %s\n", mod->name);
+    for (size_t i = 0; i < mod->buf->size; i++) {
+        Aria_Chunk* chunk = bufferGet(mod->buf, i);
+        printf("  Chunk: %s\n", chunk->name);
+
+        Aria_Bytecode* buf = chunk->buf;
+        while (buf != NULL) {
+            char display[4];
+            if (buf->operand) {
+                snprintf(display, 4, "%d", buf->operand);
+            } else {
+                display[0] = ' ';
+                display[1] = '\0';
+            }
+
+            printf(
+                "    %s: %s\n",
+                opcodeDisplay(buf->op),
+                display
+            );
+
+
+            buf = buf->next;
+        }
+
     }
 }
-
-void freeBytecode(Bytecode* bc) {
-    if (bc == NULL) { return; }
-    while (bc->prev != NULL) { bc = bc->prev; }
-
-    while (bc != NULL) {
-        Bytecode* next = bc->next;
-        free(bc);
-        bc = next;
-    }
-}
-#endif

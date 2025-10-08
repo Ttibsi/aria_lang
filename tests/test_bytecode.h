@@ -2,123 +2,48 @@
 
 #include "onetest.h"
 #include "aria_bytecode.h"
-#include "aria_parser.h"
 
-static int test_handleOperation(void) {
-    Bytecode* bc = malloc(sizeof(Bytecode));
-    Expression* expr = malloc(sizeof(Expression));
-    Expression* lhs =  malloc(sizeof(Expression));
-    Expression* rhs = malloc(sizeof(Expression));
-
-    lhs->type = Atom;
-    lhs->atom.c = 5;
-    rhs->type = Atom;
-    rhs->atom.c = 2;
-
-    expr->type = Operation;
-    expr->op.ch = '+';
-    expr->op.lhs = lhs;
-    expr->op.rhs = rhs;
-
-    bc = handleOperation(bc, expr);
-    // We're at the end of the chain here
-    onetest_assert(bc->inst == INST_NULL);
-    onetest_assert(bc->prev != NULL);
-    onetest_assert(bc->prev->inst == INST_ADD);
-
-    freeBytecode(bc);
-    free(expr);
-    free(lhs);
-    free(rhs);
-
-    return 0;
-}
-
-static int test_handleAtom(void) {
-    Bytecode* bc = malloc(sizeof(Bytecode));
-    Expression* expr = malloc(sizeof(Expression));
-    expr->type = Atom;
-    expr->atom.c = 5;
-
-    bc = handleAtom(bc, expr);
-    onetest_assert(bc->prev->value == 5);
-    return 0;
-}
-
-static int test_nextInst(void) {
-    Bytecode* bc = malloc(sizeof(Bytecode));
-    bc->inst = INST_ADD;
-
-    bc = nextInst(bc, INST_LOAD_CONST, 5);
-
-    onetest_assert(bc->prev->inst == INST_LOAD_CONST);
-    onetest_assert(bc->inst == INST_NULL);
-    onetest_assert(bc->next == NULL);
-    return 0;
-}
-
-static int test_bytecodeGeneration(void) {
-    Expression* lhs = malloc(sizeof(Expression));
-    Expression* rhs = malloc(sizeof(Expression));
-    Expression* expr = malloc(sizeof(Expression));
-
-    // Test 1: Simple atom expression
-    expr->type = Atom;
-    expr->atom.c = 42;
-
-    Bytecode* bc1 = bytecodeGeneration(*expr);
-    onetest_assert(bc1->inst == INST_LOAD_CONST);
-    onetest_assert(bc1->value == 42);
-    onetest_assert(bc1->prev == NULL); // Should be root
-    freeBytecode(bc1);
-
-    // Test 2: Simple addition operation (5 + 3)
-    lhs->type = Atom;
-    lhs->atom.c = 5;
-    rhs->type = Atom;
-    rhs->atom.c = 3;
-
-    expr->type = Operation;
-    expr->op.ch = '+';
-    expr->op.lhs = lhs;
-    expr->op.rhs = rhs;
-
-    Bytecode* bc2 = bytecodeGeneration(*expr);
-
-    // Should be at root, first instruction should be LOAD_CONST for lhs
-    onetest_assert(bc2->inst == INST_LOAD_CONST);
-    onetest_assert(bc2->prev == NULL); // Root node
-
-    // Navigate through the bytecode chain
-    Bytecode* current = bc2;
-    onetest_assert(current->inst == INST_LOAD_CONST); // Load first operand
-    onetest_assert(current->value == 5);
-    current = current->next;
-    onetest_assert(current->inst == INST_LOAD_CONST); // Load second operand
-    onetest_assert(current->value == 3);
-    current = current->next;
-    onetest_assert(current->inst == INST_ADD); // Add operation
-
-    freeBytecode(bc2);
-
-    // Test 3: Simple multiplication operation (7 * 2)
-    lhs->atom.c = 7;
-    rhs->atom.c = 2;
-    expr->op.ch = '*';
-
-    Bytecode* bc3 = bytecodeGeneration(*expr);
-
-    // Navigate through bytecode to find multiplication
-    current = bc3;
-    while (current->next != NULL) {
-        current = current->next;
+static int test_compileFunc(void) {
+    Aria_Lexer* lexer = ariaTokenize("func foo() { return 42; }");
+    ASTNode mod = ariaParse(lexer);
+    ASTNode *funcNode = (ASTNode *)bufferGet(mod.block.buf, 0);
+    if (funcNode->type != AST_FUNC) {
+        fprintf(stderr, "Expected a function node\n");
+        return 1;
     }
-    onetest_assert(current->inst == INST_NULL);
 
-    freeBytecode(bc3);
-    free(lhs);
-    free(rhs);
-    free(expr);
+    Aria_Chunk* chunk = compileFunc(funcNode);
+
+    onetest_assert(strcmp(chunk->name, "foo") == 0);
+    onetest_assert(chunk->buf->op == OP_STORE_CONST);
+    onetest_assert(chunk->buf->operand == 42);
+
+    return 0;
+}
+
+static int test_opcodeDisplay(void) {
+    onetest_assert(strcmp(opcodeDisplay(OP_STORE_CONST), "OP_STORE_CONST") == 0);
+    onetest_assert(strcmp(opcodeDisplay(AST_FUNC), "UNKNOWN") == 0);
+    return 0;
+}
+
+static int test_ariaCompile(void) {
+    Aria_Lexer* lexer = ariaTokenize("func foo(bar) { return 42; } func main(argv) { return 69; }");
+    ASTNode ast = ariaParse(lexer);
+    Aria_Module* mod = ariaCompile(&ast);
+
+    onetest_assert(strcmp(mod->name, "main") == 0);
+    onetest_assert(mod->buf->size == 2);
+
+    Aria_Chunk* first_chunk = bufferGet(mod->buf, 0);
+    onetest_assert(strcmp(first_chunk->name, "foo") == 0);
+    onetest_assert(first_chunk->buf->op == OP_STORE_CONST);
+    onetest_assert(first_chunk->buf->operand == 42);
+
+    Aria_Chunk* second_chunk = bufferGet(mod->buf, 1);
+    onetest_assert(strcmp(second_chunk->name, "main") == 0);
+    onetest_assert(second_chunk->buf->op == OP_STORE_CONST);
+    onetest_assert(second_chunk->buf->operand == 69);
 
     return 0;
 }

@@ -1,31 +1,40 @@
 #ifndef ARIA_BYTECODE_H
 #define ARIA_BYTECODE_H
 
+#include "aria_buffer.h"
 #include "aria_parser.h"
 
 typedef enum {
-    INST_LOAD_CONST,
-    INST_ADD,
-    INST_SUB,
-    INST_MUL,
-    INST_DIV,
-    INST_PRINT,
-
-    INST_NULL,
-} Instruction;
+    OP_STORE_CONST,
+} Opcode;
 
 typedef struct _Bytecode {
-    Instruction inst;
-    int value; // Can be expanded to multiple opcodes in the future. linked list?
+    Opcode op;
+    int operand;
     struct _Bytecode* next;
     struct _Bytecode* prev;
-} Bytecode;
+} Aria_Bytecode;
 
-Bytecode* handleOperation(Bytecode* bc, Expression* expr);
-Bytecode* handleAtom(Bytecode* bc, Expression* expr);
-Bytecode* nextInst(Bytecode* bc, Instruction inst, int value);
-Bytecode* bytecodeGeneration(Expression expr);
-void printBytecode(Bytecode* bc);
-void freeBytecode(Bytecode* bc);
+typedef struct {
+    char* name;
+    Aria_Bytecode* buf;
+
+    // Aria_Buffer<int>
+    Aria_Buffer* stack;
+} Aria_Chunk;
+
+// Modules should only contain top-level constructs, such as functions,
+// classes, import statements.
+typedef struct {
+    char* name;
+
+    // Aria_Buffer<Aria_Chunk*>
+    Aria_Buffer* buf;
+} Aria_Module;
+
+Aria_Chunk* compileFunc(ASTNode* node);
+const char* opcodeDisplay(Opcode op);
+Aria_Module* ariaCompile(ASTNode* node);
+void printModule(const Aria_Module* mod);
 
 #endif // ARIA_BYTECODE_H

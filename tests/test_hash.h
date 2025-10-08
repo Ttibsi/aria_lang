@@ -56,15 +56,14 @@ static int test_mapRemove(void) {
     mapInsert(map, "Hello", 5);
     mapInsert(map, "anything", 10);
 
-    int loc = hash("Hello");
     onetest_assert(hash("Hello") == hash("anything"));
 
-    onetest_assert(map->items[hash("Hello")]->key == "Hello");
-    onetest_assert(map->items[hash("Hello")]->next->key == "anything");
+    onetest_assert(strcmp(map->items[hash("Hello")]->key, "Hello") == 0);
+    onetest_assert(strcmp(map->items[hash("Hello")]->next->key, "anything") == 0);
     onetest_assert(mapFind(map, "Hello") == 5);
 
     mapRemove(map, "Hello");
-    onetest_assert(map->items[hash("Hello")]->key == "anything");
+    onetest_assert(strcmp(map->items[hash("Hello")]->key, "anything") == 0);
     onetest_assert(mapFind(map, "Hello") == 10);
 
     return 0;

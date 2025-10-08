@@ -3,7 +3,7 @@ CFLAGS := -Wall -Wextra -g -MMD -MP -std=c23
 
 sources := $(wildcard src/*.c)
 # objects := $(patsubst src/%.c,build/%.o,$(sources))
-objects := build/aria.o build/aria_lexer.o build/aria_parser.o
+objects := build/aria.o build/aria_lexer.o build/aria_parser.o build/aria_bytecode.o
 
 .PHONY: all
 all: aria

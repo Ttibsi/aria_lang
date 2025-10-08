@@ -137,7 +137,7 @@ Aria_Token scanToken(Aria_Lexer* l) {
     if (isalpha(c) || c == '_') { return scanIdentifier(l); }
 
     // TODO: Handle error case
-    return makeToken(TOK_EOF, start, 0);
+    return makeToken(TOK_ERROR, start, 0);
 }
 
 void advance(Aria_Lexer* l) {
@@ -154,6 +154,10 @@ bool match(Aria_Lexer* l, TokenType type) {
         return true;
     }
     return false;
+}
+
+TokenType getCurrTokenType(Aria_Lexer *l) {
+    return ((Aria_Token*)bufferGet(l->tokens, l->buf_index))->type;
 }
 
 int getTokenNumber(Aria_Lexer* lexer, Aria_Token token) {
@@ -174,20 +178,25 @@ char getTokenChar(Aria_Lexer* lexer, Aria_Token token) {
 
 void printTokens(Aria_Lexer* l) {
     printf("=== TOKENS ===\n");
-    for (uint32_t i = 0; i < l->tokens.size; i++) {
+    for (uint32_t i = 0; i < l->tokens->size; i++) {
         Aria_Token* tok = bufferGet(l->tokens, i);
         printf("Token: %d, start: %d, len: %d\n", tok->type, tok->start, tok->len);
     }
 }
 
-Aria_Lexer ariaTokenize(const char* src) {
-    Aria_Lexer lexer = {src, 0, bufferCreate(sizeof(Aria_Token), 64), 0};
+Aria_Lexer* ariaTokenize(char* src) {
+    Aria_Lexer* lexer = malloc(sizeof(Aria_Lexer));
+    lexer->source = malloc(strlen(src) + 1);
+    strcpy(lexer->source, src);
+    lexer->pc = 0;
+    lexer->tokens = bufferCreate(sizeof(Aria_Token), 64);
+    lexer->buf_index = 0;
 
     do {
-        Aria_Token token = scanToken(&lexer);
-        bufferInsert(&lexer.tokens, &token);
-    } while(((Aria_Token*)bufferPeek(lexer.tokens))->type != TOK_EOF);
+        Aria_Token token = scanToken(lexer);
+        bufferInsert(lexer->tokens, &token);
+    } while(((Aria_Token*)bufferPeek(lexer->tokens))->type != TOK_EOF);
 
-    lexer.pc = 0;
+    lexer->pc = 0;
     return lexer;
 }
