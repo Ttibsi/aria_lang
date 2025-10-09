@@ -7,7 +7,7 @@
 #include "test_parser.h"
 #include "test_bytecode.h"
 #include "test_stack.h"
-// #include "test_executor.h"
+#include "test_executor.h"
 // #include "test_interpreter.h"
 
 int main(void) {
@@ -72,6 +72,11 @@ int main(void) {
         ONETEST_TEST(test_stackPush),
         ONETEST_TEST(test_stackPop),
         ONETEST_TEST(test_stackPeek),
+
+        // test_executor.h
+        ONETEST_TEST(test_executeInstruction),
+        ONETEST_TEST(test_executeFunction),
+        ONETEST_TEST(test_ariaExecute),
 
         // test_interpreter.h
         // ONETEST_TEST(test_add),
