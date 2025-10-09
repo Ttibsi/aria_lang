@@ -6,6 +6,7 @@
 #include "test_lexer.h"
 #include "test_parser.h"
 #include "test_bytecode.h"
+#include "test_stack.h"
 // #include "test_executor.h"
 // #include "test_interpreter.h"
 
@@ -64,6 +65,13 @@ int main(void) {
         ONETEST_TEST(test_compileFunc),
         ONETEST_TEST(test_opcodeDisplay),
         ONETEST_TEST(test_ariaCompile),
+
+        // test_stack.h
+        ONETEST_TEST(test_isFull),
+        ONETEST_TEST(test_isEmpty),
+        ONETEST_TEST(test_stackPush),
+        ONETEST_TEST(test_stackPop),
+        ONETEST_TEST(test_stackPeek),
 
         // test_interpreter.h
         // ONETEST_TEST(test_add),
