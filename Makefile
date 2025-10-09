@@ -2,12 +2,11 @@ CC := clang
 CFLAGS := -Wall -Wextra -g -MMD -MP -std=c23
 
 sources := $(wildcard src/*.c)
-# objects := $(patsubst src/%.c,build/%.o,$(sources))
-objects := build/aria.o build/aria_lexer.o build/aria_parser.o build/aria_bytecode.o
+objects := $(patsubst src/%.c,build/%.o,$(sources))
 
 .PHONY: all
 all: aria
-	./aria -D examples/01_var.ari
+	./aria -D examples/01_var.ari; echo -e "\nRetcode: $$?"
 
 build:
 	mkdir build

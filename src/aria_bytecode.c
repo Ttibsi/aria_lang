@@ -1,4 +1,3 @@
-#define ARIA_BUFFER_IMPL
 #include "aria_bytecode.h"
 
 #include <stddef.h>
@@ -15,7 +14,6 @@ Aria_Chunk* compileFunc(ASTNode* node) {
     chunk->name = malloc(strlen(node->func.func_name) + 1);
     strcpy(chunk->name, node->func.func_name);
     chunk->buf = NULL;
-    chunk->stack = bufferCreate(sizeof(Aria_Bytecode), STACK_HEIGHT);
 
     Aria_Buffer* body = node->func.body->block.buf;
     Aria_Bytecode* current = chunk->buf;

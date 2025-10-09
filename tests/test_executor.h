@@ -1,26 +1,42 @@
 #include "aria_executor.h"
 #include "onetest.h"
 
+static int test_executeInstruction(void) {
+    Stack* local = createStack(8);
+
+    Aria_Bytecode* inst = malloc(sizeof(Aria_Bytecode));
+    inst->op = OP_STORE_CONST;
+    inst->operand = 42;
+    inst->next = NULL;
+    inst->prev = NULL;
+
+    executeInstruction(NULL, local, inst);
+
+    onetest_assert(stackPop(local) == 42);
+
+    freeStack(local);
+    return 0;
+}
+
+static int test_executeFunction(void) {
+    Stack* global = createStack(8);
+
+    Aria_Lexer* lexer = ariaTokenize("func main() { return 69; }");
+    ASTNode ast = ariaParse(lexer);
+    Aria_Module* mod = ariaCompile(&ast);
+
+    const int ret = executeFunction(global, (Aria_Chunk*)bufferGet(mod->buf, 0));
+    onetest_assert(ret == 69);
+
+    freeStack(global);
+    return 0;
+}
+
 static int test_ariaExecute(void) {
-    Bytecode* bc = malloc(sizeof(Bytecode));
-
-    bc->inst = INST_LOAD_CONST;
-    bc->value = 5;
-    bc->next = NULL;
-    Stack* stack = ariaExecute(bc);
-    onetest_assert(stackPeek(stack) == 5);
-    freeStack(stack);
-
-    bc->next = malloc(sizeof(Bytecode));
-    bc->next->inst = INST_LOAD_CONST;
-    bc->next->value = 3;
-    bc->next->next = malloc(sizeof(Bytecode));
-    bc->next->next->inst = INST_ADD;
-
-    stack = ariaExecute(bc);
-    onetest_assert(stackPeek(stack) == 8);
-
-    freeStack(stack);
-    freeBytecode(bc);
+    Aria_Lexer* lexer = ariaTokenize("func main() { return 69; }");
+    ASTNode ast = ariaParse(lexer);
+    Aria_Module* mod = ariaCompile(&ast);
+    Stack* stack = ariaExecute(mod);
+    onetest_assert(stackPop(stack) == 69);
     return 0;
 }
