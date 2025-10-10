@@ -51,5 +51,6 @@ ASTNode parseImport(Aria_Lexer* l);
 ASTNode ariaParse(Aria_Lexer* l);
 ASTNode createNode(ASTType type);
 void printAST(ASTNode ast, int indent, Aria_Lexer* l);
+void freeNode(ASTNode* node);
 
 #endif // ARIA_PARSER_H

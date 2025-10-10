@@ -34,7 +34,9 @@ int executeFunction(Stack* global_stack, Aria_Chunk* func) {
         playhead = playhead->next;
     }
 
-    return stackPeek(local_stack);
+    int ret = stackPeek(local_stack);
+    freeStack(local_stack);
+    return ret;
 }
 
 Stack* ariaExecute(Aria_Module* mod) {

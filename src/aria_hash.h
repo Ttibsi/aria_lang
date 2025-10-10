@@ -21,26 +21,22 @@ typedef struct {
     size_t elem_size;
 } Map;
 
-[[maybe_unused]] static Map* mapCreate(size_t elem_size);
-[[maybe_unused]] static void mapFree(Map* map);
-[[maybe_unused]] static int mapInsert(Map* map, char* key, void* value);
-[[maybe_unused]] static void mapRemove(Map* map, char* key);
-[[maybe_unused]] static void* mapFind(Map* map, const char* key);
+[[maybe_unused]] Map* mapCreate(size_t elem_size);
+[[maybe_unused]] int mapInsert(Map* map, char* key, void* value);
+[[maybe_unused]] void mapRemove(Map* map, char* key);
+[[maybe_unused]] void* mapFind(Map* map, const char* key);
+[[maybe_unused]] void mapFree(Map* map);
 
 #ifdef ARIA_HASH_IMPL
-[[maybe_unused]] static Map* mapCreate(size_t elem_size) {
+[[maybe_unused]] Map* mapCreate(size_t elem_size) {
     Map* map = (Map*)malloc(sizeof(Map));
     map->elem_size = elem_size;
     for (size_t i = 0; i < MAPSIZE; i++) { map->items[i] = NULL; }
     return map;
 }
 
-[[maybe_unused]] static void mapFree(Map* map) {
-    free(map);
-}
-
 // FNV-1a standard hashing formula sourced from craftinginterpreters
-[[maybe_unused]] static uint32_t hash(const char* key) {
+[[maybe_unused]] uint32_t hash(const char* key) {
     uint32_t hash = 2166136261u;
     for (size_t i = 0; i < strlen(key); i++) {
         hash ^= (uint8_t)key[i];
@@ -50,7 +46,7 @@ typedef struct {
     return hash % MAPSIZE;
 }
 
-[[maybe_unused]] static int mapInsert(Map* map, char* key, void* value) {
+[[maybe_unused]] int mapInsert(Map* map, char* key, void* value) {
     int hash_num = hash(key);
     Entry* current = map->items[hash_num];
 
@@ -78,7 +74,7 @@ typedef struct {
     return 0;
 }
 
-[[maybe_unused]] static void mapRemove(Map* map, char* key) {
+[[maybe_unused]] void mapRemove(Map* map, char* key) {
     int hash_num = hash(key);
     Entry* current = map->items[hash_num];
     if (current == NULL) { return; }
@@ -102,7 +98,7 @@ typedef struct {
     free(current);
 }
 
-[[maybe_unused]] static bool mapExists(Map* map, const char* key) {
+[[maybe_unused]] bool mapExists(Map* map, const char* key) {
     int hash_num = hash(key);
     Entry* current = map->items[hash_num];
 
@@ -121,7 +117,7 @@ typedef struct {
 }
 
 // This assumes the value exists already
-[[maybe_unused]] static void* mapFind(Map* map, const char* key) {
+[[maybe_unused]] void* mapFind(Map* map, const char* key) {
     int hash_num = hash(key);
     Entry* current = map->items[hash_num];
     if (current == NULL) { return 0; }
@@ -134,7 +130,7 @@ typedef struct {
     return current->value;
 }
 
-[[maybe_unused]] static void mapFree(Map* map) {
+[[maybe_unused]] void mapFree(Map* map) {
     if (map == NULL) { return; }
 
     for (int i = 0; i < MAPSIZE; i++) {
@@ -143,6 +139,7 @@ typedef struct {
         while (current != NULL) {
             Entry* temp = current;
             current = current->next;
+            free(temp->value);
             free(temp);
         }
     }

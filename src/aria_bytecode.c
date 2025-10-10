@@ -64,6 +64,7 @@ Aria_Module* ariaCompile(ASTNode* node) {
                 break;
         }
 
+        freeNode(child);
     }
 
     return mod;
@@ -108,9 +109,13 @@ void printModule(const Aria_Module* mod) {
 }
 
 void freeModule(Aria_Module* mod) {
+    for (size_t i = 0; i < mod->buf->size; i++) {
+        freeChunk(bufferGet(mod->buf, i));
+    }
     bufferFree(mod->buf);
 }
 
 void freeChunk(Aria_Chunk* chunk) {
     free(chunk->name);
+    // free(chunk);
 }

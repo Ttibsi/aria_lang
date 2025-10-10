@@ -34,6 +34,7 @@ typedef struct {
 [[maybe_unused]] void bufferFree(Aria_Buffer* buf) {
     free(buf->items);
     buf->capacity = 0;
+    free(buf);
 }
 
 [[maybe_unused]] void bufferInsert(Aria_Buffer* buf, void* elem) {

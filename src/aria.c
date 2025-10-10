@@ -33,12 +33,11 @@ int ariaInterpret(char* src) {
 
     // execute bytecode
     Stack* stack = ariaExecute(main_mod);
-
     if (isEmpty(stack)) { stackPush(stack, 1); }
     int result = stackPeek(stack);
 
     // cleanup here
-    //freeStack(stack);
+    freeStack(stack);
     //freeBytecode(bc);
 
     return result;

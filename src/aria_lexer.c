@@ -204,4 +204,5 @@ Aria_Lexer* ariaTokenize(char* src) {
 void freeLexer(Aria_Lexer* l) {
     bufferFree(l->tokens);
     free(l->source);
+    free(l);
 }

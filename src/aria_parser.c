@@ -212,3 +212,9 @@ void printAST(ASTNode ast, int indent, Aria_Lexer* l) {
             break;
     }
 }
+
+void freeNode(ASTNode* node) {
+    if (node->type == AST_BLOCK || node->type == AST_MODULE) {
+        free(node->block.buf);
+    }
+}
