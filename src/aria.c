@@ -22,6 +22,8 @@ int ariaInterpret(char* src) {
         printAST(ast, 0, lexer);
     }
 
+    freeLexer(lexer);
+
     Aria_Module* main_mod = ariaCompile(&ast);
 
     if (aria_debug_mode) {

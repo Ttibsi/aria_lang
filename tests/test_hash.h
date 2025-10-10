@@ -10,6 +10,7 @@ static int test_mapCreate(void) {
         onetest_assert(map->items[i] == NULL);
     }
 
+    mapFree(map);
     return 0;
 }
 
@@ -75,6 +76,7 @@ static int test_mapRemove(void) {
     onetest_assert(strcmp(map->items[hash("Hello")]->key, "anything") == 0);
     onetest_assert(*(int*)mapFind(map, "Hello") == val2);
 
+    mapFree(map);
     return 0;
 }
 
@@ -93,6 +95,7 @@ static int test_mapExists(void) {
     onetest_assert(mapExists(map, "Hello"));
     onetest_assert(mapExists(map, "anything"));
 
+    mapFree(map);
     return 0;
 }
 

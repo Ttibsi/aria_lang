@@ -120,5 +120,6 @@ int getTokenNumber(Aria_Lexer* lexer, Aria_Token token);
 char getTokenChar(Aria_Lexer* lexer, Aria_Token token);
 void printTokens(Aria_Lexer* l);
 Aria_Lexer* ariaTokenize(char* src);
+void freeLexer(Aria_Lexer* l);
 
 #endif // ARIA_LEXER_H

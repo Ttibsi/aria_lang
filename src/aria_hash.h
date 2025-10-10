@@ -22,6 +22,7 @@ typedef struct {
 } Map;
 
 [[maybe_unused]] static Map* mapCreate(size_t elem_size);
+[[maybe_unused]] static void mapFree(Map* map);
 [[maybe_unused]] static int mapInsert(Map* map, char* key, void* value);
 [[maybe_unused]] static void mapRemove(Map* map, char* key);
 [[maybe_unused]] static void* mapFind(Map* map, const char* key);
@@ -32,6 +33,10 @@ typedef struct {
     map->elem_size = elem_size;
     for (size_t i = 0; i < MAPSIZE; i++) { map->items[i] = NULL; }
     return map;
+}
+
+[[maybe_unused]] static void mapFree(Map* map) {
+    free(map);
 }
 
 // FNV-1a standard hashing formula sourced from craftinginterpreters

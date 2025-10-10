@@ -52,5 +52,7 @@ Stack* ariaExecute(Aria_Module* mod) {
     Aria_Chunk* main = mapFind(dispatch_table, "main");
     stackPush(stack, executeFunction(stack, main));
 
+    freeModule(mod);
+    mapFree(dispatch_table);
     return stack;
 }

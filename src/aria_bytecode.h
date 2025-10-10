@@ -34,5 +34,6 @@ Aria_Chunk* compileFunc(ASTNode* node);
 const char* opcodeDisplay(Opcode op);
 Aria_Module* ariaCompile(ASTNode* node);
 void printModule(const Aria_Module* mod);
+void freeModule(Aria_Module* mod);
 
 #endif // ARIA_BYTECODE_H

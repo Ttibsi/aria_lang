@@ -106,3 +106,11 @@ void printModule(const Aria_Module* mod) {
 
     }
 }
+
+void freeModule(Aria_Module* mod) {
+    bufferFree(mod->buf);
+}
+
+void freeChunk(Aria_Chunk* chunk) {
+    free(chunk->name);
+}

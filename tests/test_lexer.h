@@ -12,6 +12,8 @@ static int test_peek(void) {
 
     char actual = peek(&l);
     onetest_assert(actual == '3');
+
+    bufferFree(l.tokens);
     return 0;
 }
 
@@ -25,6 +27,8 @@ static int test_peekNext(void) {
 
     char actual = peekNext(&l);
     onetest_assert(actual == ' ');
+
+    bufferFree(l.tokens);
     return 0;
 }
 
@@ -40,6 +44,8 @@ static int test_advanceChar(void) {
     onetest_assert(actual == '3');
     actual = advanceChar(&l);
     onetest_assert(actual == ' ');
+
+    bufferFree(l.tokens);
     return 0;
 }
 
@@ -54,6 +60,8 @@ static int test_skipWhitespace(void) {
     advanceChar(&l);
     skipWhitespace(&l);
     onetest_assert(peek(&l) == '+');
+
+    bufferFree(l.tokens);
     return 0;
 }
 
@@ -82,11 +90,12 @@ static int test_scanEqualVariant(void) {
     tok = scanEqualVariant(&l, TOK_LESS, TOK_LESS_EQUAL);
     onetest_assert(tok.type == TOK_LESS);
 
+    bufferFree(l.tokens);
     return 0;
 }
 
 static int test_scanStringLiteral(void) {
-        // Test 1: Normal string literal
+    // Test 1: Normal string literal
     Aria_Lexer l1 = (Aria_Lexer){
         .source = "\"hello\"",
         .pc = 1,  // positioned after opening quote
@@ -100,6 +109,7 @@ static int test_scanStringLiteral(void) {
     onetest_assert(tok1.start == 0);
     onetest_assert(tok1.len == 7); // "hello" = 5 chars + 2 quotes
     onetest_assert(l1.pc == 7); // should be positioned after closing quote
+    bufferFree(l1.tokens);
 
     // Test 2: Empty string
     Aria_Lexer l2 = (Aria_Lexer){
@@ -115,6 +125,7 @@ static int test_scanStringLiteral(void) {
     onetest_assert(tok2.start == 0);
     onetest_assert(tok2.len == 2); // just the two quotes
     onetest_assert(l2.pc == 2); // should be positioned after closing quote
+    bufferFree(l2.tokens);
 
     // Test 3: String with spaces and special characters
     Aria_Lexer l3 = (Aria_Lexer){
@@ -130,6 +141,7 @@ static int test_scanStringLiteral(void) {
     onetest_assert(tok3.start == 0);
     onetest_assert(tok3.len == 20); // 18 chars + 2 quotes
     onetest_assert(l3.pc == 20); // should be positioned after closing quote
+    bufferFree(l3.tokens);
 
     // Test 4: Unterminated string (error case)
     Aria_Lexer l4 = (Aria_Lexer){
@@ -144,6 +156,7 @@ static int test_scanStringLiteral(void) {
     onetest_assert(tok4.type == TOK_EOF); // function returns EOF for error case
     onetest_assert(tok4.start == 0);
     onetest_assert(tok4.len == 0);
+    bufferFree(l4.tokens);
 
     return 0;
 }
@@ -160,6 +173,7 @@ static int test_scanNumber(void) {
     onetest_assert(tok.type == TOK_NUMBER);
     onetest_assert(tok.len == 3);
 
+    freeLexer(&l);
     return 0;
 }
 
@@ -182,6 +196,7 @@ static int test_scanIdentifier(void) {
     onetest_assert(tok.start == 4);
     onetest_assert(tok.len == 4);
 
+    freeLexer(&l);
     return 0;
 }
 
@@ -233,6 +248,7 @@ static int test_scanToken(void) {
     onetest_assert(tok.type == TOK_IDENTIFIER);
     onetest_assert(tok.len == 8);
 
+    bufferFree(l.tokens);
     return 0;
 }
 
@@ -257,6 +273,7 @@ static int test_advance(void) {
     Aria_Token* tok = (Aria_Token*)bufferGet(l.tokens, l.buf_index);
     onetest_assert(tok->type == TOK_PLUS);
 
+    bufferFree(l.tokens);
     return 0;
 }
 
@@ -280,6 +297,7 @@ static int test_check(void) {
     onetest_assert(check(&l, TOK_NUMBER) == 1);
     onetest_assert(check(&l, TOK_PLUS) == 0);
 
+    bufferFree(l.tokens);
     return 0;
 }
 
@@ -302,6 +320,7 @@ static int test_match(void) {
 
     onetest_assert(match(&l, TOK_NUMBER));
     onetest_assert(match(&l, TOK_PLUS));
+    bufferFree(l.tokens);
     return 0;
 }
 
@@ -310,6 +329,7 @@ static int test_getCurrTokenType(void) {
     onetest_assert(getCurrTokenType(lexer) == TOK_FUNC);
     advance(lexer);
     onetest_assert(getCurrTokenType(lexer) == TOK_IDENTIFIER);
+    freeLexer(l);
     return 0;
 }
 
@@ -332,6 +352,7 @@ static int test_getTokenNumber(void) {
 
     int tok_num = getTokenNumber(&l, *(Aria_Token*)bufferGet(l.tokens, l.buf_index));
     onetest_assert(tok_num == 3);
+    bufferFree(l.tokens);
     return 0;
 }
 
@@ -348,5 +369,7 @@ static int test_getTokenChar(void) {
 
     char tok_char = getTokenChar(&l, *(Aria_Token*)bufferGet(l.tokens, l.buf_index));
     onetest_assert(tok_char == 'H');
+
+    bufferFree(l.tokens);
     return 0;
 }

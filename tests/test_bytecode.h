@@ -18,6 +18,7 @@ static int test_compileFunc(void) {
     onetest_assert(chunk->buf->op == OP_STORE_CONST);
     onetest_assert(chunk->buf->operand == 42);
 
+    freeLexer(lexer);
     return 0;
 }
 
@@ -45,5 +46,6 @@ static int test_ariaCompile(void) {
     onetest_assert(second_chunk->buf->op == OP_STORE_CONST);
     onetest_assert(second_chunk->buf->operand == 69);
 
+    freeLexer(lexer);
     return 0;
 }

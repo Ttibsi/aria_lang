@@ -200,3 +200,8 @@ Aria_Lexer* ariaTokenize(char* src) {
     lexer->pc = 0;
     return lexer;
 }
+
+void freeLexer(Aria_Lexer* l) {
+    bufferFree(l->tokens);
+    free(l->source);
+}
