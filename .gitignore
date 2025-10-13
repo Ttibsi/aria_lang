@@ -1,7 +1,0 @@
-*.d
-*.o
-aria
-test
-iris.log
-build/
-.gdb_history

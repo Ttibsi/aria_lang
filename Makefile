@@ -1,37 +1,38 @@
 CC := clang
-CFLAGS := -Wall -Wextra -g -MMD -MP -std=c23 -fsanitize=address
+CFLAGS := -Wall -Wextra -g -MMD -MP -std=c23
 
-sources := $(wildcard src/*.c)
-objects := $(patsubst src/%.c,build/%.o,$(sources))
+ifeq (${SAN},1)
+CFLAGS += -fsanitize=address
+endif
 
-.PHONY: all
-all: aria
-	./aria -D examples/01_var.ari; echo -e "\nRetcode: $$?"
+sources := $(wildcard src/aria/*.c)
+objects := $(patsubst src/aria/%.c,build/%.o,$(sources))
 
 build:
 	mkdir build
 
-build/%.o: src/%.c | build
+build/%.o: src/aria/%.c | build
 	$(CC) $< -c -o $@ $(CFLAGS)
 
-build/main_obj.o: main.c
+aria: $(objects) | build
+	$(AR) rcs build/libaria.a $(objects)
+
+build/main.o: src/main.c
 	$(CC) $< -c -o $@ $(CFLAGS)
 
-aria: $(objects) build/main_obj.o
-	$(CC) $^ -o $@ -fsanitize=address
+.DEFAULT_GOAL := all
+all: aria build/main.o
+	$(CC) build/main.o -Lbuild -laria -o aria $(CFLAGS)
+	./aria -D examples/01_var.ari; echo -e "\nRetcode: $$?"
 
-##########################
-
-.PHONY: test
-test: $(objects) | build
-	$(CC) $(CFLAGS) -Isrc -c tests/test.c -o build/test.o
-	$(CC) -Isrc build/test.o $^ -o $@
+##########
 
 .PHONY: clean
 clean:
 	rm -rf build
-	if [ -f aria ]; then rm aria; fi
-	if [ -f test ]; then rm test; fi
-	if [ -f core ]; then rm core; fi
+	if [ -f aria ]; 	then rm aria; fi
+	if [ -f iris.log ]; then rm iris.log; fi
+	if [ -f test ]; 	then rm test; fi
+	if [ -f core ]; 	then rm core; fi
 
 -include $(objects:.o=.d)
