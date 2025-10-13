@@ -1,0 +1,4 @@
+func foo() { return 42; }
+func main(argc, argv) {
+    return 69;
+}
