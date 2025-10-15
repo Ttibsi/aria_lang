@@ -64,7 +64,7 @@ ASTNode parseBlock(Aria_Lexer* L) {
         check(L, TOK_IMPORT)
     )) {
         ASTNode expr = parseExpression(L);
-        bufferInsert(node.block.buf, (void*)&expr);
+        bufferInsert(node.block, (void*)&expr);
 
         if (check(L, TOK_RIGHT_BRACE)) { break; }
     }
@@ -137,7 +137,7 @@ ASTNode ariaParse(Aria_Lexer* L) {
                 break;
         };
 
-        bufferInsert(module.block.buf, &inner);
+        bufferInsert(module.block, &inner);
     }
 
     return module;
@@ -150,9 +150,7 @@ ASTNode createNode(ASTType type) {
         case AST_MODULE:
             return (ASTNode){
                 .type = type,
-                .block = {
-                    .buf = bufferCreate(sizeof(ASTNode), 32)
-                }
+                .block = bufferCreate(sizeof(ASTNode), 32)
             };
 
         case AST_FUNC:
@@ -180,7 +178,7 @@ ASTNode createNode(ASTType type) {
 void printASTimpl(ASTNode ast, int indent, Aria_Lexer* L) {
     switch (ast.type) {
         case AST_BLOCK: [[fallthrough]]; case AST_MODULE:
-            Aria_Buffer* buf = ast.block.buf;
+            Aria_Buffer* buf = ast.block;
             for (uint32_t i = 0; i < buf->size; i++) {
                 printASTimpl(*(ASTNode*)bufferGet(buf, i), indent, L);
             }
@@ -219,4 +217,28 @@ void printASTimpl(ASTNode ast, int indent, Aria_Lexer* L) {
 void printAST(ASTNode ast, Aria_Lexer* L) {
     printf("\n=== AST ===\n");
     printASTimpl(ast, 0, L);
+}
+
+void nodeFree(ASTNode node) {
+    switch(node.type) {
+        case AST_BLOCK:
+            [[fallthrough]];
+        case AST_MODULE:
+            for (size_t i = 0; i < node.block->size; i++) {
+                nodeFree(*(ASTNode*)bufferGet(node.block, i));
+            }
+            bufferFree(node.block);
+            break;
+
+        case AST_FUNC:
+            free(node.func.func_name);
+            nodeFree(*node.func.body);
+            free(node.func.body);
+            break;
+
+        case AST_VALUE:
+            [[fallthrough]];
+        case AST_ERR:
+            break;
+    };
 }

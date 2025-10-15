@@ -17,17 +17,15 @@ typedef struct _ASTNode {
     ASTType type;
     union {
         struct {
-            // Aria_Buffer<ASTNode>
-            Aria_Buffer* buf;
-        } block;
-
-        struct {
             char* func_name;
             Aria_Token args[8];
             struct _ASTNode* body;
         } func;
 
         int value;
+
+        // Aria_Buffer<ASTNode>
+        Aria_Buffer* block;
     };
 } ASTNode;
 
@@ -48,5 +46,6 @@ ASTNode parseFunc(Aria_Lexer* L);
 ASTNode ariaParse(Aria_Lexer* L);
 ASTNode createNode(ASTType type);
 void printAST(ASTNode ast, Aria_Lexer* L);
+void nodeFree(ASTNode node);
 
 #endif // ARIA_PARSER_H

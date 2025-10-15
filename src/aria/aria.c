@@ -8,11 +8,13 @@
     return "0.0.0";
 }
 
-void ariaFree(Aria_Lexer* L) {
+void ariaFree(Aria_Lexer* L, ASTNode* ast) {
     // Lexer
     free(L->source);
     bufferFree(L->tokens);
     L = NULL;
+
+    nodeFree(*ast);
 }
 
 [[nodiscard]] int ariaInterpret(char* text, const bool debug_mode) {
@@ -23,6 +25,6 @@ void ariaFree(Aria_Lexer* L) {
     ASTNode ast = ariaParse(&L);
     if (debug_mode) { printAST(ast, &L); }
 
-    ariaFree(&L);
+    ariaFree(&L, &ast);
     return 0;
 }
