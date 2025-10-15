@@ -41,7 +41,7 @@ ASTNode parseExpression(Aria_Lexer* L) {
         case TOK_SWITCH: return parseSwitch(L); break;
         case TOK_VAR: return parseVar(L); break;
         case TOK_IDENTIFIER: return parseIdentifier(L); break;
-        defauLt: parsingError("Incorrect token found in parseExpression (defauLt)\n"); break;
+        default: parsingError("Incorrect token found in parseExpression (defauLt)\n"); break;
     };
 
     parsingError("Incorrect token found in parseExpression\n");
@@ -146,7 +146,7 @@ ASTNode ariaParse(Aria_Lexer* L) {
 ASTNode createNode(ASTType type) {
     switch (type) {
         case AST_BLOCK:
-            [[fallthrough]]
+            [[fallthrough]];
         case AST_MODULE:
             return (ASTNode){
                 .type = type,
@@ -179,10 +179,10 @@ ASTNode createNode(ASTType type) {
 
 void printASTimpl(ASTNode ast, int indent, Aria_Lexer* L) {
     switch (ast.type) {
-        case AST_BLOCK: [[fallthrough]] case AST_MODULE:
+        case AST_BLOCK: [[fallthrough]]; case AST_MODULE:
             Aria_Buffer* buf = ast.block.buf;
             for (uint32_t i = 0; i < buf->size; i++) {
-                printAST(*(ASTNode*)bufferGet(buf, i), indent, L);
+                printASTimpl(*(ASTNode*)bufferGet(buf, i), indent, L);
             }
             break;
 
@@ -202,7 +202,7 @@ void printASTimpl(ASTNode ast, int indent, Aria_Lexer* L) {
             }
 
             printf("%*s@Function Body\n", indent + 2, "");
-            printAST(*ast.func.body, indent + 4, L);
+            printASTimpl(*ast.func.body, indent + 4, L);
             break;
 
         case AST_VALUE:

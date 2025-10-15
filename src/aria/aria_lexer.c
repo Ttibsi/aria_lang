@@ -164,25 +164,25 @@ bool match(Aria_Lexer* L, const TokenType type) {
     return false;
 }
 
-TokenType getCurrTokenType(Aria_Lexer *L) {
+TokenType getCurrTokenType(Aria_Lexer* L) {
     Aria_Token* tkn = bufferGet(L->tokens, L->buf_index);
     return tkn->type;
 }
 
-int getTokenNumber(Aria_Lexer* L, Aria_Token token) {
-    if (token.type != TOK_NUMBER) return 0;
+int getTokenNumber(Aria_Lexer* L, Aria_Token* token) {
+    if (token->type != TOK_NUMBER) return 0;
 
-    char* num_str = malloc(token.len + 1);
-    strncpy(num_str, L->source + token.start, token.len);
-    num_str[token.len] = '\0';
+    char* num_str = malloc(token->len + 1);
+    strncpy(num_str, L->source + token->start, token->len);
+    num_str[token->len] = '\0';
     int result = atoi(num_str);
     free(num_str);
     return result;
 }
 
-char getTokenChar(Aria_Lexer* L, Aria_Token token) {
-    if (token.len == 0) return '\0';
-    return L->source[token.start];
+char getTokenChar(Aria_Lexer* L, Aria_Token* token) {
+    if (token->len == 0) return '\0';
+    return L->source[token->start];
 }
 void ariaTokenize(Aria_Lexer* L) {
     Aria_Token token = {};
