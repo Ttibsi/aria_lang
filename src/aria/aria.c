@@ -14,7 +14,7 @@
 
 // Do we want this to be a user-exposed function instead? So we can
 // free after the user uses the contents (ex interacts with the stack/adds custom functions?)
-void ariaFree(Aria_Lexer* L, ASTNode* ast, Aria_Module* mod) {
+void ariaFree(Aria_Lexer* L, ASTNode* ast, Aria_Module* mod, Stack* stack) {
     // Lexer
     free(L->source);
     bufferFree(L->tokens);
@@ -32,6 +32,9 @@ void ariaFree(Aria_Lexer* L, ASTNode* ast, Aria_Module* mod) {
     bufferFree(mod->buf);
     free(mod);
     mod = NULL;
+
+    // Stack
+    freeStack(stack);
 }
 
 [[nodiscard]] int ariaInterpret(char* text, const bool debug_mode) {
@@ -49,6 +52,6 @@ void ariaFree(Aria_Lexer* L, ASTNode* ast, Aria_Module* mod) {
     if (isEmpty(stack)) { stackPush(stack, 1); }
     int result = stackPeek(stack);
 
-    ariaFree(&L, &ast, main_mod);
+    ariaFree(&L, &ast, main_mod, stack);
     return result;
 }

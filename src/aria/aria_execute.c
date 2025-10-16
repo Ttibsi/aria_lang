@@ -32,7 +32,9 @@ int executeFunction(Stack* global_stack, Aria_Chunk* func) {
         playhead = playhead->next;
     }
 
-    return stackPeek(local_stack);
+    int top = stackPeek(local_stack);
+    freeStack(local_stack);
+    return top;
 }
 
 Stack* ariaExecute(Aria_Module* mod) {
@@ -41,10 +43,11 @@ Stack* ariaExecute(Aria_Module* mod) {
 
     for (size_t i = 0; i < mod->buf->size; i++) {
         Aria_Chunk* chunk = (Aria_Chunk*)bufferGet(mod->buf, i);
-        int ret = mapInsert(dispatch_table, chunk->name, chunk);
-        if (ret) {
-            // do something here to show multiple definitions for the same function
-        }
+        // Most interpreted languages don't warn on redeclaration of a function (python, lua, js)
+        // so we don't need to check/do anything if a function is redeclared, it just gets
+        // written over
+        mapInsert(dispatch_table, chunk->name, chunk);
+
     }
 
     Aria_Chunk* main = mapFind(dispatch_table, "main");
