@@ -1,14 +1,19 @@
 #define ARIA_BUFFER_IMPL
-#include "aria.h"
+#define ARIA_STACK_IMPL
 
+#include "aria.h"
 #include "aria_lexer.h"
 #include "aria_parser.h"
 #include "aria_bytecode.h"
+#include "aria_execute.h"
+#include "aria_stack.h"
 
 [[nodiscard]] char* ariaVersion() {
     return "0.0.0";
 }
 
+// Do we want this to be a user-exposed function instead? So we can
+// free after the user uses the contents (ex interacts with the stack/adds custom functions?)
 void ariaFree(Aria_Lexer* L, ASTNode* ast, Aria_Module* mod) {
     // Lexer
     free(L->source);
@@ -40,6 +45,10 @@ void ariaFree(Aria_Lexer* L, ASTNode* ast, Aria_Module* mod) {
     Aria_Module* main_mod = ariaCompile(&ast);
     if (debug_mode) { printBytecode(main_mod); }
 
+    Stack* stack = ariaExecute(main_mod);
+    if (isEmpty(stack)) { stackPush(stack, 1); }
+    int result = stackPeek(stack);
+
     ariaFree(&L, &ast, main_mod);
-    return 0;
+    return result;
 }

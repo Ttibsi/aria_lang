@@ -23,7 +23,7 @@ build/main.o: src/main.c
 .DEFAULT_GOAL := all
 all: aria build/main.o
 	$(CC) build/main.o -Lbuild -laria -o aria $(CFLAGS)
-	./aria -D examples/01_ret.ari; echo -e "\nRetcode: $?"
+	./aria -D examples/01_ret.ari; echo -e "\nRetcode: $$?"
 
 ##########
 
