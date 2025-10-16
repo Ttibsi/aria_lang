@@ -61,6 +61,10 @@ Aria_Module* ariaCompile(ASTNode* node) {
             case AST_FUNC:
                 Aria_Chunk* chunk = compileFunc(child);
                 bufferInsert(mod->buf, chunk);
+
+                // Contents is used in the buffer, so only free the chunk itself
+                // allocated at the start of compileFunc
+                free(chunk);
                 break;
         }
 
