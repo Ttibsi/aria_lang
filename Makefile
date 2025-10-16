@@ -20,6 +20,7 @@ aria: $(objects) | build
 build/main.o: src/main.c
 	$(CC) $< -c -o $@ $(CFLAGS)
 
+.PHONY: all
 .DEFAULT_GOAL := all
 all: aria build/main.o
 	$(CC) build/main.o -Lbuild -laria -o aria $(CFLAGS)
@@ -27,12 +28,17 @@ all: aria build/main.o
 
 ##########
 
+.PHONY: test
+test: $(objects) | build
+	$(CC) $(CFLAGS) -Isrc -c tests/test.c -o build/test.o
+	$(CC) -Isrc $(CFLAGS) build/test.o $^ -o $@_exe
+
 .PHONY: clean
 clean:
 	rm -rf build
 	if [ -f aria ]; 	then rm aria; fi
 	if [ -f iris.log ]; then rm iris.log; fi
-	if [ -f test ]; 	then rm test; fi
+	if [ -f test_exe ];	then rm test_exe; fi
 	if [ -f core ]; 	then rm core; fi
 
 -include $(objects:.o=.d)
