@@ -30,8 +30,9 @@ all: aria build/main.o
 
 .PHONY: test
 test: $(objects) | build
-	$(CC) $(CFLAGS) -Isrc -c tests/test.c -o build/test.o
+	$(CC) $(CFLAGS) -Isrc/aria -c tests/test.c -o build/test.o
 	$(CC) -Isrc $(CFLAGS) build/test.o $^ -o $@_exe
+	@echo -e "" # newline for navigation
 
 .PHONY: clean
 clean:

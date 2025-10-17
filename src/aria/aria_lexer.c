@@ -1,5 +1,6 @@
 #include "aria_lexer.h"
 
+#include <assert.h>
 #include <ctype.h>
 #include <stdio.h>
 
@@ -40,30 +41,36 @@ void skipWhitespace(Aria_Lexer* L) {
 }
 
 Aria_Token scanEqualVariant(Aria_Lexer* L, TokenType single, TokenType equal) {
-    int start = L->pc - 1;
-    if (peek(L) == '=') {
+    // int start = L->pc - 1;
+    if (peekNext(L) == '=') {
         advanceChar(L);
-        return makeToken(equal, start, 2);
+        return makeToken(equal, L->pc, 2);
     }
-    return makeToken(single, start, 1);
+    return makeToken(single, L->pc, 1);
 }
 
 Aria_Token scanStringLiteral(Aria_Lexer* L) {
-    int start = L->pc - 1;
+    assert (peek(L) == '"');
+    int start = L->pc;
     int length = 0;
 
-    while (peek(L) != '"' && peek(L) != '\0') {
+    while (peekNext(L) != '"' && peekNext(L) != '\0') {
         advanceChar(L);
         length++;
     }
 
-    if (peek(L) == '\0') {
+    if (peekNext(L) == '\0') {
         // TODO: Handle error case
         return makeToken(TOK_EOF, start, 0);
     }
 
     advanceChar(L); // consume closing quote
-    return makeToken(TOK_STRING, start, length + 2);
+    length++;
+    assert (peek(L) == '"');
+    advanceChar(L); // Next char
+    length++;
+
+    return makeToken(TOK_STRING, start, length);
 }
 
 Aria_Token scanNumber(Aria_Lexer* L) {
@@ -123,7 +130,7 @@ Aria_Token scanToken(Aria_Lexer* L) {
         case '=': advanceChar(L); return scanEqualVariant(L, TOK_EQUAL, TOK_EQUAL_EQUAL);
         case '<': advanceChar(L); return scanEqualVariant(L, TOK_LESS, TOK_LESS_EQUAL);
         case '>': advanceChar(L); return scanEqualVariant(L, TOK_GREATER, TOK_GREATER_EQUAL);
-        case '"': advanceChar(L); return scanStringLiteral(L);
+        case '"': return scanStringLiteral(L);
         case '&':
             if (peek(L) == '&') {
                 advanceChar(L);

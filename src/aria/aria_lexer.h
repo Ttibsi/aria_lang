@@ -101,6 +101,16 @@ static const Keyword keywords[] = {
 static const int keyword_count = sizeof(keywords) / sizeof(keywords[0]);
 
 Aria_Lexer lexerInit(char* text);
+Aria_Token makeToken(TokenType type, int start, int length);
+char peek(Aria_Lexer* L);
+char peekNext(Aria_Lexer* L);
+char advanceChar(Aria_Lexer* L);
+void skipWhitespace(Aria_Lexer* L);
+Aria_Token scanEqualVariant(Aria_Lexer* L, TokenType single, TokenType equal);
+Aria_Token scanStringLiteral(Aria_Lexer* L);
+Aria_Token scanNumber(Aria_Lexer* L);
+Aria_Token scanIdentifier(Aria_Lexer* L);
+Aria_Token scanToken(Aria_Lexer* L);
 void advance(Aria_Lexer* L);
 bool check(Aria_Lexer* L, const TokenType type);
 bool match(Aria_Lexer* L, const TokenType type);
