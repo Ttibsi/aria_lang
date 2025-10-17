@@ -32,7 +32,6 @@ typedef struct _ASTNode {
 ASTNode parseConst(Aria_Lexer* L);
 ASTNode parseFor(Aria_Lexer* L);
 ASTNode parseIf(Aria_Lexer* L);
-ASTNode parsePrint(Aria_Lexer* L);
 ASTNode parseReturn(Aria_Lexer* L);
 ASTNode parseSwitch(Aria_Lexer* L);
 ASTNode parseVar(Aria_Lexer* L);

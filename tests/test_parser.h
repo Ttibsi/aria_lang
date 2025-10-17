@@ -5,7 +5,6 @@
 static inline int test_parseConst(void) { return 1; }
 static inline int test_parseFor(void) { return 1; }
 static inline int test_parseIf(void) { return 1; }
-static inline int test_parsePrint(void) { return 1; }
 static inline int test_parseReturn(void) {
     Aria_Lexer L = lexerInit("return 69;");
     ariaTokenize(&L);

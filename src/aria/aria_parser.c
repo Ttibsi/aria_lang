@@ -12,7 +12,6 @@
 ASTNode parseConst(Aria_Lexer* L) { assert(0 && "TODO"); }
 ASTNode parseFor(Aria_Lexer* L) { assert(0 && "TODO"); }
 ASTNode parseIf(Aria_Lexer* L) { assert(0 && "TODO"); }
-ASTNode parsePrint(Aria_Lexer* L) { assert(0 && "TODO"); }
 
 ASTNode parseReturn(Aria_Lexer* L) {
     ASTNode node = createNode(AST_VALUE);
@@ -36,7 +35,6 @@ ASTNode parseExpression(Aria_Lexer* L) {
         case TOK_CONST: return parseConst(L); break;
         case TOK_FOR: return parseFor(L); break;
         case TOK_IF: return parseIf(L); break;
-        case TOK_PRINT: return parsePrint(L); break;
         case TOK_RETURN: return parseReturn(L); break;
         case TOK_SWITCH: return parseSwitch(L); break;
         case TOK_VAR: return parseVar(L); break;
