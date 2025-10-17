@@ -3,7 +3,6 @@
 
 #include "aria_bytecode.h"
 #include "aria_stack.h"
-#include "aria_bytecode.h"
 
 void executeInstruction(Stack* global, Stack* local, Aria_Bytecode* inst);
 int executeFunction(Stack* stack, Aria_Chunk* func);

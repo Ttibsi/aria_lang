@@ -31,8 +31,9 @@ typedef struct {
 } Aria_Module;
 
 Aria_Chunk* compileFunc(ASTNode* node);
-const char* opcodeDisplay(Opcode op);
 Aria_Module* ariaCompile(ASTNode* node);
-void printModule(const Aria_Module* mod);
+const char* opcodeDisplay(Opcode op);
+void printBytecode(const Aria_Module* mod);
+void freeChunk(Aria_Chunk* chunk);
 
 #endif // ARIA_BYTECODE_H

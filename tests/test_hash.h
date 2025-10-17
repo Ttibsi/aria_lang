@@ -4,7 +4,7 @@
 
 
 static int test_mapCreate(void) {
-    Map* map = mapCreate(8);
+    Map* map = mapCreate(1);
 
     for (int i = 0; i < MAPSIZE; i++) {
         onetest_assert(map->items[i] == NULL);

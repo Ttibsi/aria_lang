@@ -15,7 +15,7 @@ Aria_Chunk* compileFunc(ASTNode* node) {
     strcpy(chunk->name, node->func.func_name);
     chunk->buf = NULL;
 
-    Aria_Buffer* body = node->func.body->block.buf;
+    Aria_Buffer* body = node->func.body->block;
     Aria_Bytecode* current = chunk->buf;
 
     for (size_t i = 0; i < body->size; i++) {
@@ -52,7 +52,7 @@ Aria_Module* ariaCompile(ASTNode* node) {
     mod->buf = bufferCreate(sizeof(Aria_Chunk), 64);
 
     assert(node->type == AST_MODULE);
-    Aria_Buffer* module_buf = node->block.buf;
+    Aria_Buffer* module_buf = node->block;
 
     for (size_t i = 0; i < module_buf->size; i++) {
         ASTNode* child = (ASTNode*)bufferGet(module_buf, i);
@@ -61,6 +61,10 @@ Aria_Module* ariaCompile(ASTNode* node) {
             case AST_FUNC:
                 Aria_Chunk* chunk = compileFunc(child);
                 bufferInsert(mod->buf, chunk);
+
+                // Contents is used in the buffer, so only free the chunk itself
+                // allocated at the start of compileFunc
+                free(chunk);
                 break;
         }
 
@@ -105,4 +109,26 @@ void printModule(const Aria_Module* mod) {
         }
 
     }
+}
+
+void printBytecode(const Aria_Module* mod) {
+    printf("\n=== BYTECODE ===\n");
+    printModule(mod);
+}
+
+void freeChunk(Aria_Chunk *chunk) {
+    if (chunk == NULL) return;
+
+    /* free the name string */
+    free(chunk->name);
+    chunk->name = NULL;
+
+    /* free the linked list of bytecode instructions */
+    Aria_Bytecode *cur = chunk->buf;
+    while (cur != NULL) {
+        Aria_Bytecode *next = cur->next;
+        free(cur);
+        cur = next;
+    }
+    chunk->buf = NULL;
 }

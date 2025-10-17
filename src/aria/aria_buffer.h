@@ -12,16 +12,16 @@ typedef struct {
     void* items;
 } Aria_Buffer;
 
-[[maybe_unused]] Aria_Buffer* bufferCreate(uint32_t elem_size, uint32_t cap);
+[[nodiscard]] [[maybe_unused]] Aria_Buffer* bufferCreate(uint32_t elem_size, uint32_t cap);
 [[maybe_unused]] void bufferFree(Aria_Buffer* buf);
 [[maybe_unused]] void bufferInsert(Aria_Buffer* buf, void* elem);
-[[maybe_unused]] void* bufferGet(const Aria_Buffer* buf, uint32_t idx);
-[[maybe_unused]] void* bufferPeek(const Aria_Buffer* buf);
+[[nodiscard]] [[maybe_unused]] void* bufferGet(const Aria_Buffer* buf, uint32_t idx);
+[[nodiscard]] [[maybe_unused]] void* bufferPeek(const Aria_Buffer* buf);
 [[maybe_unused]] void bufferCopy(Aria_Buffer* dst, const Aria_Buffer* src);
 
 #ifdef ARIA_BUFFER_IMPL
 
-[[maybe_unused]] Aria_Buffer* bufferCreate(uint32_t elem_size, uint32_t cap) {
+[[nodiscard]] [[maybe_unused]] Aria_Buffer* bufferCreate(uint32_t elem_size, uint32_t cap) {
     Aria_Buffer* buf = malloc(sizeof(Aria_Buffer));
     buf->size = 0;
     buf->capacity = cap;
@@ -34,6 +34,8 @@ typedef struct {
 [[maybe_unused]] void bufferFree(Aria_Buffer* buf) {
     free(buf->items);
     buf->capacity = 0;
+    free(buf);
+    buf = NULL;
 }
 
 [[maybe_unused]] void bufferInsert(Aria_Buffer* buf, void* elem) {
@@ -46,12 +48,12 @@ typedef struct {
     buf->size++;
 }
 
-[[maybe_unused]] void* bufferGet(const Aria_Buffer* buf, uint32_t idx) {
+[[nodiscard]] [[maybe_unused]] void* bufferGet(const Aria_Buffer* buf, uint32_t idx) {
     if (idx > buf->size) { return NULL; }
     return buf->items + (buf->elem_size * idx);
 }
 
-[[maybe_unused]] void* bufferPeek(const Aria_Buffer* buf) {
+[[nodiscard]] [[maybe_unused]] void* bufferPeek(const Aria_Buffer* buf) {
     if (buf->size == 0) { return NULL; }
     return buf->items + (buf->elem_size * (buf->size - 1));
 }

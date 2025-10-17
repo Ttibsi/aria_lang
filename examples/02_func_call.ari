@@ -1,0 +1,7 @@
+func foo() {
+    return 17 * 2;
+}
+
+func main() {
+    return 35 + foo();
+}

@@ -10,25 +10,20 @@
 #define ONETEST_MAX_ERROR_LEN 256
 #define ONETEST_MAX_TESTS 128
 
-/* Macro to create test entries */
 #define ONETEST_TEST(func) {func, #func, 0}
 #define ONETEST_SKIP(func) {func, #func, 1}
 
-/* Test function pointer type */
 typedef int (*onetest_func_t)(void);
 
-/* Test structure */
 typedef struct {
     onetest_func_t func;
     const char* name;
     int skip;  // 0 for no, 1 for yes
 } onetest_test_t;
 
-/* Error storage */
 extern char onetest_errors[ONETEST_MAX_ERRORS][ONETEST_MAX_ERROR_LEN];
 extern int onetest_error_count;
 
-/* Main execution function */
 int onetest_exec(const onetest_test_t* tests, int test_count);
 
 #define onetest_assert(x) \
@@ -43,7 +38,6 @@ int onetest_exec(const onetest_test_t* tests, int test_count);
 
 #ifdef ONETEST_IMPLEMENTATION
 
-/* Global error storage */
 char onetest_errors[ONETEST_MAX_ERRORS][ONETEST_MAX_ERROR_LEN];
 int onetest_error_count = 0;
 
@@ -53,12 +47,10 @@ typedef struct {
     int fail;
 } Counters;
 
-/* Check if running in CI environment */
 static int onetest_is_ci(void) {
     return getenv("CI") != NULL;
 }
 
-/* Get current time in milliseconds */
 static double onetest_get_time_ms(void) {
     clock_t c = clock();
     return ((double)c / CLOCKS_PER_SEC) * 1000.0;
@@ -129,12 +121,10 @@ int onetest_exec(const onetest_test_t* tests, int test_count) {
             }
         }
 
-        /* padding for the dotted line */
         int name_len = strlen(tests[i].name);
         int padding  = 79 - name_len - (tests[i].skip ? 7 : 6);
         if (padding < 0) padding = 0;
 
-        /* ----- print status line ----- */
         if (tests[i].skip) {
             const char *col = status_color(ci, "\x1b[43m");
             print_status(tests[i].name, padding, "Skipped", col);
@@ -147,18 +137,10 @@ int onetest_exec(const onetest_test_t* tests, int test_count) {
             ++counters.pass;
         }
 
-        /* ----- print any errors ----- */
-        if (!tests[i].skip) {
-            print_errors(ci);
-        }
-
-        /* ----- count failures ----- */
-        if (onetest_error_count > 0 || retcode > 0) {
-            ++counters.fail;
-        }
+        if (!tests[i].skip) { print_errors(ci); }
+        if (onetest_error_count > 0 || retcode > 0) { ++counters.fail; }
     }
 
-    /* ----- runtime & summary ----- */
     double end_time = onetest_get_time_ms();
     double duration = end_time - start_time;
 

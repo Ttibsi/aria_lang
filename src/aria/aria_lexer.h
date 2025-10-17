@@ -1,8 +1,6 @@
 #ifndef ARIA_LEXER_H
 #define ARIA_LEXER_H
 
-#include <stdbool.h>
-
 #include "aria_buffer.h"
 
 typedef enum {
@@ -102,23 +100,24 @@ static const Keyword keywords[] = {
 };
 static const int keyword_count = sizeof(keywords) / sizeof(keywords[0]);
 
-char peek(Aria_Lexer* l);
-char peekNext(Aria_Lexer* l);
-char advanceChar(Aria_Lexer* l);
-void skipWhitespace(Aria_Lexer* l);
+Aria_Lexer lexerInit(char* text);
 Aria_Token makeToken(TokenType type, int start, int length);
-Aria_Token scanEqualVariant(Aria_Lexer* l, TokenType single, TokenType equal);
-Aria_Token scanStringLiteral(Aria_Lexer* l);
-Aria_Token scanNumber(Aria_Lexer* l);
-Aria_Token scanIdentifier(Aria_Lexer* l);
-Aria_Token scanToken(Aria_Lexer* l);
-void advance(Aria_Lexer* l);
-bool check(Aria_Lexer* l, TokenType type);
-bool match(Aria_Lexer* l, TokenType type);
-TokenType getCurrTokenType(Aria_Lexer* l);
-int getTokenNumber(Aria_Lexer* lexer, Aria_Token token);
-char getTokenChar(Aria_Lexer* lexer, Aria_Token token);
-void printTokens(Aria_Lexer* l);
-Aria_Lexer* ariaTokenize(char* src);
+char peek(Aria_Lexer* L);
+char peekNext(Aria_Lexer* L);
+char advanceChar(Aria_Lexer* L);
+void skipWhitespace(Aria_Lexer* L);
+Aria_Token scanEqualVariant(Aria_Lexer* L, TokenType single, TokenType equal);
+Aria_Token scanStringLiteral(Aria_Lexer* L);
+Aria_Token scanNumber(Aria_Lexer* L);
+Aria_Token scanIdentifier(Aria_Lexer* L);
+Aria_Token scanToken(Aria_Lexer* L);
+void advance(Aria_Lexer* L);
+bool check(Aria_Lexer* L, const TokenType type);
+bool match(Aria_Lexer* L, const TokenType type);
+TokenType getCurrTokenType(Aria_Lexer* L);
+int getTokenNumber(Aria_Lexer* L, Aria_Token* token);
+char getTokenChar(Aria_Lexer* L, Aria_Token* token);
+void ariaTokenize(Aria_Lexer* L);
+void printTokens(Aria_Lexer* L);
 
 #endif // ARIA_LEXER_H

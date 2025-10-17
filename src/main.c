@@ -1,14 +1,12 @@
-#include "src/aria.h"
-
 #include <stdio.h>
-#include <stdlib.h>
-#include <libgen.h>
-#include <string.h>
-
+#include "aria/aria.h"
 
 char* file_to_string(const char* filename) {
     FILE* f = fopen(filename, "rb");
-    if (!f) return NULL;
+    if (!f) {
+        fprintf(stderr, "File does not exist\n");
+        return NULL;
+    }
 
     fseek(f, 0, SEEK_END);
     long len = ftell(f);
@@ -30,11 +28,12 @@ void usage() {
 
 int main(int argc, char* argv[]) {
     const char* filename = NULL;
+    bool debug_mode = false;
 
     // Parse command line arguments
     for (int i = 1; i < argc; i++) {
         if (strcmp(argv[i], "-D") == 0) {
-            aria_debug_mode = 1;
+            debug_mode = true;
         } else if (argv[i][0] != '-') {
             // This is the filename (first non-flag argument)
             filename = argv[i];
@@ -48,8 +47,11 @@ int main(int argc, char* argv[]) {
     }
 
     if (filename != NULL) {
-        const char* text = file_to_string(filename);
-        return ariaInterpret(text);
+        char* text = file_to_string(filename);
+        if (text == NULL) { return 1; }
+        const int ret = ariaInterpret(text, debug_mode);
+        free(text);
+        return ret;
     } else {
         // TODO: Proper repl
         usage();

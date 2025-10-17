@@ -1,7 +1,7 @@
-#include "aria_executor.h"
+#include "aria_execute.h"
 #include "onetest.h"
 
-static int test_executeInstruction(void) {
+static inline int test_executeInstruction(void) {
     Stack* local = createStack(8);
 
     Aria_Bytecode* inst = malloc(sizeof(Aria_Bytecode));
@@ -15,14 +15,16 @@ static int test_executeInstruction(void) {
     onetest_assert(stackPop(local) == 42);
 
     freeStack(local);
+    free(inst);
     return 0;
 }
 
-static int test_executeFunction(void) {
+static inline int test_executeFunction(void) {
     Stack* global = createStack(8);
 
-    Aria_Lexer* lexer = ariaTokenize("func main() { return 69; }");
-    ASTNode ast = ariaParse(lexer);
+    Aria_Lexer L = lexerInit("func main() { return 69; }");
+    ariaTokenize(&L);
+    ASTNode ast = ariaParse(&L);
     Aria_Module* mod = ariaCompile(&ast);
 
     const int ret = executeFunction(global, (Aria_Chunk*)bufferGet(mod->buf, 0));
@@ -32,11 +34,15 @@ static int test_executeFunction(void) {
     return 0;
 }
 
-static int test_ariaExecute(void) {
-    Aria_Lexer* lexer = ariaTokenize("func main() { return 69; }");
-    ASTNode ast = ariaParse(lexer);
+static inline int test_ariaExecute(void) {
+    Aria_Lexer L = lexerInit("func main() { return 69; }");
+    ariaTokenize(&L);
+    ASTNode ast = ariaParse(&L);
     Aria_Module* mod = ariaCompile(&ast);
+
     Stack* stack = ariaExecute(mod);
     onetest_assert(stackPop(stack) == 69);
+
+    freeStack(stack);
     return 0;
 }

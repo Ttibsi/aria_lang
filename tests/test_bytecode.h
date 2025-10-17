@@ -1,19 +1,17 @@
-#include <stdlib.h>
+#include <string.h>
 
 #include "onetest.h"
 #include "aria_bytecode.h"
 
-static int test_compileFunc(void) {
-    Aria_Lexer* lexer = ariaTokenize("func foo() { return 42; }");
-    ASTNode mod = ariaParse(lexer);
-    ASTNode *funcNode = (ASTNode *)bufferGet(mod.block.buf, 0);
-    if (funcNode->type != AST_FUNC) {
-        fprintf(stderr, "Expected a function node\n");
-        return 1;
-    }
+static inline int test_compileFunc(void) {
+    Aria_Lexer L = lexerInit("func foo() { return 42; }");
+    ariaTokenize(&L);
+    const ASTNode mod = ariaParse(&L);
 
-    Aria_Chunk* chunk = compileFunc(funcNode);
+    ASTNode* funcNode = (ASTNode*)bufferGet(mod.block, 0);
+    onetest_assert(funcNode->type == AST_FUNC);
 
+    const Aria_Chunk* chunk = compileFunc(funcNode);
     onetest_assert(strcmp(chunk->name, "foo") == 0);
     onetest_assert(chunk->buf->op == OP_STORE_CONST);
     onetest_assert(chunk->buf->operand == 42);
@@ -21,15 +19,10 @@ static int test_compileFunc(void) {
     return 0;
 }
 
-static int test_opcodeDisplay(void) {
-    onetest_assert(strcmp(opcodeDisplay(OP_STORE_CONST), "OP_STORE_CONST") == 0);
-    onetest_assert(strcmp(opcodeDisplay(AST_FUNC), "UNKNOWN") == 0);
-    return 0;
-}
-
-static int test_ariaCompile(void) {
-    Aria_Lexer* lexer = ariaTokenize("func foo(bar) { return 42; } func main(argv) { return 69; }");
-    ASTNode ast = ariaParse(lexer);
+static inline int test_ariaCompile(void) {
+    Aria_Lexer L = lexerInit("func foo(bar) { return 42; } func main(argv) { return 69; }");
+    ariaTokenize(&L);
+    const ASTNode ast = ariaParse(&L);
     Aria_Module* mod = ariaCompile(&ast);
 
     onetest_assert(strcmp(mod->name, "main") == 0);
@@ -45,5 +38,11 @@ static int test_ariaCompile(void) {
     onetest_assert(second_chunk->buf->op == OP_STORE_CONST);
     onetest_assert(second_chunk->buf->operand == 69);
 
+    return 0;
+}
+
+static inline int test_opcodeDisplay(void) {
+    onetest_assert(strcmp(opcodeDisplay(OP_STORE_CONST), "OP_STORE_CONST") == 0);
+    onetest_assert(strcmp(opcodeDisplay(AST_FUNC), "UNKNOWN") == 0);
     return 0;
 }

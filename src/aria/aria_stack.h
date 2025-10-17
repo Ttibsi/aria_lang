@@ -26,17 +26,11 @@ typedef struct {
 // Function to create a stack of given capacity.
 [[maybe_unused]] Stack* createStack(const int capacity) {
     Stack* stack = (Stack*)malloc(sizeof(Stack));
-    if (!stack) {
-        return NULL;
-    }
+
     stack->capacity = capacity;
     stack->top = -1;
-
     stack->array = (int*)malloc(stack->capacity * sizeof(int));
-    if (!stack->array) {
-        free(stack);
-        return NULL;
-    }
+
     return stack;
 }
 
@@ -73,7 +67,7 @@ typedef struct {
 }
 
 [[maybe_unused]] void freeStack(Stack* stack) {
-    if (stack) {
+    if (stack != NULL) {
         free(stack->array);
         free(stack);
     }
