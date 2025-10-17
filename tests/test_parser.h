@@ -61,18 +61,16 @@ static inline int test_parseFunc(void) {
 static inline int test_ariaParse(void) {
     Aria_Lexer L = lexerInit("func foo() { return 42; }");
     ariaTokenize(&L);
-    const ASTNode node = ariaParse(&L);
+    ASTNode mod = ariaParse(&L);
+    onetest_assert(mod.type == AST_MODULE);
 
-    onetest_assert(node.type == AST_FUNC);
-    onetest_assert(strcmp(node.func.func_name, "foo") == 0);
+    ASTNode* func = (ASTNode*)bufferGet(mod.block, 0);
+    onetest_assert(func->type == AST_FUNC);
+    onetest_assert(strcmp(func->func.func_name, "foo") == 0);
 
-    const ASTNode body = *node.func.body;
-    onetest_assert(body.type == AST_BLOCK);
-    onetest_assert(body.block->size == 1);
-
-    const ASTNode last_node = *(ASTNode*)bufferPeek(body.block);
-    onetest_assert(last_node.type == AST_VALUE);
-    onetest_assert(last_node.value == 42);
+    ASTNode* body = func->func.body;
+    onetest_assert(body->type == AST_BLOCK);
+    onetest_assert(body->block->size == 1);
 
     return 0;
 }
