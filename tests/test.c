@@ -5,6 +5,9 @@
 #include "test_parser.h"
 #include "test_bytecode.h"
 #include "test_execute.h"
+#include "test_buffer.h"
+#include "test_stack.h"
+#include "test_hash.h"
 
 int main(void) {
     onetest_test_t tests[] = {
@@ -54,6 +57,28 @@ int main(void) {
         ONETEST_TEST(test_executeInstruction),
         ONETEST_TEST(test_executeFunction),
         ONETEST_TEST(test_ariaExecute),
+
+        // test_buffer.h
+        ONETEST_TEST(test_bufferCreate),
+        ONETEST_TEST(test_bufferInsert),
+        ONETEST_TEST(test_bufferGet),
+        ONETEST_TEST(test_bufferPeek),
+        ONETEST_TEST(test_bufferCopy),
+
+        // test_stack.h
+        ONETEST_TEST(test_isFull),
+        ONETEST_TEST(test_isEmpty),
+        ONETEST_TEST(test_stackPush),
+        ONETEST_TEST(test_stackPop),
+        ONETEST_TEST(test_stackPeek),
+
+        // test_hash.h
+        ONETEST_TEST(test_mapCreate),
+        ONETEST_TEST(test_hash),
+        ONETEST_TEST(test_mapInsert),
+        ONETEST_TEST(test_mapRemove),
+        ONETEST_TEST(test_mapExists),
+        ONETEST_TEST(test_mapFind),
     };
 
     return onetest_exec(tests, sizeof(tests) / sizeof(tests[0]));
