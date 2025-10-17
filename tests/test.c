@@ -2,6 +2,7 @@
 #include "onetest.h"
 
 #include "test_lexer.h"
+#include "test_parser.h"
 
 int main(void) {
     onetest_test_t tests[] = {
@@ -23,6 +24,24 @@ int main(void) {
 		ONETEST_TEST(test_getCurrTokenType),
 		ONETEST_TEST(test_getTokenNumber),
 		ONETEST_TEST(test_getTokenChar),
+
+        // test_parser.h
+        ONETEST_SKIP(test_parseConst),
+        ONETEST_SKIP(test_parseFor),
+        ONETEST_SKIP(test_parseIf),
+        ONETEST_SKIP(test_parsePrint),
+        ONETEST_TEST(test_parseReturn),
+        ONETEST_SKIP(test_parseSwitch),
+        ONETEST_SKIP(test_parseVar),
+        ONETEST_SKIP(test_parseIdentifier),
+        ONETEST_SKIP(test_parseExpression),
+        ONETEST_SKIP(test_parseClass),
+        ONETEST_SKIP(test_parseExport),
+        ONETEST_SKIP(test_parseImport),
+        ONETEST_TEST(test_parseBlock),
+        ONETEST_TEST(test_parseFunc),
+        ONETEST_TEST(test_ariaParse),
+        ONETEST_TEST(test_createNode),
     };
 
     return onetest_exec(tests, sizeof(tests) / sizeof(tests[0]));
