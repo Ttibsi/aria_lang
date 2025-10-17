@@ -4,6 +4,7 @@
 #include "test_lexer.h"
 #include "test_parser.h"
 #include "test_bytecode.h"
+#include "test_execute.h"
 
 int main(void) {
     onetest_test_t tests[] = {
@@ -48,6 +49,11 @@ int main(void) {
         ONETEST_TEST(test_compileFunc),
         ONETEST_TEST(test_ariaCompile),
         ONETEST_TEST(test_opcodeDisplay),
+
+        // test_execute.h
+        ONETEST_TEST(test_executeInstruction),
+        ONETEST_TEST(test_executeFunction),
+        ONETEST_TEST(test_ariaExecute),
     };
 
     return onetest_exec(tests, sizeof(tests) / sizeof(tests[0]));
