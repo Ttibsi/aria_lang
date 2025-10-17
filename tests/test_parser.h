@@ -18,6 +18,7 @@ static inline int test_parseReturn(void) {
 
 static inline int test_parseSwitch(void) { return 1; }
 static inline int test_parseVar(void) { return 1; }
+static inline int test_parseFuncCall(void) { return 1; }
 static inline int test_parseIdentifier(void) { return 1; }
 static inline int test_parseExpression(void) { return 1; }
 static inline int test_parseClass(void) { return 1; }

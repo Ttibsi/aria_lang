@@ -27,7 +27,45 @@ ASTNode parseReturn(Aria_Lexer* L) {
 
 ASTNode parseSwitch(Aria_Lexer* L) { assert(0 && "TODO"); }
 ASTNode parseVar(Aria_Lexer* L) { assert(0 && "TODO"); }
-ASTNode parseIdentifier(Aria_Lexer* L) { assert(0 && "TODO"); }
+
+ASTNode parseFuncCall(Aria_Lexer* L) {
+    // NOTE: When this is called, the index of the buffer is on the oparen
+    ASTNode node = createNode(AST_FUNCCALL);
+
+    // function name
+    Aria_Token* func_call = (Aria_Token*)bufferGet(L->tokens, L->buf_index - 1);
+    node.func_call.func_name = malloc(sizeof(char) * func_call->len + 1);
+    memcpy(node.func_call.func_name, L->source + func_call->start, func_call->len);
+
+    // parameters
+    if (!match(L, TOK_LEFT_PAREN)) { parsingError("Function name not followed by open bracket\n"); }
+    int args_idx = 0;
+    while (!check(L, TOK_RIGHT_PAREN)) {
+        if (!check(L, TOK_IDENTIFIER)) { parsingError("function args contain non-identifiers\n"); }
+        if (args_idx >= param_count) { parsingError("Function has too many arguments\n"); }
+
+        node.func.args[args_idx] = *(Aria_Token*)bufferGet(L->tokens, L->buf_index);
+        args_idx++;
+        advance(L);
+        if (check(L, TOK_COMMA)) { advance(L); } // Skip commas
+    }
+
+    advance(L); // TOK_RIGHT_PAREN
+    return node;
+}
+
+ASTNode parseIdentifier(Aria_Lexer* L) {
+    const Aria_Token* ident = (Aria_Token*)bufferGet(L->tokens, L->buf_index);
+    advance(L);
+
+    switch(getCurrTokenType(L)) {
+        case TOK_LEFT_PAREN: return parseFuncCall(L); break;
+        case  TOK_EQUAL:
+            // Probably modifying a variable
+            break;
+    };
+    assert(0 && "TODO");
+}
 
 ASTNode parseExpression(Aria_Lexer* L) {
     Aria_Token* tkn = (Aria_Token*)bufferGet(L->tokens, L->buf_index);

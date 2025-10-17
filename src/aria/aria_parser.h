@@ -4,11 +4,14 @@
 #include "aria_lexer.h"
 #include "aria_buffer.h"
 
+constexpr int param_count = 8;
+
 typedef enum {
     AST_BLOCK,
     AST_FUNC,
     AST_VALUE,
     AST_MODULE,
+    AST_FUNCCALL,
 
     AST_ERR,
 } ASTType;
@@ -18,9 +21,14 @@ typedef struct _ASTNode {
     union {
         struct {
             char* func_name;
-            Aria_Token args[8];
+            Aria_Token args[param_count];
             struct _ASTNode* body;
         } func;
+
+        struct {
+            char* func_name;
+            Aria_Token* param_list[param_count];
+        } func_call;
 
         int value;
 

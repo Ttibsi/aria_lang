@@ -37,6 +37,7 @@ int main(void) {
         ONETEST_TEST(test_parseReturn),
         ONETEST_SKIP(test_parseSwitch),
         ONETEST_SKIP(test_parseVar),
+        ONETEST_SKIP(test_parseFuncCall),
         ONETEST_SKIP(test_parseIdentifier),
         ONETEST_SKIP(test_parseExpression),
         ONETEST_SKIP(test_parseClass),
