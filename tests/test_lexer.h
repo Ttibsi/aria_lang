@@ -239,3 +239,7 @@ static inline int test_getTokenChar(void) {
     onetest_assert(tok_char == 'H');
     return 0;
 }
+
+static inline int test_getTokenString(void) {
+    return 1;
+}

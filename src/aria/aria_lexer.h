@@ -115,6 +115,7 @@ bool match(Aria_Lexer* L, const TokenType type);
 TokenType getCurrTokenType(Aria_Lexer* L);
 int getTokenNumber(Aria_Lexer* L, Aria_Token* token);
 char getTokenChar(Aria_Lexer* L, Aria_Token* token);
+char* getTokenString(Aria_Lexer* L, size_t index);
 void ariaTokenize(Aria_Lexer* L);
 void printTokens(Aria_Lexer* L);
 

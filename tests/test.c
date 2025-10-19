@@ -29,6 +29,7 @@ int main(void) {
         ONETEST_TEST(test_getCurrTokenType),
         ONETEST_TEST(test_getTokenNumber),
         ONETEST_TEST(test_getTokenChar),
+        ONETEST_TEST(test_getTokenString),
 
         // test_parser.h
         ONETEST_SKIP(test_parseConst),
