@@ -6,12 +6,20 @@
 
 constexpr int param_count = 8;
 
+typedef uint8_t binding_t;
+typedef struct {
+    binding_t left;
+    binding_t right;
+} BP;
+
 typedef enum {
     AST_BLOCK,
     AST_FUNC,
     AST_VALUE,
     AST_MODULE,
     AST_FUNCCALL,
+    AST_RETURN,
+    AST_EXPR,
 
     AST_ERR,
 } ASTType;
@@ -30,6 +38,16 @@ typedef struct _ASTNode {
             Aria_Token* param_list[param_count];
         } func_call;
 
+        struct {
+            struct _ASTNode* expr;
+        } ret;
+
+        struct {
+            TokenType op;
+            struct _ASTNode* lhs;
+            struct _ASTNode* rhs;
+        } expr;
+
         int value;
 
         // Aria_Buffer<ASTNode>
@@ -37,6 +55,9 @@ typedef struct _ASTNode {
     };
 } ASTNode;
 
+binding_t prefixBindingPower(const Aria_Token* tkn);
+BP infixBindingPower(const TokenType* tkn);
+binding_t postfixBindingPower(const Aria_Token* tkn);
 ASTNode parseConst(Aria_Lexer* L);
 ASTNode parseFor(Aria_Lexer* L);
 ASTNode parseIf(Aria_Lexer* L);
@@ -44,12 +65,13 @@ ASTNode parseReturn(Aria_Lexer* L);
 ASTNode parseSwitch(Aria_Lexer* L);
 ASTNode parseVar(Aria_Lexer* L);
 ASTNode parseIdentifier(Aria_Lexer* L);
-ASTNode parseExpression(Aria_Lexer* L);
+ASTNode parseExpression(Aria_Lexer* L, binding_t min_bp);
 ASTNode parseClass(Aria_Lexer* L);
 ASTNode parseExport(Aria_Lexer* L);
 ASTNode parseImport(Aria_Lexer* l);
 ASTNode parseBlock(Aria_Lexer* L);
 ASTNode parseFunc(Aria_Lexer* L);
+ASTNode parseStatement(Aria_Lexer* L);
 ASTNode ariaParse(Aria_Lexer* L);
 ASTNode createNode(ASTType type);
 void printAST(ASTNode ast, Aria_Lexer* L);
