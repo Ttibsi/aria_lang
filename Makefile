@@ -38,7 +38,7 @@ test: $(objects) | build
 clean:
 	rm -rf build
 	if [ -f aria ]; 	then rm aria; fi
-	if [ -f iris.log ]; then rm iris.log; fi
+	if [ -f iris.log ];	then rm iris.log; fi
 	if [ -f test_exe ];	then rm test_exe; fi
 	if [ -f core ]; 	then rm core; fi
 
