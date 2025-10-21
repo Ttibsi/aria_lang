@@ -173,6 +173,7 @@ bool match(Aria_Lexer* L, const TokenType type) {
 
 TokenType getCurrTokenType(Aria_Lexer* L) {
     const Aria_Token* tkn = bufferGet(L->tokens, L->buf_index);
+    if (tkn == NULL) { return TOK_ERROR; }
     return tkn->type;
 }
 

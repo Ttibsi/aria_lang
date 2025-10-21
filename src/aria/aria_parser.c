@@ -88,12 +88,12 @@ ASTNode parseFuncCall(Aria_Lexer* L) {
         if (check(L, TOK_COMMA)) { advance(L); } // Skip commas
     }
 
-    advance(L); // TOK_RIGHT_PAREN
+    //advance(L); // TOK_RIGHT_PAREN
     return node;
 }
 
 ASTNode parseIdentifier(Aria_Lexer* L) {
-    const Aria_Token* ident = (Aria_Token*)bufferGet(L->tokens, L->buf_index);
+    // const Aria_Token* ident = (Aria_Token*)bufferGet(L->tokens, L->buf_index);
     advance(L);
 
     switch(getCurrTokenType(L)) {
@@ -102,7 +102,8 @@ ASTNode parseIdentifier(Aria_Lexer* L) {
             // Probably modifying a variable
             break;
     };
-    assert(0 && "TODO");
+
+    unreachable();
 }
 
 ASTNode parseExpression(Aria_Lexer* L, binding_t min_bp) {
@@ -303,14 +304,27 @@ ASTNode createNode(ASTType type) {
                 .value = 0
             };
 
+        case AST_FUNCCALL:
+            return (ASTNode){
+                .type = type,
+                .func_call = { .func_name = NULL }
+            };
+
+        case AST_RETURN:
+            return (ASTNode){
+                .type = type
+            };
+
         case AST_EXPR:
             return (ASTNode){
                 .type = type,
                 .expr = {TOK_ERROR, NULL, NULL}
             };
+
         case AST_ERR:
-            return (ASTNode){.type = type};
-    };
+            return (ASTNode){ .type = type };
+
+        };
 
     return (ASTNode){.type = type};
 }
@@ -324,7 +338,7 @@ void printASTimpl(ASTNode ast, int indent, Aria_Lexer* L) {
             }
             break;
 
-        case AST_FUNC:
+        case AST_FUNC: case AST_FUNCCALL:
             printf("%*s@Function Node: { %s }\n", indent, "", ast.func.func_name);
 
             // Arguments
@@ -339,6 +353,8 @@ void printASTimpl(ASTNode ast, int indent, Aria_Lexer* L) {
                 );
             }
 
+            if (ast.type == AST_FUNCCALL) { break; }
+
             printf("%*s@Function Body\n", indent + 2, "");
             printASTimpl(*ast.func.body, indent + 4, L);
             break;
@@ -346,6 +362,15 @@ void printASTimpl(ASTNode ast, int indent, Aria_Lexer* L) {
         case AST_VALUE:
             printf("%*s@Value: { %d }\n", indent, "", ast.value);
             break;
+
+        case AST_RETURN:
+            printf("%*s@Return\n", indent, "");
+            break;
+
+        case AST_EXPR:
+            printf("%*s@Expr", indent, "");
+            break;
+
         case AST_ERR:
             printf("%*s@Error\n", indent, "");
             break;
@@ -380,5 +405,13 @@ void nodeFree(ASTNode node) {
             [[fallthrough]];
         case AST_ERR:
             break;
-    };
+
+        case AST_FUNCCALL:
+            free(node.func_call.func_name);
+
+        case AST_RETURN:
+            break;
+        case AST_EXPR:
+          break;
+        };
 }
