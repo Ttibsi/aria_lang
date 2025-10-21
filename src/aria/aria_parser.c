@@ -2,6 +2,7 @@
 
 #include <assert.h>
 #include <stdio.h>
+#include <stddef.h>
 
 #define parsingError(str, ...) \
     do { \
@@ -365,10 +366,13 @@ void printASTimpl(ASTNode ast, int indent, Aria_Lexer* L) {
 
         case AST_RETURN:
             printf("%*s@Return\n", indent, "");
+            printASTimpl(*ast.ret.expr, indent + 2, L);
             break;
 
         case AST_EXPR:
-            printf("%*s@Expr", indent, "");
+            printf("%*s@Expr (Token: %d)\n", indent, "", ast.expr.op);
+            printASTimpl(*ast.expr.lhs, indent + 2, L);
+            printASTimpl(*ast.expr.rhs, indent + 2, L);
             break;
 
         case AST_ERR:
