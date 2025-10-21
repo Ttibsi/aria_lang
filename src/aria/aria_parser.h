@@ -6,12 +6,6 @@
 
 constexpr int param_count = 8;
 
-typedef uint8_t binding_t;
-typedef struct {
-    binding_t left;
-    binding_t right;
-} BP;
-
 typedef enum {
     AST_BLOCK,
     AST_FUNC,
@@ -55,9 +49,10 @@ typedef struct _ASTNode {
     };
 } ASTNode;
 
-binding_t prefixBindingPower(const Aria_Token* tkn);
-BP infixBindingPower(const TokenType* tkn);
-binding_t postfixBindingPower(const Aria_Token* tkn);
+typedef uint8_t binding_t;
+
+binding_t prefixBindingPower(const TokenType* tkn);
+binding_t infixBindingPower(const TokenType* tkn);
 ASTNode parseConst(Aria_Lexer* L);
 ASTNode parseFor(Aria_Lexer* L);
 ASTNode parseIf(Aria_Lexer* L);

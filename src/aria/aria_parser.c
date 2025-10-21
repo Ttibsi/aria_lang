@@ -5,13 +5,47 @@
 
 #define parsingError(str, ...) \
     do { \
-        fprintf(stderr, "%s:%d - "str, __func__, __LINE__ __VA_OPT__(,) __VA_ARGS__); \
+        fprintf(stderr, "%s:%d - "str"\n", __func__, __LINE__ __VA_OPT__(,) __VA_ARGS__); \
         assert(0); \
     } while(0)
 
-binding_t prefixBindingPower(const Aria_Token* tkn) {}
-BP infixBindingPower(const TokenType* tkn) {}
-binding_t postfixBindingPower(const Aria_Token* tkn) {}
+binding_t prefixBindingPower(const TokenType* tkn) {
+    switch (*tkn) {
+        case TOK_BANG:
+        case TOK_MINUS:
+            return 8;
+            break;
+        default:
+            return 0;
+    }
+
+    return 0;
+}
+
+binding_t infixBindingPower(const TokenType* tkn) {
+    switch (*tkn) {
+        case TOK_DOT: case TOK_LEFT_PAREN: case TOK_RIGHT_PAREN:
+            return 9;
+        case TOK_STAR: case TOK_SLASH:
+            return 7;
+        case TOK_PLUS: case TOK_MINUS:
+            return 6;
+        case TOK_GREATER: case TOK_GREATER_EQUAL: case TOK_LESS: case TOK_LESS_EQUAL:
+            return 5;
+        case TOK_EQUAL_EQUAL: case TOK_BANG_EQUAL:
+            return 4;
+        case TOK_AND:
+            return 3;
+        case TOK_OR:
+            return 2;
+        case TOK_EQUAL:
+            return 1;
+        default:
+            return 0;
+    };
+
+    return 0;
+}
 
 ASTNode parseConst(Aria_Lexer* L) { assert(0 && "TODO"); }
 ASTNode parseFor(Aria_Lexer* L) { assert(0 && "TODO"); }
@@ -93,26 +127,30 @@ ASTNode parseExpression(Aria_Lexer* L, binding_t min_bp) {
             }
             break;
         default:
-            parsingError("Unknown token found (parseExpression LHS): %d\n", getCurrTokenType(L));
+            parsingError("Unknown token found (parseExpression LHS): %d", getCurrTokenType(L));
             break;
     };
-    advance(L);
 
-    if (getCurrTokenType(L) == TOK_SEMICOLON) { return lhs; }
-    if (getCurrTokenType(L) == TOK_EOF) {
+
+    const Aria_Token* next = bufferGet(L->tokens, L->buf_index + 1);
+    if (next->type == TOK_EOF) {
         parsingError("EOF reached when parsing an expression");
+    } else if (next->type == TOK_SEMICOLON || next->type == TOK_RIGHT_PAREN) {
+        return lhs;
     }
 
     while (true) {
         advance(L);
-        if (getCurrTokenType(L) == TOK_RIGHT_PAREN) { break; }
+        const TokenType tok_type = getCurrTokenType(L);
+        if (tok_type == TOK_SEMICOLON || tok_type == TOK_RIGHT_PAREN) {
+            break;
+        }
 
-        TokenType op = getCurrTokenType(L);
-        const BP bp = infixBindingPower(&op);
-        if (bp.left < min_bp) { break; }
+        const binding_t bp = infixBindingPower(&tok_type);
+        if (bp < min_bp) { break; }
         advance(L);
 
-        ASTNode rhs = parseExpression(L, bp.right);
+        ASTNode rhs = parseExpression(L, bp + 1);
 
         ASTNode* lhs_ptr = malloc(sizeof(ASTNode));
         ASTNode* rhs_ptr = malloc(sizeof(ASTNode));
@@ -120,7 +158,7 @@ ASTNode parseExpression(Aria_Lexer* L, binding_t min_bp) {
         *rhs_ptr = rhs;
 
         lhs = createNode(AST_EXPR);
-        lhs.expr.op = op;
+        lhs.expr.op = tok_type;
         lhs.expr.lhs = lhs_ptr;
         lhs.expr.rhs = rhs_ptr;
     }
