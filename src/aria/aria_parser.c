@@ -100,7 +100,7 @@ ASTNode parseIdentifier(Aria_Lexer* L) {
 
     switch(getCurrTokenType(L)) {
         case TOK_LEFT_PAREN: return parseFuncCall(L); break;
-        case  TOK_EQUAL:
+        case TOK_EQUAL:
             // Probably modifying a variable
             break;
     };
@@ -371,7 +371,7 @@ void printASTimpl(ASTNode ast, int indent, Aria_Lexer* L) {
             break;
 
         case AST_EXPR:
-            printf("%*s@Expr (Token: %d)\n", indent, "", ast.expr.op);
+            printf("%*s@Expr (Token: %c)\n", indent, "", symbols[ast.expr.op]);
             printASTimpl(*ast.expr.lhs, indent + 2, L);
             printASTimpl(*ast.expr.rhs, indent + 2, L);
             break;
