@@ -30,6 +30,7 @@ void ariaFree(Aria_Lexer* L, ASTNode* ast, Aria_Module* mod, Stack* stack) {
         freeChunk(c);
     }
     bufferFree(mod->buf);
+    bufferFree(mod->identifiers);
     free(mod);
     mod = NULL;
 

@@ -6,8 +6,95 @@
 
 #define STACK_HEIGHT 64
 
+void appendPtr(Aria_Bytecode* inst, Aria_Bytecode* curr) {
+    if (curr == NULL) {
+        curr = inst;
+        return;
+    }
+
+    curr->next = inst;
+    inst->prev = curr;
+    curr = inst;
+}
+
+Aria_Bytecode* compileSymbol(TokenType tok, Aria_Bytecode* curr) {
+    Aria_Bytecode* inst = malloc(sizeof(Aria_Bytecode));
+    inst->operand = 0;
+    inst->next = NULL;
+    inst->prev = NULL;
+
+    switch (tok) {
+        case TOK_MINUS: break;
+        case TOK_PLUS: break;
+        case TOK_SLASH: break;
+        case TOK_STAR: break;
+        case TOK_BANG: break;
+        case TOK_BANG_EQUAL: break;
+        case TOK_EQUAL: break;
+        case TOK_EQUAL_EQUAL: break;
+        case TOK_GREATER: break;
+        case TOK_GREATER_EQUAL: break;
+        case TOK_LESS: break;
+        case TOK_LESS_EQUAL: break;
+        case TOK_AND: break;
+        case TOK_OR: break;
+    }
+    appendPtr(inst, curr);
+    return inst;
+}
+
+Aria_Bytecode* compileExpression(ASTNode* node, Aria_Bytecode* curr, Aria_Buffer* identifiers) {
+    switch (node->type) {
+        case AST_VALUE: {
+            Aria_Bytecode* inst = malloc(sizeof(Aria_Bytecode));
+            inst->op = OP_STORE_CONST;
+            inst->operand = node->value;
+            inst->next = NULL;
+            inst->prev = NULL;
+            return inst;
+        } break;
+
+        case AST_FUNCCALL: {
+            bufferInsert(identifiers, node->func_call.func_name);
+
+            Aria_Bytecode* inst = malloc(sizeof(Aria_Bytecode));
+            inst->op = OP_FUNC_CALL;
+            inst->operand = identifiers->size;
+            inst->next = NULL;
+            inst->prev = NULL;
+            return inst;
+        } break;
+
+        case AST_RETURN: {
+            ASTNode* expr_node = node->ret.expr;
+            Aria_Bytecode* expr = compileExpression(expr_node, curr, identifiers);
+            appendPtr(expr, curr);
+
+            Aria_Bytecode* inst = malloc(sizeof(Aria_Bytecode));
+            inst->op = OP_RET;
+            inst->operand = -1;
+            inst->next = NULL;
+            inst->prev = NULL;
+            return inst;
+        } break;
+
+        case AST_EXPR: {
+            Aria_Bytecode* expr = compileExpression(node->expr.lhs, curr, identifiers);
+            appendPtr(expr, curr);
+            expr = compileExpression(node->expr.rhs, curr, identifiers);
+            appendPtr(expr, curr);
+
+            return compileSymbol(node->expr.op, curr);
+        }
+
+        default: break;
+    }
+
+    unreachable();
+}
+
 // TODO: handle parameters -- first elems on the stack?
-Aria_Chunk* compileFunc(ASTNode* node) {
+Aria_Chunk* compileFunc(ASTNode* node, Aria_Buffer* identifiers) {
     // need to duplicate for memory reasons
 
     Aria_Chunk* chunk = malloc(sizeof(Aria_Chunk));
@@ -16,31 +103,14 @@ Aria_Chunk* compileFunc(ASTNode* node) {
     chunk->buf = NULL;
 
     Aria_Buffer* body = node->func.body->block;
-    Aria_Bytecode* current = chunk->buf;
+    Aria_Bytecode* curr = chunk->buf;
 
     for (size_t i = 0; i < body->size; i++) {
         ASTNode* body_node = bufferGet(body, i);
-        switch (body_node->type) {
-            case AST_VALUE: {
-                Aria_Bytecode* inst = malloc(sizeof(Aria_Bytecode));
-                inst->op = OP_STORE_CONST;
-                inst->operand = body_node->value;
-                inst->next = NULL;
-                inst->prev = NULL;
+        Aria_Bytecode* inst = compileExpression(body_node, curr, identifiers);
 
-                if (current == NULL) {
-                    current = inst;
-                    chunk->buf = current;
-                } else {
-                    current->next = inst;
-                    inst->prev = current;
-                    current = inst;
-                }
-
-                break;
-            }
-            default: break;
-        }
+        appendPtr(inst, curr);
+        if (chunk->buf == NULL) { chunk->buf = curr; }
     }
 
     return chunk;
@@ -50,6 +120,7 @@ Aria_Module* ariaCompile(ASTNode* node) {
     Aria_Module* mod = malloc(sizeof(Aria_Module));
     mod->name = "main";
     mod->buf = bufferCreate(sizeof(Aria_Chunk), 64);
+    mod->identifiers = bufferCreate(sizeof(char*), 32);
 
     assert(node->type == AST_MODULE);
     Aria_Buffer* module_buf = node->block;
@@ -59,7 +130,7 @@ Aria_Module* ariaCompile(ASTNode* node) {
 
         switch (child->type) {
             case AST_FUNC:
-                Aria_Chunk* chunk = compileFunc(child);
+                Aria_Chunk* chunk = compileFunc(child, mod->identifiers);
                 bufferInsert(mod->buf, chunk);
 
                 // Contents is used in the buffer, so only free the chunk itself
@@ -75,8 +146,10 @@ Aria_Module* ariaCompile(ASTNode* node) {
 
 const char* opcodeDisplay(Opcode op) {
     switch (op) {
-        case OP_STORE_CONST: return "OP_STORE_CONST";
-        default: return "UNKNOWN";
+        case OP_STORE_CONST:  return "OP_STORE_CONST";
+        case OP_FUNC_CALL:    return "OP_FUNC_CALL";
+        case OP_RET:          return "OP_RET";
+        default:              return "UNKNOWN";
     }
 
     return "";
@@ -91,7 +164,7 @@ void printModule(const Aria_Module* mod) {
         Aria_Bytecode* buf = chunk->buf;
         while (buf != NULL) {
             char display[4];
-            if (buf->operand) {
+            if (buf->operand != -1) {
                 snprintf(display, 4, "%d", buf->operand);
             } else {
                 display[0] = ' ';
@@ -99,7 +172,8 @@ void printModule(const Aria_Module* mod) {
             }
 
             printf(
-                "    %s: %s\n",
+                "%*s%s: %s\n",
+                4, "",
                 opcodeDisplay(buf->op),
                 display
             );
