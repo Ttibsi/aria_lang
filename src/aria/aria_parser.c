@@ -75,6 +75,7 @@ ASTNode parseFuncCall(Aria_Lexer* L) {
     Aria_Token* func_call = (Aria_Token*)bufferGet(L->tokens, L->buf_index - 1);
     node.func_call.func_name = malloc(sizeof(char) * func_call->len + 1);
     memcpy(node.func_call.func_name, L->source + func_call->start, func_call->len);
+    node.func_call.func_name[func_call->len] = '\0';
 
     // parameters
     if (!match(L, TOK_LEFT_PAREN)) { parsingError("Function name not followed by open bracket\n"); }
@@ -412,10 +413,18 @@ void nodeFree(ASTNode node) {
 
         case AST_FUNCCALL:
             free(node.func_call.func_name);
+            break;
 
         case AST_RETURN:
+            nodeFree(*node.ret.expr);
+            free(node.ret.expr);
             break;
+
         case AST_EXPR:
-          break;
+            nodeFree(*node.expr.lhs);
+            nodeFree(*node.expr.rhs);
+            free(node.expr.lhs);
+            free(node.expr.rhs);
+            break;
         };
 }
