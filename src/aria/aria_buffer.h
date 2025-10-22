@@ -39,6 +39,8 @@ typedef struct {
 }
 
 [[maybe_unused]] void bufferInsert(Aria_Buffer* buf, void* elem) {
+    if (buf == NULL || elem == NULL) { return; }
+
     if (buf->size == buf->capacity) {
         buf->capacity *= 2;
         buf->items = realloc(buf->items, buf->capacity * buf->elem_size);
@@ -49,7 +51,7 @@ typedef struct {
 }
 
 [[nodiscard]] [[maybe_unused]] void* bufferGet(const Aria_Buffer* buf, uint32_t idx) {
-    if (idx > buf->size) { return NULL; }
+    if (idx >= buf->size) { return NULL; }
     return buf->items + (buf->elem_size * idx);
 }
 

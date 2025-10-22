@@ -7,17 +7,16 @@
 #define STACK_HEIGHT 64
 
 Aria_Bytecode* appendPtr(Aria_Bytecode* inst, Aria_Bytecode* curr) {
-    if (curr->op == OP_NULL) {
-        free(curr);
-        curr = inst;
-        curr->prev = NULL;
-        return curr;
+    if (curr == NULL) {
+        inst->prev = NULL;
+        inst->next = NULL;
+        return inst;
     }
 
     curr->next = inst;
     inst->prev = curr;
-    curr = inst;
-    return curr;
+    inst->next = NULL;
+    return inst;
 }
 
 Aria_Bytecode* compileSymbol(TokenType tok, Aria_Bytecode* curr) {
@@ -107,20 +106,19 @@ Aria_Chunk* compileFunc(ASTNode* node, Aria_Buffer* identifiers) {
     chunk->name = malloc(strlen(node->func.func_name) + 1);
     strcpy(chunk->name, node->func.func_name);
 
-    chunk->buf = malloc(sizeof(Aria_Bytecode));
-    chunk->buf->op = OP_NULL;
-    chunk->buf->operand = -1;
-    chunk->buf->next = NULL;
-    chunk->buf->prev = NULL;
+    chunk->buf = NULL;
 
     Aria_Buffer* body = node->func.body->block;
-    Aria_Bytecode* curr = chunk->buf;
+    Aria_Bytecode* tail = NULL;
 
     for (size_t i = 0; i < body->size; i++) {
         ASTNode* body_node = bufferGet(body, i);
-        Aria_Bytecode* inst = compileExpression(body_node, curr, identifiers);
-        while (curr->next != NULL) { curr = curr->next; }
-        while (chunk->buf->prev != NULL) { chunk->buf = chunk->buf->prev; }
+        Aria_Bytecode* inst = compileExpression(body_node, tail, identifiers);
+
+        tail = appendPtr(inst, tail);
+        if (chunk->buf == NULL) {
+            chunk->buf = inst;
+        }
     }
 
     return chunk;
