@@ -6,17 +6,18 @@
 
 #define STACK_HEIGHT 64
 
-void appendPtr(Aria_Bytecode* inst, Aria_Bytecode* curr) {
+Aria_Bytecode* appendPtr(Aria_Bytecode* inst, Aria_Bytecode* curr) {
     if (curr->op == OP_NULL) {
         free(curr);
         curr = inst;
         curr->prev = NULL;
-        return;
+        return curr;
     }
 
     curr->next = inst;
     inst->prev = curr;
     curr = inst;
+    return curr;
 }
 
 Aria_Bytecode* compileSymbol(TokenType tok, Aria_Bytecode* curr) {
@@ -42,7 +43,7 @@ Aria_Bytecode* compileSymbol(TokenType tok, Aria_Bytecode* curr) {
         case TOK_OR: inst->op = OP_OR; break;
     }
 
-    appendPtr(inst, curr);
+    curr = appendPtr(inst, curr);
     return inst;
 }
 
@@ -71,23 +72,23 @@ Aria_Bytecode* compileExpression(ASTNode* node, Aria_Bytecode* curr, Aria_Buffer
         case AST_RETURN: {
             ASTNode* expr_node = node->ret.expr;
             Aria_Bytecode* expr = compileExpression(expr_node, curr, identifiers);
-            appendPtr(expr, curr);
+            curr = appendPtr(expr, curr);
 
             Aria_Bytecode* inst = malloc(sizeof(Aria_Bytecode));
             inst->op = OP_RET;
             inst->operand = -1;
             inst->next = NULL;
             inst->prev = expr;
-            appendPtr(inst, curr);
+            curr = appendPtr(inst, curr);
 
             return inst;
         } break;
 
         case AST_EXPR: {
             Aria_Bytecode* expr = compileExpression(node->expr.lhs, curr, identifiers);
-            appendPtr(expr, curr);
+            curr = appendPtr(expr, curr);
             expr = compileExpression(node->expr.rhs, curr, identifiers);
-            appendPtr(expr, curr);
+            curr = appendPtr(expr, curr);
 
             return compileSymbol(node->expr.op, curr);
         }
@@ -118,9 +119,8 @@ Aria_Chunk* compileFunc(ASTNode* node, Aria_Buffer* identifiers) {
     for (size_t i = 0; i < body->size; i++) {
         ASTNode* body_node = bufferGet(body, i);
         Aria_Bytecode* inst = compileExpression(body_node, curr, identifiers);
-
-        appendPtr(inst, curr);
-        if (chunk->buf == NULL) { chunk->buf = curr; }
+        while (curr->next != NULL) { curr = curr->next; }
+        while (chunk->buf->prev != NULL) { chunk->buf = chunk->buf->prev; }
     }
 
     return chunk;

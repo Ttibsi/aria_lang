@@ -49,7 +49,7 @@ typedef struct {
     Aria_Buffer* identifiers;
 } Aria_Module;
 
-void appendPtr(Aria_Bytecode* inst, Aria_Bytecode* curr);
+Aria_Bytecode* appendPtr(Aria_Bytecode* inst, Aria_Bytecode* curr);
 Aria_Bytecode* compileExpression(ASTNode* node, Aria_Bytecode* curr, Aria_Buffer* identifiers);
 Aria_Chunk* compileFunc(ASTNode* node, Aria_Buffer* identifiers);
 Aria_Module* ariaCompile(ASTNode* node);
