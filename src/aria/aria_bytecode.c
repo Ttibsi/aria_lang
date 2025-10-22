@@ -7,8 +7,10 @@
 #define STACK_HEIGHT 64
 
 void appendPtr(Aria_Bytecode* inst, Aria_Bytecode* curr) {
-    if (curr == NULL) {
+    if (curr->op == OP_NULL) {
+        free(curr);
         curr = inst;
+        curr->prev = NULL;
         return;
     }
 
@@ -24,21 +26,22 @@ Aria_Bytecode* compileSymbol(TokenType tok, Aria_Bytecode* curr) {
     inst->prev = NULL;
 
     switch (tok) {
-        case TOK_MINUS: break;
-        case TOK_PLUS: break;
-        case TOK_SLASH: break;
-        case TOK_STAR: break;
-        case TOK_BANG: break;
-        case TOK_BANG_EQUAL: break;
-        case TOK_EQUAL: break;
-        case TOK_EQUAL_EQUAL: break;
-        case TOK_GREATER: break;
-        case TOK_GREATER_EQUAL: break;
-        case TOK_LESS: break;
-        case TOK_LESS_EQUAL: break;
-        case TOK_AND: break;
-        case TOK_OR: break;
+        case TOK_MINUS: inst->op = OP_SUB; break;
+        case TOK_PLUS: inst->op = OP_ADD; break;
+        case TOK_SLASH: inst->op = OP_DIV; break;
+        case TOK_STAR: inst->op = OP_MUL; break;
+        case TOK_BANG: inst->op = OP_NOT; break;
+        case TOK_BANG_EQUAL: inst->op = OP_NEQ; break;
+        case TOK_EQUAL: inst->op = OP_ASSIGN; break;
+        case TOK_EQUAL_EQUAL: inst->op = OP_EQ; break;
+        case TOK_GREATER: inst->op = OP_GT; break;
+        case TOK_GREATER_EQUAL: inst->op = OP_GE; break;
+        case TOK_LESS: inst->op = OP_LT; break;
+        case TOK_LESS_EQUAL: inst->op = OP_LE; break;
+        case TOK_AND: inst->op = OP_AND; break;
+        case TOK_OR: inst->op = OP_OR; break;
     }
+
     appendPtr(inst, curr);
     return inst;
 }
@@ -74,7 +77,9 @@ Aria_Bytecode* compileExpression(ASTNode* node, Aria_Bytecode* curr, Aria_Buffer
             inst->op = OP_RET;
             inst->operand = -1;
             inst->next = NULL;
-            inst->prev = NULL;
+            inst->prev = expr;
+            appendPtr(inst, curr);
+
             return inst;
         } break;
 
@@ -100,7 +105,12 @@ Aria_Chunk* compileFunc(ASTNode* node, Aria_Buffer* identifiers) {
     Aria_Chunk* chunk = malloc(sizeof(Aria_Chunk));
     chunk->name = malloc(strlen(node->func.func_name) + 1);
     strcpy(chunk->name, node->func.func_name);
-    chunk->buf = NULL;
+
+    chunk->buf = malloc(sizeof(Aria_Bytecode));
+    chunk->buf->op = OP_NULL;
+    chunk->buf->operand = -1;
+    chunk->buf->next = NULL;
+    chunk->buf->prev = NULL;
 
     Aria_Buffer* body = node->func.body->block;
     Aria_Bytecode* curr = chunk->buf;
@@ -149,6 +159,8 @@ const char* opcodeDisplay(Opcode op) {
         case OP_STORE_CONST:  return "OP_STORE_CONST";
         case OP_FUNC_CALL:    return "OP_FUNC_CALL";
         case OP_RET:          return "OP_RET";
+        case OP_MUL:          return "OP_MUL";
+        case OP_ADD:          return "OP_ADD";
         default:              return "UNKNOWN";
     }
 
