@@ -60,7 +60,7 @@ Aria_Bytecode* compileExpression(ASTNode* node, Aria_Bytecode* curr, Aria_Buffer
 
             Aria_Bytecode* inst = malloc(sizeof(Aria_Bytecode));
             inst->op = OP_FUNC_CALL;
-            inst->operand = identifiers->size;
+            inst->operand = identifiers->size - 1;
             inst->next = NULL;
             inst->prev = NULL;
             return inst;
@@ -119,6 +119,7 @@ Aria_Chunk* compileFunc(ASTNode* node, Aria_Buffer* identifiers) {
         }
     }
 
+    while (chunk->buf->prev != NULL) { chunk->buf = chunk->buf->prev; }
     return chunk;
 }
 

@@ -11,24 +11,42 @@
 // Map<str, Aria_Chunk>
 static Map* dispatch_table = NULL;
 
-void executeInstruction(Stack* global, Stack* local, Aria_Bytecode* inst) {
+int executeInstruction(Stack* global, Stack* local, Aria_Bytecode* inst, Aria_Buffer* idents) {
     switch (inst->op) {
         case OP_STORE_CONST:
             stackPush(local, inst->operand);
             break;
+        case OP_ADD: {
+            int b = stackPop(local);
+            int a = stackPop(local);
+            stackPush(local, a + b);
+        } break;
+        case OP_MUL: {
+            int b = stackPop(local);
+            int a = stackPop(local);
+            stackPush(local, a * b);
+        } break;
+        case OP_FUNC_CALL: {
+            char* func_name = bufferGet(idents, inst->operand);
+            Aria_Chunk* func = mapFind(dispatch_table, func_name);
+            stackPush(local, executeFunction(global, func, idents));
+        } break;
+        case OP_RET: {
+            return stackPeek(local);
+        } break;
         case OP_NULL:
           break;
     }
 
-    return;
+    return 0;
 }
 
-int executeFunction(Stack* global_stack, Aria_Chunk* func) {
+int executeFunction(Stack* global_stack, Aria_Chunk* func, Aria_Buffer* idents) {
     Stack* local_stack = createStack(1024);
 
     Aria_Bytecode* playhead = func->buf;
     while (playhead != NULL) {
-        executeInstruction(global_stack, local_stack, playhead);
+        executeInstruction(global_stack, local_stack, playhead, idents);
         playhead = playhead->next;
     }
 
@@ -51,7 +69,7 @@ Stack* ariaExecute(Aria_Module* mod) {
     }
 
     Aria_Chunk* main = mapFind(dispatch_table, "main");
-    stackPush(stack, executeFunction(stack, main));
+    stackPush(stack, executeFunction(stack, main, mod->identifiers));
 
     return stack;
 }
