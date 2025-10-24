@@ -51,7 +51,7 @@ typedef struct {
 }
 
 [[nodiscard]] [[maybe_unused]] void* bufferGet(const Aria_Buffer* buf, uint32_t idx) {
-    if (idx >= buf->size) { return NULL; }
+    if (idx > buf->size) { return NULL; }
     return buf->items + (buf->elem_size * idx);
 }
 

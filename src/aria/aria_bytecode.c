@@ -8,14 +8,12 @@
 
 Aria_Bytecode* appendPtr(Aria_Bytecode* inst, Aria_Bytecode* curr) {
     if (curr == NULL) {
-        inst->prev = NULL;
-        inst->next = NULL;
+        curr = inst;
         return inst;
     }
 
     curr->next = inst;
     inst->prev = curr;
-    inst->next = NULL;
     return inst;
 }
 
@@ -172,6 +170,8 @@ void printModule(const Aria_Module* mod) {
         printf("  Chunk: %s\n", chunk->name);
 
         Aria_Bytecode* buf = chunk->buf;
+        while (buf->prev != NULL) { buf = buf->prev; }
+
         while (buf != NULL) {
             char display[4];
             if (buf->operand != -1) {
