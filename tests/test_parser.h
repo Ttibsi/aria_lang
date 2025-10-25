@@ -10,8 +10,8 @@ static inline int test_parseReturn(void) {
     ariaTokenize(&L);
     const ASTNode node = parseReturn(&L);
 
-    onetest_assert(node.type == AST_VALUE);
-    onetest_assert(node.value == 69);
+    onetest_assert(node.type == AST_RETURN);
+    onetest_assert(node.ret.expr->expr.lhs->value == 69);
 
     return 0;
 }
@@ -33,8 +33,8 @@ static inline int test_parseBlock(void) {
     onetest_assert(node.block->size == 2);
 
     const ASTNode last_node = *(ASTNode*)bufferPeek(node.block);
-    onetest_assert(last_node.type == AST_VALUE);
-    onetest_assert(last_node.value == 85);
+    onetest_assert(last_node.type == AST_RETURN);
+    onetest_assert(last_node.ret.expr->expr.lhs->value == 85);
 
     return 0;
 }
@@ -52,8 +52,8 @@ static inline int test_parseFunc(void) {
     onetest_assert(body.block->size == 1);
 
     const ASTNode last_node = *(ASTNode*)bufferPeek(body.block);
-    onetest_assert(last_node.type == AST_VALUE);
-    onetest_assert(last_node.value == 42);
+    onetest_assert(last_node.type == AST_RETURN);
+    onetest_assert(last_node.ret.expr->expr.lhs->value == 42);
 
     return 0;
 }

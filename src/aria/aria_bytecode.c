@@ -84,6 +84,8 @@ Aria_Bytecode* compileExpression(ASTNode* node, Aria_Bytecode* curr, Aria_Buffer
         case AST_EXPR: {
             Aria_Bytecode* expr = compileExpression(node->expr.lhs, curr, identifiers);
             curr = appendPtr(expr, curr);
+            if (node->expr.rhs == NULL) { return expr; }
+
             expr = compileExpression(node->expr.rhs, curr, identifiers);
             curr = appendPtr(expr, curr);
 

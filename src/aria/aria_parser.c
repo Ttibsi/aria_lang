@@ -58,9 +58,19 @@ ASTNode parseReturn(Aria_Lexer* L) {
 
     ASTNode* expr = malloc(sizeof(ASTNode));
     *expr = parseExpression(L, 0);
-    node.ret.expr = expr;
 
-    advance(L); // consume semicolon
+    if (expr->type == AST_EXPR) {
+        node.ret.expr = expr;
+    } else {
+        node.ret.expr = malloc(sizeof(ASTNode));
+        node.ret.expr->type = AST_EXPR;
+        node.ret.expr->expr.lhs = expr;
+        node.ret.expr->expr.rhs = NULL;
+        node.ret.expr->expr.op = expr->type;
+        advance(L);
+    }
+
+    match(L, TOK_SEMICOLON); // consume semicolon if needed
     return node;
 }
 
@@ -243,7 +253,7 @@ ASTNode parseStatement(Aria_Lexer* L) {
         case TOK_SWITCH: return parseSwitch(L); break;
         case TOK_VAR: return parseVar(L); break;
         case TOK_IDENTIFIER: return parseIdentifier(L); break;
-        default: parsingError("Incorrect token found in parseStatement (defauLt)\n"); break;
+        default: parsingError("Incorrect token found in parseStatement (default)\n"); break;
     };
 
     parsingError("Incorrect token found in parseStatement\n");

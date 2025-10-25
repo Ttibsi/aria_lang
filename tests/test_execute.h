@@ -10,7 +10,7 @@ static inline int test_executeInstruction(void) {
     inst->next = NULL;
     inst->prev = NULL;
 
-    executeInstruction(NULL, local, inst);
+    executeInstruction(NULL, local, inst, NULL);
 
     onetest_assert(stackPop(local) == 42);
 
@@ -27,7 +27,7 @@ static inline int test_executeFunction(void) {
     ASTNode ast = ariaParse(&L);
     Aria_Module* mod = ariaCompile(&ast);
 
-    const int ret = executeFunction(global, (Aria_Chunk*)bufferGet(mod->buf, 0));
+    const int ret = executeFunction(global, (Aria_Chunk*)bufferGet(mod->buf, 0), NULL);
     onetest_assert(ret == 69);
 
     freeStack(global);

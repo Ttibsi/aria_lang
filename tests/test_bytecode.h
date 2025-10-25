@@ -11,7 +11,7 @@ static inline int test_compileFunc(void) {
     ASTNode* funcNode = (ASTNode*)bufferGet(mod.block, 0);
     onetest_assert(funcNode->type == AST_FUNC);
 
-    const Aria_Chunk* chunk = compileFunc(funcNode);
+    const Aria_Chunk* chunk = compileFunc(funcNode, NULL);
     onetest_assert(strcmp(chunk->name, "foo") == 0);
     onetest_assert(chunk->buf->op == OP_STORE_CONST);
     onetest_assert(chunk->buf->operand == 42);
@@ -22,7 +22,7 @@ static inline int test_compileFunc(void) {
 static inline int test_ariaCompile(void) {
     Aria_Lexer L = lexerInit("func foo(bar) { return 42; } func main(argv) { return 69; }");
     ariaTokenize(&L);
-    const ASTNode ast = ariaParse(&L);
+    ASTNode ast = ariaParse(&L);
     Aria_Module* mod = ariaCompile(&ast);
 
     onetest_assert(strcmp(mod->name, "main") == 0);
@@ -43,6 +43,6 @@ static inline int test_ariaCompile(void) {
 
 static inline int test_opcodeDisplay(void) {
     onetest_assert(strcmp(opcodeDisplay(OP_STORE_CONST), "OP_STORE_CONST") == 0);
-    onetest_assert(strcmp(opcodeDisplay(AST_FUNC), "UNKNOWN") == 0);
+    onetest_assert(strcmp(opcodeDisplay(-1), "UNKNOWN") == 0);
     return 0;
 }
