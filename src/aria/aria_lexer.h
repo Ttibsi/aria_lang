@@ -43,7 +43,6 @@ typedef enum {
     TOK_FUNC,           // 29
     TOK_IF,             // 30
     TOK_IMPORT,         // 31
-    TOK_PRINT,          // 32
     TOK_RETURN,         // 33
     TOK_STATIC,         // 34
     TOK_SWITCH,         // 35
@@ -58,6 +57,30 @@ typedef enum {
     TOK_ERROR,          // 41
     TOK_EOF             // 42
 } TokenType;
+
+static const char symbols[] = {
+    [TOK_LEFT_PAREN]    = '(',
+    [TOK_RIGHT_PAREN]   = ')',
+    [TOK_LEFT_BRACE]    = '{',
+    [TOK_RIGHT_BRACE]   = '}',
+    [TOK_COMMA]         = '\'',
+    [TOK_DOT]           = '.',
+    [TOK_SEMICOLON]     = ';',
+    [TOK_MINUS]         = '-',
+    [TOK_PLUS]          = '+',
+    [TOK_SLASH]         = '/',
+    [TOK_STAR]          = '*',
+    [TOK_BANG]          = '!',
+    [TOK_BANG_EQUAL]    = '!',
+    [TOK_EQUAL]         = '=',
+    [TOK_EQUAL_EQUAL]   = '=',
+    [TOK_GREATER]       = '>',
+    [TOK_GREATER_EQUAL] = '>',
+    [TOK_LESS]          = '<',
+    [TOK_LESS_EQUAL]    = '<',
+    [TOK_AND]           = '&',
+    [TOK_OR]            = '|',
+};
 
 typedef struct _Aria_Token {
     bool valid;
@@ -91,7 +114,6 @@ static const Keyword keywords[] = {
     { "func",    4,  TOK_FUNC     },  // 29
     { "if",      2,  TOK_IF       },  // 30
     { "import",  6,  TOK_IMPORT   },  // 31
-    { "print",   5,  TOK_PRINT    },  // 32
     { "return",  6,  TOK_RETURN   },  // 33
     { "static",  6,  TOK_STATIC   },  // 34
     { "switch",  6,  TOK_SWITCH   },  // 35
@@ -117,6 +139,7 @@ bool match(Aria_Lexer* L, const TokenType type);
 TokenType getCurrTokenType(Aria_Lexer* L);
 int getTokenNumber(Aria_Lexer* L, Aria_Token* token);
 char getTokenChar(Aria_Lexer* L, Aria_Token* token);
+char* getTokenString(Aria_Lexer* L, size_t index);
 void ariaTokenize(Aria_Lexer* L);
 void printTokens(Aria_Lexer* L);
 

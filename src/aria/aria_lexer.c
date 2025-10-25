@@ -172,10 +172,12 @@ bool match(Aria_Lexer* L, const TokenType type) {
 }
 
 TokenType getCurrTokenType(Aria_Lexer* L) {
-    Aria_Token* tkn = bufferGet(L->tokens, L->buf_index);
+    const Aria_Token* tkn = bufferGet(L->tokens, L->buf_index);
+    if (tkn == NULL) { return TOK_ERROR; }
     return tkn->type;
 }
 
+// TODO: Refactor these two functionss to take in an index instead of a token
 int getTokenNumber(Aria_Lexer* L, Aria_Token* token) {
     if (token->type != TOK_NUMBER) return 0;
 
@@ -191,6 +193,15 @@ char getTokenChar(Aria_Lexer* L, Aria_Token* token) {
     if (token->len == 0) return '\0';
     return L->source[token->start];
 }
+
+char* getTokenString(Aria_Lexer* L, size_t index) {
+    Aria_Token* tkn = (Aria_Token*)bufferGet(L->tokens, index);
+    char* str = malloc(sizeof(char) * tkn->len + 1);
+    strncpy(str, L->source + tkn->start, tkn->len);
+    str[tkn->len] = '\0';
+    return str;
+}
+
 void ariaTokenize(Aria_Lexer* L) {
     Aria_Token token = {};
     do {
@@ -205,6 +216,7 @@ void printTokens(Aria_Lexer* L) {
     printf("=== TOKENS ===\n");
     for (uint32_t i = 0; i < L->tokens->size; i++) {
         Aria_Token* tok = bufferGet(L->tokens, i);
-        printf("Token: %d, start: %d, len: %d\n", tok->type, tok->start, tok->len);
+        printf("[%d] Token: %d, start: %d, len: %d\n", i, tok->type, tok->start, tok->len);
     }
+    printf("--- %d tokens found ---\n", L->tokens->size);
 }

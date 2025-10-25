@@ -1,4 +1,4 @@
-CC := clang
+CC := clang-19
 CFLAGS := -Wall -Wextra -g -MMD -MP -std=c23
 
 ifeq (${SAN},1)
@@ -24,7 +24,7 @@ build/main.o: src/main.c
 .DEFAULT_GOAL := all
 all: aria build/main.o
 	$(CC) build/main.o -Lbuild -laria -o aria $(CFLAGS)
-	./aria -D examples/01_ret.ari; echo -e "\nRetcode: $$?"
+	./aria -D examples/02_func_call.ari; echo -e "\nRetcode: $$?"
 
 ##########
 
@@ -38,7 +38,7 @@ test: $(objects) | build
 clean:
 	rm -rf build
 	if [ -f aria ]; 	then rm aria; fi
-	if [ -f iris.log ]; then rm iris.log; fi
+	if [ -f iris.log ];	then rm iris.log; fi
 	if [ -f test_exe ];	then rm test_exe; fi
 	if [ -f core ]; 	then rm core; fi
 
