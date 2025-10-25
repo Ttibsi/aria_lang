@@ -33,8 +33,31 @@ static inline int test_parseFuncCall(void) {
     return 0;
 }
 
-static inline int test_parseIdentifier(void) { return 1; }
-static inline int test_parseExpression(void) { return 1; }
+static inline int test_parseIdentifier(void) {
+    return 1;
+}
+
+static inline int test_parseExpression(void) {
+    Aria_Lexer L = lexerInit("12 + (2 * 3);");
+    ariaTokenize(&L);
+    const ASTNode node = parseExpression(&L, 0);
+
+    onetest_assert(node.type == AST_EXPR);
+    onetest_assert(node.expr.op == TOK_PLUS);
+
+    const ASTNode* lhs = node.expr.lhs;
+    const ASTNode* rhs = node.expr.rhs;
+
+    onetest_assert(lhs->type == AST_VALUE);
+    onetest_assert(lhs->value == 12);
+
+    onetest_assert(rhs->expr.op == TOK_STAR);
+    onetest_assert(rhs->expr.lhs->value == 2);
+    onetest_assert(rhs->expr.rhs->value == 3);
+
+    return 0;
+}
+
 static inline int test_parseClass(void) { return 1; }
 static inline int test_parseExport(void) { return 1; }
 static inline int test_parseImport(void) { return 1; }

@@ -39,7 +39,7 @@ int main(void) {
         ONETEST_SKIP(test_parseSwitch),
         ONETEST_SKIP(test_parseVar),
         ONETEST_TEST(test_parseFuncCall),
-        ONETEST_SKIP(test_parseIdentifier),
+        ONETEST_TEST(test_parseIdentifier),
         ONETEST_TEST(test_parseExpression),
         ONETEST_SKIP(test_parseClass),
         ONETEST_SKIP(test_parseExport),
