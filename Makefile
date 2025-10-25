@@ -1,4 +1,4 @@
-CC := clang
+CC := clang-19
 CFLAGS := -Wall -Wextra -g -MMD -MP -std=c23
 
 ifeq (${SAN},1)
