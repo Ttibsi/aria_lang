@@ -387,7 +387,11 @@ void printASTimpl(ASTNode ast, int indent, Aria_Lexer* L) {
         case AST_EXPR:
             printf("%*s@Expr (Token: %c)\n", indent, "", symbols[ast.expr.op]);
             printASTimpl(*ast.expr.lhs, indent + 2, L);
-            printASTimpl(*ast.expr.rhs, indent + 2, L);
+
+            if (ast.expr.rhs != NULL) {
+                printASTimpl(*ast.expr.rhs, indent + 2, L);
+            }
+
             break;
 
         case AST_ERR:
@@ -436,7 +440,7 @@ void nodeFree(ASTNode node) {
 
         case AST_EXPR:
             nodeFree(*node.expr.lhs);
-            nodeFree(*node.expr.rhs);
+            if (node.expr.rhs != NULL) { nodeFree(*node.expr.rhs); }
             free(node.expr.lhs);
             free(node.expr.rhs);
             break;
