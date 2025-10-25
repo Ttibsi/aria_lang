@@ -18,7 +18,21 @@ static inline int test_parseReturn(void) {
 
 static inline int test_parseSwitch(void) { return 1; }
 static inline int test_parseVar(void) { return 1; }
-static inline int test_parseFuncCall(void) { return 1; }
+
+static inline int test_parseFuncCall(void) {
+    Aria_Lexer L = lexerInit("foo(1)");
+    ariaTokenize(&L);
+    advance(&L);
+    onetest_assert(L.buf_index == 1);
+    const ASTNode node = parseFuncCall(&L);
+
+    onetest_assert(node.type == AST_FUNCCALL);
+    onetest_assert(strcmp(node.func_call.func_name, "foo") == 0);
+    onetest_assert(node.func_call.param_list[0]->type == TOK_NUMBER);
+
+    return 0;
+}
+
 static inline int test_parseIdentifier(void) { return 1; }
 static inline int test_parseExpression(void) { return 1; }
 static inline int test_parseClass(void) { return 1; }

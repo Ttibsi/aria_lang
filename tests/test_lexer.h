@@ -241,5 +241,11 @@ static inline int test_getTokenChar(void) {
 }
 
 static inline int test_getTokenString(void) {
-    return 1;
+    Aria_Lexer L = lexerInit("\"foo\"");
+    ariaTokenize(&L);
+
+    char* str = getTokenString(&L, 0);
+    onetest_assert(strcmp(str, "foo"));
+
+    return 0;
 }

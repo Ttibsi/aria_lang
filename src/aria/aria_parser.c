@@ -91,10 +91,14 @@ ASTNode parseFuncCall(Aria_Lexer* L) {
     if (!match(L, TOK_LEFT_PAREN)) { parsingError("Function name not followed by open bracket\n"); }
     int args_idx = 0;
     while (!check(L, TOK_RIGHT_PAREN)) {
-        if (!check(L, TOK_IDENTIFIER)) { parsingError("function args contain non-identifiers\n"); }
+        if (!(
+            check(L, TOK_IDENTIFIER) ||
+            check(L, TOK_NUMBER) ||
+            check(L, TOK_STRING)
+        )) { parsingError("function params are incorrect\n"); }
         if (args_idx >= param_count) { parsingError("Function has too many arguments\n"); }
 
-        node.func.args[args_idx] = *(Aria_Token*)bufferGet(L->tokens, L->buf_index);
+        node.func_call.param_list[args_idx] = (Aria_Token*)bufferGet(L->tokens, L->buf_index);
         args_idx++;
         advance(L);
         if (check(L, TOK_COMMA)) { advance(L); } // Skip commas

@@ -59,6 +59,7 @@ ASTNode parseIf(Aria_Lexer* L);
 ASTNode parseReturn(Aria_Lexer* L);
 ASTNode parseSwitch(Aria_Lexer* L);
 ASTNode parseVar(Aria_Lexer* L);
+ASTNode parseFuncCall(Aria_Lexer* L);
 ASTNode parseIdentifier(Aria_Lexer* L);
 ASTNode parseExpression(Aria_Lexer* L, binding_t min_bp);
 ASTNode parseClass(Aria_Lexer* L);
