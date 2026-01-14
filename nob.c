@@ -96,39 +96,34 @@ bool ends_with(const char* s, const char* suffix) {
 }
 
 bool compile_static_object(const char* build_root, const char* objects_root) {
-    // List immediate children of build/objects
     Nob_File_Paths subdirs = {0};
-    if (!nob_read_entire_dir(objects_root, &subdirs)) return false;
+    if (!read_entire_dir(objects_root, &subdirs)) return false;
 
     for (size_t i = 0; i < subdirs.count; i++) {
         const char* dir_name = subdirs.items[i];
         if (strcmp(dir_name, ".") == 0 || strcmp(dir_name, "..") == 0) continue;
 
-        const char* subdir_path = nob_temp_sprintf("%s%c%s", objects_root, '/', dir_name);
+        const char* subdir_path = temp_sprintf("%s%c%s", objects_root, '/', dir_name);
 
-        if (nob_get_file_type(subdir_path) != NOB_FILE_DIRECTORY) {
-            continue;  // only process directories
-        }
+        if (get_file_type(subdir_path) != FILE_DIRECTORY) { continue; }
 
         // Gather *.o files in this subdir (one level)
         Nob_File_Paths files = {0};
-        if (!nob_read_entire_dir(subdir_path, &files)) {
+        if (!read_entire_dir(subdir_path, &files)) {
             free(files.items);
             free(subdirs.items);
             return false;
         }
 
-        Nob_File_Paths objects = {0};
+        File_Paths objects = {0};
         for (size_t j = 0; j < files.count; j++) {
             const char* name = files.items[j];
             if (strcmp(name, ".") == 0 || strcmp(name, "..") == 0) continue;
             if (!ends_with(name, ".o")) continue;
 
-            const char* obj_path = nob_temp_sprintf("%s%c%s", subdir_path, '/', name);
+            const char* obj_path = temp_sprintf("%s%c%s", subdir_path, '/', name);
 
-            if (nob_get_file_type(obj_path) == NOB_FILE_REGULAR) {
-                nob_da_append(&objects, obj_path);
-            }
+            if (get_file_type(obj_path) == FILE_REGULAR) { da_append(&objects, obj_path); }
         }
 
         free(files.items);
@@ -140,14 +135,14 @@ bool compile_static_object(const char* build_root, const char* objects_root) {
         }
 
         // Output archive at top-level build/: build/lib<dir>.a
-        const char* archive_path = nob_temp_sprintf("%s%clib%s.a", build_root, '/', dir_name);
+        const char* archive_path = temp_sprintf("%s%clib%s.a", build_root, '/', dir_name);
 
-        Nob_Cmd cmd = {0};
-        nob_cmd_append(&cmd, "ar", "rcs", archive_path);
-        for (size_t k = 0; k < objects.count; k++) { nob_cmd_append(&cmd, objects.items[k]); }
+        Cmd cmd = {0};
+        cmd_append(&cmd, "ar", "rcs", archive_path);
+        for (size_t k = 0; k < objects.count; k++) { cmd_append(&cmd, objects.items[k]); }
 
         nob_log(NOB_INFO, "AR %s (%zu objects)", archive_path, objects.count);
-        if (!nob_cmd_run(&cmd)) {
+        if (!cmd_run(&cmd)) {
             free(objects.items);
             free(subdirs.items);
             return false;
