@@ -1,7 +1,4 @@
-*.d
-*.o
-/aria
-/test_exe
 iris.log
 build/
+nob
 .gdb_history

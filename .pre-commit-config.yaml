@@ -1,4 +1,5 @@
 ---
+exclude: include
 repos:
   - repo: https://github.com/pre-commit/pre-commit-hooks
     rev: v6.0.0
@@ -9,11 +10,19 @@ repos:
         additional_dependencies: [ ruamel.yaml>=0.15 ]
     -   id: end-of-file-fixer
     -   id: trailing-whitespace
-  - repo: https://github.com/mrtazz/checkmake.git
-    rev: 0.2.2
+  - repo: https://github.com/pre-commit/mirrors-clang-format
+    rev: v21.1.8
     hooks:
-    -   id: checkmake
+      - id: clang-format
+  - repo: https://github.com/rhysd/actionlint
+    rev: v1.7.10
+    hooks:
+    - id: actionlint
   - repo: https://github.com/sco1/brie-commit
     rev: v1.1.0
     hooks:
     -   id: brie-commit
+  - repo: https://github.com/GideonBear/pre-comet
+    rev: v1.0.0
+    hooks:
+      - id: pre-comet

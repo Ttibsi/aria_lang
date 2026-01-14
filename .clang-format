@@ -1,0 +1,13 @@
+AllowShortBlocksOnASingleLine: "Always"
+AllowShortIfStatementsOnASingleLine: WithoutElse
+AllowShortLoopsOnASingleLine: true
+BasedOnStyle:  Google
+BreakBeforeBinaryOperators: true
+BreakBeforeTernaryOperators: true
+ColumnLimit: 100
+IndentWidth: 4
+Language: Cpp
+PointerAlignment: Left
+SortIncludes: true
+TabWidth: 4
+UseTab: Never
