@@ -5,7 +5,7 @@
 int main(void) {
     onetest_test_t tests[] = {
         // test_lexer.h
-        ONETEST_TEST(test_lexerInit),
+        ONETEST_TEST(test_ariaLexerInit),
         ONETEST_TEST(test_makeToken),
         ONETEST_TEST(test_peek),
         ONETEST_TEST(test_peekNext),

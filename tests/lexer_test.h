@@ -3,16 +3,16 @@
 #include "aria/aria_lexer.h"
 #include "onetest.h"
 
-static inline int test_lexerInit(void) {
-    Aria_Lexer L = lexerInit("3 + 4");
+static inline int test_ariaLexerInit(void) {
+    AriaLexer L = {0};
+    ariaLexerInit(&L, "3 + 4");
     onetest_assert(strcmp(L.source, "3 + 4") == 0);
-    onetest_assert(L.tokens->size == 0);
-    onetest_assert(L.tokens->capacity == 32);
+    onetest_assert(L.count == 0);
     return 0;
 }
 
 static inline int test_makeToken(void) {
-    Aria_Token tkn = makeToken(TOK_PLUS, 2, 1);
+    AriaToken tkn = makeToken(TOK_PLUS, 2, 1);
     onetest_assert(tkn.valid == true);
     onetest_assert(tkn.type == TOK_PLUS);
     onetest_assert(tkn.start == 2);
@@ -21,7 +21,8 @@ static inline int test_makeToken(void) {
 }
 
 static inline int test_peek(void) {
-    Aria_Lexer L = lexerInit("3 + 4");
+    AriaLexer L = {0};
+    ariaLexerInit(&L, "3 + 4");
     ariaTokenize(&L);
 
     const char actual = peek(&L);
@@ -30,7 +31,8 @@ static inline int test_peek(void) {
 }
 
 static inline int test_peekNext(void) {
-    Aria_Lexer L = lexerInit("3 + 4");
+    AriaLexer L = {0};
+    ariaLexerInit(&L, "3 + 4");
     ariaTokenize(&L);
 
     char actual = peekNext(&L);
@@ -39,7 +41,8 @@ static inline int test_peekNext(void) {
 }
 
 static inline int test_advanceChar(void) {
-    Aria_Lexer L = lexerInit("3 + 4");
+    AriaLexer L = {0};
+    ariaLexerInit(&L, "3 + 4");
     ariaTokenize(&L);
 
     char actual = advanceChar(&L);
@@ -50,7 +53,8 @@ static inline int test_advanceChar(void) {
 }
 
 static inline int test_skipWhitespace(void) {
-    Aria_Lexer L = lexerInit("3 + 4");
+    AriaLexer L = {0};
+    ariaLexerInit(&L, "3 + 4");
     ariaTokenize(&L);
 
     advanceChar(&L);
@@ -60,10 +64,11 @@ static inline int test_skipWhitespace(void) {
 }
 
 static inline int test_scanEqualVariant(void) {
-    Aria_Lexer L = lexerInit("!=");
+    AriaLexer L = {0};
+    ariaLexerInit(&L, "!=");
     ariaTokenize(&L);
 
-    Aria_Token tok = scanEqualVariant(&L, TOK_BANG, TOK_BANG_EQUAL);
+    AriaToken tok = scanEqualVariant(&L, TOK_BANG, TOK_BANG_EQUAL);
     onetest_assert(tok.type == TOK_BANG_EQUAL);
 
     L.source = "<";
@@ -74,12 +79,13 @@ static inline int test_scanEqualVariant(void) {
 }
 
 static inline int test_scanStringLiteral(void) {
-    Aria_Lexer L = lexerInit("\"hello world 123!@#\"");
+    AriaLexer L = {0};
+    ariaLexerInit(&L, "\"hello world 123!@#\"");
     ariaTokenize(&L);
     advance(&L);
 
     // Test 1: standard string
-    Aria_Token tok1 = scanStringLiteral(&L);
+    AriaToken tok1 = scanStringLiteral(&L);
     onetest_assert(tok1.valid == true);
     onetest_assert(tok1.type == TOK_STRING);
     onetest_assert(tok1.start == 0);
@@ -90,7 +96,7 @@ static inline int test_scanStringLiteral(void) {
     L.source = "\"\"";
     L.pc = 0;
 
-    Aria_Token tok2 = scanStringLiteral(&L);
+    AriaToken tok2 = scanStringLiteral(&L);
     onetest_assert(tok2.valid == true);
     onetest_assert(tok2.type == TOK_STRING);
     onetest_assert(tok2.start == 0);
@@ -101,7 +107,7 @@ static inline int test_scanStringLiteral(void) {
     L.source = "\"unterminated";
     L.pc = 0;
 
-    Aria_Token tok4 = scanStringLiteral(&L);
+    AriaToken tok4 = scanStringLiteral(&L);
     onetest_assert(tok4.valid == true);
     onetest_assert(tok4.type == TOK_EOF);  // function returns EOF for error case
     onetest_assert(tok4.start == 0);
@@ -111,10 +117,11 @@ static inline int test_scanStringLiteral(void) {
 }
 
 static inline int test_scanNumber(void) {
-    Aria_Lexer L = lexerInit("123 + 45");
+    AriaLexer L = {0};
+    ariaLexerInit(&L, "123 + 45");
     ariaTokenize(&L);
 
-    Aria_Token tok = scanNumber(&L);
+    AriaToken tok = scanNumber(&L);
     onetest_assert(tok.type == TOK_NUMBER);
     onetest_assert(tok.len == 3);
 
@@ -122,10 +129,11 @@ static inline int test_scanNumber(void) {
 }
 
 static inline int test_scanIdentifier(void) {
-    Aria_Lexer L = lexerInit("var temp");
+    AriaLexer L = {0};
+    ariaLexerInit(&L, "var temp");
     ariaTokenize(&L);
 
-    Aria_Token tok = scanIdentifier(&L);
+    AriaToken tok = scanIdentifier(&L);
     onetest_assert(tok.type == TOK_VAR);
     onetest_assert(tok.start == 0);
     onetest_assert(tok.len == 3);
@@ -140,10 +148,11 @@ static inline int test_scanIdentifier(void) {
 }
 
 static inline int test_scanToken(void) {
-    Aria_Lexer L = lexerInit("3 + 4");
+    AriaLexer L = {0};
+    ariaLexerInit(&L, "3 + 4");
     ariaTokenize(&L);
 
-    Aria_Token tok = scanToken(&L);
+    AriaToken tok = scanToken(&L);
     onetest_assert(tok.valid == true);
     onetest_assert(tok.type == TOK_NUMBER);
     onetest_assert(tok.start == 0);
@@ -183,18 +192,20 @@ static inline int test_scanToken(void) {
 }
 
 static inline int test_advance(void) {
-    Aria_Lexer L = lexerInit("3 + 4");
+    AriaLexer L = {0};
+    ariaLexerInit(&L, "3 + 4");
     ariaTokenize(&L);
 
     advance(&L);
-    Aria_Token* tok = (Aria_Token*)bufferGet(L.tokens, L.buf_index);
+    const AriaToken* tok = &L.items[L.index];
     onetest_assert(tok->type == TOK_PLUS);
 
     return 0;
 }
 
 static inline int test_check(void) {
-    Aria_Lexer L = lexerInit("3 + 4");
+    AriaLexer L = {0};
+    ariaLexerInit(&L, "3 + 4");
     ariaTokenize(&L);
 
     onetest_assert(check(&L, TOK_NUMBER) == 1);
@@ -204,7 +215,8 @@ static inline int test_check(void) {
 }
 
 static inline int test_match(void) {
-    Aria_Lexer L = lexerInit("3 + 4");
+    AriaLexer L = {0};
+    ariaLexerInit(&L, "3 + 4");
     ariaTokenize(&L);
 
     onetest_assert(match(&L, TOK_NUMBER));
@@ -213,7 +225,8 @@ static inline int test_match(void) {
 }
 
 static inline int test_getCurrTokenType(void) {
-    Aria_Lexer L = lexerInit("func foo() { return 42; }");
+    AriaLexer L = {0};
+    ariaLexerInit(&L, "func foo() { return 42; }");
     ariaTokenize(&L);
 
     onetest_assert(getCurrTokenType(&L) == TOK_FUNC);
@@ -223,25 +236,28 @@ static inline int test_getCurrTokenType(void) {
 }
 
 static inline int test_getTokenNumber(void) {
-    Aria_Lexer L = lexerInit("3 + 4");
+    AriaLexer L = {0};
+    ariaLexerInit(&L, "3 + 4");
     ariaTokenize(&L);
 
-    int tok_num = getTokenNumber(&L, (Aria_Token*)bufferGet(L.tokens, L.buf_index));
+    int tok_num = getTokenNumber(&L, L.index);
     onetest_assert(tok_num == 3);
     return 0;
 }
 
 static inline int test_getTokenChar(void) {
-    Aria_Lexer L = lexerInit("Hello");
+    AriaLexer L = {0};
+    ariaLexerInit(&L, "Hello");
     ariaTokenize(&L);
 
-    char tok_char = getTokenChar(&L, (Aria_Token*)bufferGet(L.tokens, L.buf_index));
+    char tok_char = getTokenChar(&L, L.index);
     onetest_assert(tok_char == 'H');
     return 0;
 }
 
 static inline int test_getTokenString(void) {
-    Aria_Lexer L = lexerInit("\"foo\"");
+    AriaLexer L = {0};
+    ariaLexerInit(&L, "\"foo\"");
     ariaTokenize(&L);
 
     char* str = getTokenString(&L, 0);
