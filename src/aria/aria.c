@@ -19,6 +19,7 @@ void ariaPopulateMod(AriaMod* mod, AriaFunc* funcs) { mod->funcs = funcs; }
 int ariaDoString(AriaVM* vm, const char* str) {
     AriaLexer lexer = {0};
     ariaLexerInit(&lexer, str);
+    ariaTokenize(&lexer);
 
     NOB_TODO("ariaDoString not implemented");
 }
