@@ -1,4 +1,5 @@
-iris.log
-build/
-nob
 .gdb_history
+build/
+core
+iris.log
+nob
