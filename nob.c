@@ -5,7 +5,7 @@
 #define NOB_IMPLEMENTATION
 #include "include/nob.h"
 
-#define ARIA_C_VER "-std=gnu23"
+#define ARIA_C_VER "-std=gnu2x"
 #define ARIA_EXE "aria"
 
 int usage() {
@@ -75,6 +75,7 @@ bool walker(Nob_Walk_Entry entry) {
         Cmd cmd = {0};
         cmd_append(&cmd, "gcc");
         nob_cc_flags(&cmd);
+        cmd_append(&cmd, "-g");
         cmd_append(&cmd, ARIA_C_VER);
         cmd_append(&cmd, "-Isrc");
         cmd_append(&cmd, "-c");
@@ -194,20 +195,45 @@ bool clean() {
     return cmd_run(&cmd);
 }
 
-int main(int argc, char** argv) {
-    GO_REBUILD_URSELF(argc, argv);
+bool test() {
+    if (!walk_dir("src/", walker)) { return 1; }
+    if (compile_static_object("build", "build/objects") == 0) { return 1; }
 
-    if (argc > 1) {
-        if (strcmp(argv[1], "clean") == 0) { return !clean(); }
+    Cmd cmd = {0};
+    cmd_append(&cmd, "gcc");
+    cmd_append(&cmd, ARIA_C_VER);
+    cmd_append(&cmd, "tests/test.c");
 
-        return usage();
-    }
+    walk_dir("build", collect_archives, .data = &cmd);
 
-    mkdir_all();
+    cmd_append(&cmd, "-Isrc");
+    cmd_append(&cmd, "-Iinclude");
+    cmd_append(&cmd, "-o", "build/test_exe");
+
+    return cmd_run(&cmd);
+}
+
+bool build_main_binary() {
     if (!walk_dir("src/", walker)) { return 1; }
 
     if (compile_static_object("build", "build/objects") == 0) { return 1; }
     nob_log(NOB_INFO, "Object compilation complete");
     if (compile_exe() != 0) { return 1; }
+
+    return 0;
+}
+
+int main(int argc, char** argv) {
+    GO_REBUILD_URSELF(argc, argv);
+    mkdir_all();
+
+    if (argc > 1) {
+        if (strcmp(argv[1], "clean") == 0) { return !clean(); }
+        if (strcmp(argv[1], "test") == 0) { return !test(); }
+
+        return usage();
+    }
+
+    if (build_main_binary()) { return 1; }
     return 0;
 }

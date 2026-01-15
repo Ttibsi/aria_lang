@@ -2,6 +2,7 @@
 
 #define NOB_IMPLEMENTATION
 #include "../include/nob.h"
+#include "aria_lexer.h"
 
 void ariaInit(AriaVM* vm) {
     AriaStack stack = {0};
@@ -15,7 +16,13 @@ void ariaStoreArgs(AriaVM* vm, int argc, char** argv) {
 
 void ariaPopulateMod(AriaMod* mod, AriaFunc* funcs) { mod->funcs = funcs; }
 
-int ariaDoString(AriaVM* vm, const char* str) { NOB_TODO("ariaDoString not implemented"); }
+int ariaDoString(AriaVM* vm, const char* str) {
+    AriaLexer lexer = {0};
+    ariaLexerInit(&lexer, str);
+    ariaTokenize(&lexer);
+
+    NOB_TODO("ariaDoString not implemented");
+}
 
 int ariaDoFile(AriaVM* vm, const char* filename) {
     Nob_String_Builder file_buf = {0};

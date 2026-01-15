@@ -2,6 +2,8 @@ AllowShortBlocksOnASingleLine: "Always"
 AllowShortIfStatementsOnASingleLine: WithoutElse
 AllowShortLoopsOnASingleLine: true
 BasedOnStyle:  Google
+BraceWrapping:
+  AfterFunction: true
 BreakBeforeBinaryOperators: true
 BreakBeforeTernaryOperators: true
 ColumnLimit: 100
