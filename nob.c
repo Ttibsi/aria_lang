@@ -195,11 +195,24 @@ bool clean() {
     return cmd_run(&cmd);
 }
 
+bool test() {
+    Cmd cmd = {0};
+    cmd_append(&cmd, "gcc");
+    cmd_append(&cmd, ARIA_C_VER);
+    cmd_append(&cmd, "tests/test.c");
+    cmd_append(&cmd, "-Isrc");
+    cmd_append(&cmd, "-Iinclude");
+    cmd_append(&cmd, "-o", "build/test_exe");
+
+    return cmd_run(&cmd);
+}
+
 int main(int argc, char** argv) {
     GO_REBUILD_URSELF(argc, argv);
 
     if (argc > 1) {
         if (strcmp(argv[1], "clean") == 0) { return !clean(); }
+        if (strcmp(argv[1], "test") == 0) { return !test(); }
 
         return usage();
     }
