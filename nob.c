@@ -196,10 +196,16 @@ bool clean() {
 }
 
 bool test() {
+    if (!walk_dir("src/", walker)) { return 1; }
+    if (compile_static_object("build", "build/objects") == 0) { return 1; }
+
     Cmd cmd = {0};
     cmd_append(&cmd, "gcc");
     cmd_append(&cmd, ARIA_C_VER);
     cmd_append(&cmd, "tests/test.c");
+
+    walk_dir("build", collect_archives, .data = &cmd);
+
     cmd_append(&cmd, "-Isrc");
     cmd_append(&cmd, "-Iinclude");
     cmd_append(&cmd, "-o", "build/test_exe");
@@ -207,8 +213,19 @@ bool test() {
     return cmd_run(&cmd);
 }
 
+bool build_main_binary() {
+    if (!walk_dir("src/", walker)) { return 1; }
+
+    if (compile_static_object("build", "build/objects") == 0) { return 1; }
+    nob_log(NOB_INFO, "Object compilation complete");
+    if (compile_exe() != 0) { return 1; }
+
+    return 0;
+}
+
 int main(int argc, char** argv) {
     GO_REBUILD_URSELF(argc, argv);
+    mkdir_all();
 
     if (argc > 1) {
         if (strcmp(argv[1], "clean") == 0) { return !clean(); }
@@ -217,11 +234,6 @@ int main(int argc, char** argv) {
         return usage();
     }
 
-    mkdir_all();
-    if (!walk_dir("src/", walker)) { return 1; }
-
-    if (compile_static_object("build", "build/objects") == 0) { return 1; }
-    nob_log(NOB_INFO, "Object compilation complete");
-    if (compile_exe() != 0) { return 1; }
+    if (build_main_binary()) { return 1; }
     return 0;
 }
