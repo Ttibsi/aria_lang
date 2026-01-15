@@ -5,7 +5,7 @@
 #define NOB_IMPLEMENTATION
 #include "include/nob.h"
 
-#define ARIA_C_VER "-std=gnu23"
+#define ARIA_C_VER "-std=gnu2x"
 #define ARIA_EXE "aria"
 
 int usage() {

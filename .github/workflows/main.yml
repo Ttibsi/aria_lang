@@ -13,6 +13,6 @@ jobs:
     runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v4
-      - run: gcc nob.c -o nob
+      - run: clang nob.c -o nob
       - run: ./nob test
       - run: ./build/test_exe
