@@ -3,6 +3,8 @@
 
 #include <stdlib.h>
 
+#include "aria_lexer.h"
+
 typedef enum {
     OBJ_TYPE_NUM,
     OBJ_TYPE_BOOL,
@@ -34,6 +36,8 @@ typedef struct _AriaVM {
     int argc;
     char** argv;
     bool debug_mode;
+
+    AriaLexer lexer;
 
     void (*writeFn)(struct _AriaVM*);
 } AriaVM;
