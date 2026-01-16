@@ -47,6 +47,7 @@ double ariaUnwrapNumObject(AriaObj* obj) {
 }
 
 void ariaCleanup(AriaVM* vm) {
+    // TODO: DO we free the lexer here? Or before this
     nob_da_free(vm->global_stack);
     vm = NULL;
 }
