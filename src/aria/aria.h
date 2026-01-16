@@ -33,6 +33,7 @@ typedef struct _AriaVM {
     AriaStack global_stack;
     int argc;
     char** argv;
+    bool debug_mode;
 
     void (*writeFn)(struct _AriaVM*);
 } AriaVM;

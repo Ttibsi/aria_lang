@@ -21,6 +21,8 @@ int ariaDoString(AriaVM* vm, const char* str) {
     ariaLexerInit(&lexer, str);
     ariaTokenize(&lexer);
 
+    if (vm->debug_mode) { printTokens(&lexer); }
+
     NOB_TODO("ariaDoString not implemented");
 }
 
