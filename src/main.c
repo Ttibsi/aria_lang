@@ -9,6 +9,7 @@ int main(int argc, char* argv[]) {
     AriaVM vm = {0};
     ariaInit(&vm);
     ariaStoreArgs(&vm, argc, argv);
+    vm.debug_mode = true;
 
     // setup user-defined functions on the VM
     // such as writing and standard memory management (malloc/free)
