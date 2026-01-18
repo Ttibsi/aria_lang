@@ -87,7 +87,7 @@ static inline int test_scanStringLiteral(void) {
     // Test 1: standard string
     AriaToken tok1 = scanStringLiteral(&L);
     onetest_assert(tok1.valid == true);
-    onetest_assert(tok1.type == TOK_STRING);
+    onetest_assert(tok1.type == TOK_STRING_LIT);
     onetest_assert(tok1.start == 0);
     onetest_assert(tok1.len == 20);
     onetest_assert(L.pc == 20);  // should be positioned after closing quote
@@ -98,7 +98,7 @@ static inline int test_scanStringLiteral(void) {
 
     AriaToken tok2 = scanStringLiteral(&L);
     onetest_assert(tok2.valid == true);
-    onetest_assert(tok2.type == TOK_STRING);
+    onetest_assert(tok2.type == TOK_STRING_LIT);
     onetest_assert(tok2.start == 0);
     onetest_assert(tok2.len == 2);  // just the two quotes
     onetest_assert(L.pc == 2);      // should be positioned after closing quote
@@ -122,7 +122,7 @@ static inline int test_scanNumber(void) {
     ariaTokenize(&L);
 
     AriaToken tok = scanNumber(&L);
-    onetest_assert(tok.type == TOK_NUMBER);
+    onetest_assert(tok.type == TOK_NUM_LIT);
     onetest_assert(tok.len == 3);
 
     return 0;
@@ -130,7 +130,7 @@ static inline int test_scanNumber(void) {
 
 static inline int test_scanIdentifier(void) {
     AriaLexer L = {0};
-    ariaLexerInit(&L, "var temp");
+    ariaLexerInit(&L, "VAR temp");
     ariaTokenize(&L);
 
     AriaToken tok = scanIdentifier(&L);
@@ -147,6 +147,20 @@ static inline int test_scanIdentifier(void) {
     return 0;
 }
 
+static inline int test_advanceComment(void) {
+    AriaLexer L = {0};
+    ariaLexerInit(&L, "; some comment\nVAR temp");
+
+    onetest_assert(L.pc == 0);
+    onetest_assert(L.source[L.pc] == ';');
+
+    advanceComment(&L);
+    onetest_assert(L.pc == 14);
+    onetest_assert(L.source[L.pc] == '\n');
+
+    return 0;
+}
+
 static inline int test_scanToken(void) {
     AriaLexer L = {0};
     ariaLexerInit(&L, "3 + 4");
@@ -154,7 +168,7 @@ static inline int test_scanToken(void) {
 
     AriaToken tok = scanToken(&L);
     onetest_assert(tok.valid == true);
-    onetest_assert(tok.type == TOK_NUMBER);
+    onetest_assert(tok.type == TOK_NUM_LIT);
     onetest_assert(tok.start == 0);
     onetest_assert(tok.len == 1);
 
@@ -164,7 +178,7 @@ static inline int test_scanToken(void) {
     onetest_assert(tok.len == 1);
 
     tok = scanToken(&L);
-    onetest_assert(tok.type == TOK_NUMBER);
+    onetest_assert(tok.type == TOK_NUM_LIT);
     onetest_assert(tok.start == 4);
     onetest_assert(tok.len == 1);
 
@@ -177,7 +191,7 @@ static inline int test_scanToken(void) {
     L.pc = 0;
 
     tok = scanToken(&L);
-    onetest_assert(tok.type == TOK_STRING);
+    onetest_assert(tok.type == TOK_STRING_LIT);
     onetest_assert(tok.len == 7);
 
     // Identifier
@@ -208,7 +222,7 @@ static inline int test_check(void) {
     ariaLexerInit(&L, "3 + 4");
     ariaTokenize(&L);
 
-    onetest_assert(check(&L, TOK_NUMBER) == 1);
+    onetest_assert(check(&L, TOK_NUM_LIT) == 1);
     onetest_assert(check(&L, TOK_PLUS) == 0);
 
     return 0;
@@ -219,14 +233,14 @@ static inline int test_match(void) {
     ariaLexerInit(&L, "3 + 4");
     ariaTokenize(&L);
 
-    onetest_assert(match(&L, TOK_NUMBER));
+    onetest_assert(match(&L, TOK_NUM_LIT));
     onetest_assert(match(&L, TOK_PLUS));
     return 0;
 }
 
 static inline int test_getCurrTokenType(void) {
     AriaLexer L = {0};
-    ariaLexerInit(&L, "func foo() { return 42; }");
+    ariaLexerInit(&L, "FUNC foo() NUM RET 42 END");
     ariaTokenize(&L);
 
     onetest_assert(getCurrTokenType(&L) == TOK_FUNC);
