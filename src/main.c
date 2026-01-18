@@ -25,11 +25,11 @@ int main(int argc, char* argv[]) {
     ariaPopulateMod(&module, funcs);
 
     // Execute some code either as a string or from a file
-    const char* src
-        = "import module_name\n\n"
-          "print(module_name.someFunc())\n";
-    [[maybe_unused]] int retcode_str = ariaDoString(&vm, src);
-    [[maybe_unused]] int retcode_file = ariaDoFile(&vm, "file_name.ari");
+    // const char* src
+    //     = "import module_name\n\n"
+    //       "print(module_name.someFunc())\n";
+    // [[maybe_unused]] int retcode_str = ariaDoString(&vm, src);
+    [[maybe_unused]] int retcode_file = ariaDoFile(&vm, "/home/auri/workspace/t.ari");
 
     // C <> lang value interop
     AriaObj obj = {.as = {69}};

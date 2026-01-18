@@ -26,7 +26,7 @@ int ariaDoString(AriaVM* vm, const char* str) {
 
 int ariaDoFile(AriaVM* vm, const char* filename) {
     Nob_String_Builder file_buf = {0};
-    if (!nob_read_entire_file(filename, &file_buf)) { return 0; }
+    if (!nob_read_entire_file(filename, &file_buf)) { return 1; }
     nob_sb_append_null(&file_buf);
 
     return ariaDoString(vm, file_buf.items);

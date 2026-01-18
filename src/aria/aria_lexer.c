@@ -16,7 +16,8 @@ void ariaLexerInit(AriaLexer* lexer, char* source) {
 }
 
 AriaToken makeToken(TokenType type, int start, int length) {
-    return (AriaToken){.valid = true, .type = type, .start = start, .len = length};
+    AriaToken tok = (AriaToken){.valid = true, .type = type, .start = start, .len = length};
+    return tok;
 }
 
 char peek(AriaLexer* L) { return L->source[L->pc]; }
@@ -30,16 +31,17 @@ void skipWhitespace(AriaLexer* L) {
 }
 
 AriaToken scanEqualVariant(AriaLexer* L, TokenType single, TokenType equal) {
+    int start = L->pc - 1;
     if (peekNext(L) == '=') {
         advanceChar(L);
-        return makeToken(equal, L->pc, 2);
+        return makeToken(equal, start, 2);
     }
-    return makeToken(single, L->pc, 1);
+    return makeToken(single, start, 1);
 }
 
 AriaToken scanStringLiteral(AriaLexer* L) {
     assert(peek(L) == '"');
-    int start = L->pc;
+    int start = L->pc - 1;
     int length = 0;
 
     while (peekNext(L) != '"' && peekNext(L) != '\0') {
@@ -58,7 +60,7 @@ AriaToken scanStringLiteral(AriaLexer* L) {
     advanceChar(L);  // Next char
     length++;
 
-    return makeToken(TOK_STRING, start, length);
+    return makeToken(TOK_STRING_LIT, start, length);
 }
 
 AriaToken scanNumber(AriaLexer* L) {
@@ -71,7 +73,7 @@ AriaToken scanNumber(AriaLexer* L) {
         length++;
     } while (isdigit(peek(L)) || peek(L) == '.');
 
-    return makeToken(TOK_NUMBER, start, length);
+    return makeToken(TOK_NUM_LIT, start, length);
 }
 
 AriaToken scanIdentifier(AriaLexer* L) {
@@ -93,6 +95,8 @@ AriaToken scanIdentifier(AriaLexer* L) {
     return makeToken(TOK_IDENTIFIER, start, length);
 }
 
+void advanceComment(AriaLexer* L) { while (L->source[L->pc] != '\n') { advanceChar(L); } }
+
 AriaToken scanToken(AriaLexer* L) {
     skipWhitespace(L);
 
@@ -101,56 +105,24 @@ AriaToken scanToken(AriaLexer* L) {
 
     if (c == '\0') { return makeToken(TOK_EOF, start, 0); }
     switch (c) {
-        case '.':
-            advanceChar(L);
-            return makeToken(TOK_DOT, start, 1);
-        case ',':
-            advanceChar(L);
-            return makeToken(TOK_COMMA, start, 1);
-        case ';':
-            advanceChar(L);
-            return makeToken(TOK_SEMICOLON, start, 1);
-        case ':':
-            advanceChar(L);
-            return makeToken(TOK_COLON, start, 1);
-        case '-':
-            advanceChar(L);
-            return makeToken(TOK_MINUS, start, 1);
-        case '+':
-            advanceChar(L);
-            return makeToken(TOK_PLUS, start, 1);
-        case '*':
-            advanceChar(L);
-            return makeToken(TOK_STAR, start, 1);
-        case '/':
-            advanceChar(L);
-            return makeToken(TOK_SLASH, start, 1);
-        case '{':
-            advanceChar(L);
-            return makeToken(TOK_LEFT_BRACE, start, 1);
-        case '}':
-            advanceChar(L);
-            return makeToken(TOK_RIGHT_BRACE, start, 1);
-        case '(':
-            advanceChar(L);
-            return makeToken(TOK_LEFT_PAREN, start, 1);
-        case ')':
-            advanceChar(L);
-            return makeToken(TOK_RIGHT_PAREN, start, 1);
-        case '!':
-            advanceChar(L);
-            return scanEqualVariant(L, TOK_BANG, TOK_BANG_EQUAL);
-        case '=':
-            advanceChar(L);
-            return scanEqualVariant(L, TOK_EQUAL, TOK_EQUAL_EQUAL);
-        case '<':
-            advanceChar(L);
-            return scanEqualVariant(L, TOK_LESS, TOK_LESS_EQUAL);
-        case '>':
-            advanceChar(L);
-            return scanEqualVariant(L, TOK_GREATER, TOK_GREATER_EQUAL);
-        case '"':
-            return scanStringLiteral(L);
+        // clang-format off
+        case '.': advanceChar(L); return makeToken(TOK_DOT, start, 1);
+        case ',': advanceChar(L); return makeToken(TOK_COMMA, start, 1);
+        case ';': advanceComment(L); break;
+        case ':': advanceChar(L); return makeToken(TOK_COLON, start, 1);
+        case '-': advanceChar(L); return makeToken(TOK_MINUS, start, 1);
+        case '+': advanceChar(L); return makeToken(TOK_PLUS, start, 1);
+        case '*': advanceChar(L); return makeToken(TOK_STAR, start, 1);
+        case '/': advanceChar(L); return makeToken(TOK_SLASH, start, 1);
+        case '{': advanceChar(L); return makeToken(TOK_LEFT_BRACE, start, 1);
+        case '}': advanceChar(L); return makeToken(TOK_RIGHT_BRACE, start, 1);
+        case '(': advanceChar(L); return makeToken(TOK_LEFT_PAREN, start, 1);
+        case ')': advanceChar(L); return makeToken(TOK_RIGHT_PAREN, start, 1);
+        case '!': advanceChar(L); return scanEqualVariant(L, TOK_BANG, TOK_BANG_EQUAL);
+        case '=': advanceChar(L); return scanEqualVariant(L, TOK_EQUAL, TOK_EQUAL_EQUAL);
+        case '<': advanceChar(L); return scanEqualVariant(L, TOK_LESS, TOK_LESS_EQUAL);
+        case '>': advanceChar(L); return scanEqualVariant(L, TOK_GREATER, TOK_GREATER_EQUAL);
+        case '"': return scanStringLiteral(L);
         case '&':
             if (peek(L) == '&') {
                 advanceChar(L);
@@ -166,6 +138,8 @@ AriaToken scanToken(AriaLexer* L) {
             }
             break;
     }
+
+    //clang-format on
 
     if (isdigit(c)) { return scanNumber(L); }
     if (isalpha(c) || c == '_') { return scanIdentifier(L); }
@@ -194,7 +168,7 @@ TokenType getCurrTokenType(AriaLexer* L) {
 
 int getTokenNumber(AriaLexer* L, size_t index) {
     const AriaToken* tkn = &L->items[L->index];
-    if (tkn->type != TOK_NUMBER) return 0;
+    if (tkn->type != TOK_NUM_LIT) return 0;
 
     char* num_str = malloc(tkn->len + 1);
     strncpy(num_str, L->source + tkn->start, tkn->len);
@@ -232,8 +206,8 @@ void printTokens(AriaLexer* L) {
     printf("=== TOKENS ===\n");
     nob_da_foreach(AriaToken, x, L) {
         const size_t idx = x - L->items;
-        printf("[%d] Token: %d, start: %d, len: %d\n", idx, x->type, x->start, x->len);
+        printf("[%ld] Token: %d, start: %d, len: %d\n", idx, x->type, x->start, x->len);
     }
 
-    printf("--- %d tokens found ---\n", L->count);
+    printf("--- %ld tokens found ---\n", L->count);
 }
