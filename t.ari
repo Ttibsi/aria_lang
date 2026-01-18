@@ -1,0 +1,41 @@
+IMPORT "file.ext"
+IMPORT module
+
+; a comment
+; supported types: char, string, bool, num (double), func, nil
+; container types: list[type], map[key, value]
+
+TYPE name
+    VAR foo TYPE
+    VAR bar TYPE = val
+
+    FUNC f_name(arg, arg)
+    END
+
+    ; overloads use single underscores on either side
+    FUNC _add_()
+    END
+
+    FUNC _constructor_(arg)
+        THIS.foo = arg
+    END
+END
+
+; for obvious reasons, main always returns an int
+FUNC main(argc, argv) TYPE
+    IF cond THEN
+    ELSE IF cond THEN
+    ELSE
+    END
+
+    ; `STEP int` is optional
+    FOR i = start TO stop STEP int
+    END
+
+    ; idx and elem for a list, key and value for a map
+    FOREACH idx, elem IN container
+    END
+
+    func_call(param)
+    object.method_call()
+END
