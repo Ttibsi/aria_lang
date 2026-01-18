@@ -41,7 +41,7 @@ AriaToken scanEqualVariant(AriaLexer* L, TokenType single, TokenType equal) {
 
 AriaToken scanStringLiteral(AriaLexer* L) {
     assert(peek(L) == '"');
-    int start = L->pc - 1;
+    int start = (L->pc - 1 > 0) ? L->pc : 0;
     int length = 0;
 
     while (peekNext(L) != '"' && peekNext(L) != '\0') {
@@ -95,7 +95,9 @@ AriaToken scanIdentifier(AriaLexer* L) {
     return makeToken(TOK_IDENTIFIER, start, length);
 }
 
-void advanceComment(AriaLexer* L) { while (L->source[L->pc] != '\n') { advanceChar(L); } }
+void advanceComment(AriaLexer* L) {
+    while (L->source[L->pc] != '\n') { advanceChar(L); }
+}
 
 AriaToken scanToken(AriaLexer* L) {
     skipWhitespace(L);
@@ -105,7 +107,7 @@ AriaToken scanToken(AriaLexer* L) {
 
     if (c == '\0') { return makeToken(TOK_EOF, start, 0); }
     switch (c) {
-        // clang-format off
+            // clang-format off
         case '.': advanceChar(L); return makeToken(TOK_DOT, start, 1);
         case ',': advanceChar(L); return makeToken(TOK_COMMA, start, 1);
         case ';': advanceComment(L); break;

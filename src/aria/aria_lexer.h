@@ -32,36 +32,36 @@ typedef enum {
     TOK_OR,   // 21
 
     // Keywords.
-    TOK_BOOL,       // 22
-    TOK_CHAR,       // 23
-    TOK_ELSE,       // 24
-    TOK_END,        // 25
-    TOK_FALSE,      // 26
-    TOK_FOR,        // 27
-    TOK_FOREACH,    // 28
-    TOK_FUNC,       // 29
-    TOK_IF,         // 30
-    TOK_IMPORT,     // 31
-    TOK_IN,         // 32
-    TOK_NIL,        // 33
-    TOK_NUM,        // 34
-    TOK_STEP,       // 35
-    TOK_STR,        // 36
-    TOK_THEN,       // 37
-    TOK_TO,         // 38
-    TOK_TRUE,       // 39
-    TOK_TYPE,       // 40 
-    TOK_VAR,        // 41
-
+    TOK_BOOL,     // 22
+    TOK_CHAR,     // 23
+    TOK_ELSE,     // 24
+    TOK_END,      // 25
+    TOK_FALSE,    // 26
+    TOK_FOR,      // 27
+    TOK_FOREACH,  // 28
+    TOK_FUNC,     // 29
+    TOK_IF,       // 30
+    TOK_IMPORT,   // 31
+    TOK_IN,       // 32
+    TOK_NIL,      // 33
+    TOK_NUM,      // 34
+    TOK_RET,      // 35
+    TOK_STEP,     // 36
+    TOK_STR,      // 37
+    TOK_THEN,     // 38
+    TOK_TO,       // 39
+    TOK_TRUE,     // 40
+    TOK_TYPE,     // 41
+    TOK_VAR,      // 42
 
     // Literals.
-    TOK_IDENTIFIER,  // 42
-    TOK_STRING_LIT,  // 43
-    TOK_CHAR_LIT,    // 44
-    TOK_NUM_LIT,     // 45
+    TOK_IDENTIFIER,  // 43
+    TOK_STRING_LIT,  // 44
+    TOK_CHAR_LIT,    // 45
+    TOK_NUM_LIT,     // 46
 
-    TOK_ERROR,       // 46
-    TOK_EOF,         // 47
+    TOK_ERROR,  // 47
+    TOK_EOF,    // 48
     TOK_COUNT
 } TokenType;
 
@@ -79,26 +79,27 @@ typedef struct {
 } AriaKeyword;
 
 static const AriaKeyword keywords[] = {
-    { "BOOL",    4, TOK_BOOL    }, // 22
-    { "CHAR",    4, TOK_CHAR    }, // 23
-    { "ELSE",    4, TOK_ELSE    }, // 24
-    { "END",     3, TOK_END     }, // 25
-    { "FALSE",   5, TOK_FALSE   }, // 26
-    { "FOR",     3, TOK_FOR     }, // 27
-    { "FOREACH", 7, TOK_FOREACH }, // 28
-    { "FUNC",    4, TOK_FUNC    }, // 29
-    { "IF",      2, TOK_IF      }, // 30
-    { "IMPORT",  6, TOK_IMPORT  }, // 31
-    { "IN",      2, TOK_IN      }, // 32 
-    { "NIL",     3, TOK_NIL     }, // 33
-    { "NUM",     3, TOK_NUM     }, // 34
-    { "STEP",    4, TOK_STEP    }, // 35
-    { "STR",     3, TOK_STR     }, // 36
-    { "THEN",    4, TOK_THEN    }, // 37
-    { "TO",      2, TOK_TO      }, // 38
-    { "TRUE",    2, TOK_TRUE    }, // 39
-    { "TYPE",    4, TOK_TYPE    }, // 40 
-    { "VAR",     3, TOK_VAR     }, // 41 
+    {"BOOL", 4, TOK_BOOL},        // 22
+    {"CHAR", 4, TOK_CHAR},        // 23
+    {"ELSE", 4, TOK_ELSE},        // 24
+    {"END", 3, TOK_END},          // 25
+    {"FALSE", 5, TOK_FALSE},      // 26
+    {"FOR", 3, TOK_FOR},          // 27
+    {"FOREACH", 7, TOK_FOREACH},  // 28
+    {"FUNC", 4, TOK_FUNC},        // 29
+    {"IF", 2, TOK_IF},            // 30
+    {"IMPORT", 6, TOK_IMPORT},    // 31
+    {"IN", 2, TOK_IN},            // 32
+    {"NIL", 3, TOK_NIL},          // 33
+    {"NUM", 3, TOK_NUM},          // 34
+    {"RET", 3, TOK_RET},          // 35
+    {"STEP", 4, TOK_STEP},        // 36
+    {"STR", 3, TOK_STR},          // 37
+    {"THEN", 4, TOK_THEN},        // 38
+    {"TO", 2, TOK_TO},            // 39
+    {"TRUE", 2, TOK_TRUE},        // 40
+    {"TYPE", 4, TOK_TYPE},        // 41
+    {"VAR", 3, TOK_VAR},          // 42
 };
 static const int keyword_count = sizeof(keywords) / sizeof(keywords[0]);
 
@@ -125,7 +126,7 @@ AriaToken scanEqualVariant(AriaLexer* L, TokenType single, TokenType equal);
 AriaToken scanStringLiteral(AriaLexer* L);
 AriaToken scanNumber(AriaLexer* L);
 AriaToken scanIdentifier(AriaLexer* L);
-void advanceComment(AriaLexer* L); // TODO: test
+void advanceComment(AriaLexer* L);  // TODO: test
 AriaToken scanToken(AriaLexer* L);
 void advance(AriaLexer* L);
 bool check(AriaLexer* L, const TokenType type);
