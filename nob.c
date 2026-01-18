@@ -231,7 +231,8 @@ int main(int argc, char** argv) {
         if (strcmp(argv[1], "clean") == 0) { return !clean(); }
         if (strcmp(argv[1], "test") == 0) {
             mkdir_all();
-            return !test(); }
+            return !test();
+        }
 
         return usage();
     }
