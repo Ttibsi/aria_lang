@@ -122,11 +122,11 @@ char peek(AriaLexer* L);
 char peekNext(AriaLexer* L);
 char advanceChar(AriaLexer* L);
 void skipWhitespace(AriaLexer* L);
-AriaToken scanEqualVariant(AriaLexer* L, TokenType single, TokenType equal);
-AriaToken scanStringLiteral(AriaLexer* L);
-AriaToken scanNumber(AriaLexer* L);
-AriaToken scanIdentifier(AriaLexer* L);
-void advanceComment(AriaLexer* L);  // TODO: test
+AriaToken scanEqualVariant(AriaLexer* L, TokenType single, TokenType equal, int start);
+AriaToken scanStringLiteral(AriaLexer* L, int start);
+AriaToken scanNumber(AriaLexer* L, int start);
+AriaToken scanIdentifier(AriaLexer* L, int start);
+void advanceComment(AriaLexer* L);
 AriaToken scanToken(AriaLexer* L);
 void advance(AriaLexer* L);
 bool check(AriaLexer* L, const TokenType type);
