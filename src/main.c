@@ -29,7 +29,7 @@ int main(int argc, char* argv[]) {
     //     = "import module_name\n\n"
     //       "print(module_name.someFunc())\n";
     // [[maybe_unused]] int retcode_str = ariaDoString(&vm, src);
-    [[maybe_unused]] int retcode_file = ariaDoFile(&vm, "/home/auri/workspace/t.ari");
+    [[maybe_unused]] int retcode_file = ariaDoFile(&vm, "t.ari");
 
     // C <> lang value interop
     AriaObj obj = {.as = {69}};
