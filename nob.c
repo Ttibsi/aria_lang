@@ -77,7 +77,9 @@ bool walker(Nob_Walk_Entry entry) {
         nob_cc_flags(&cmd);
         cmd_append(&cmd, "-g");
         cmd_append(&cmd, ARIA_C_VER);
+        cmd_append(&cmd, "-Wfatal-errors");
         cmd_append(&cmd, "-Isrc");
+        cmd_append(&cmd, "-Iinclude");
         cmd_append(&cmd, "-c");
         cmd_append(&cmd, entry.path);
         cmd_append(&cmd, "-o");
