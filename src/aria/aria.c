@@ -23,7 +23,7 @@ int ariaDoString(AriaVM* vm, const char* str) {
 
     if (vm->debug_mode) { printTokens(&vm->lexer); }
 
-    const ASTNode module = ariaParse(&vm->lexer);
+    const ASTNode module = ariaParse(&vm->lexer, "main");
     if (vm->debug_mode) { printAst(&module); }
 
     NOB_TODO("ariaDoString not implemented");
