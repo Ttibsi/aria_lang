@@ -158,6 +158,18 @@ bool match(AriaLexer* L, const TokenType type) {
     return false;
 }
 
+bool checkType(AriaLexer* L) {
+    const TokenType curType = getCurrTokenType(L);
+    if (curType == TOK_BOOL ||
+        curType == TOK_CHAR ||
+        curType == TOK_NIL ||
+        curType == TOK_NUM ||
+        curType == TOK_STR
+    ) { return true; }
+
+    return false;
+}
+
 TokenType getCurrTokenType(AriaLexer* L) {
     const AriaToken* tkn = &L->items[L->index];
     if (tkn == NULL) { return TOK_ERROR; }

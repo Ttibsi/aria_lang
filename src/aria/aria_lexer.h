@@ -131,6 +131,7 @@ AriaToken scanToken(AriaLexer* L);
 void advance(AriaLexer* L);
 bool check(AriaLexer* L, const TokenType type);
 bool match(AriaLexer* L, const TokenType type);
+bool checkType(AriaLexer* L);
 TokenType getCurrTokenType(AriaLexer* L);
 int getTokenNumber(AriaLexer* L, size_t index);
 char getTokenChar(AriaLexer* L, size_t index);
