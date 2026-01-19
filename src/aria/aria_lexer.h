@@ -4,18 +4,18 @@
 #include <stddef.h>
 typedef enum {
     // Single-character tokens.
-    TOK_LEFT_PAREN,   // 0
-    TOK_RIGHT_PAREN,  // 1
-    TOK_LEFT_BRACE,   // 2
-    TOK_RIGHT_BRACE,  // 3
-    TOK_COMMA,        // 4
-    TOK_DOT,          // 5
-    TOK_SEMICOLON,    // 6
-    TOK_COLON,        // 7
-    TOK_MINUS,        // 8
-    TOK_PLUS,         // 9
-    TOK_SLASH,        // 10
-    TOK_STAR,         // 11
+    TOK_LEFT_PAREN,      // 0
+    TOK_RIGHT_PAREN,     // 1
+    TOK_LEFT_SQUACKET,   // 2
+    TOK_RIGHT_SQUACKET,  // 3
+    TOK_COMMA,           // 4
+    TOK_DOT,             // 5
+    TOK_SEMICOLON,       // 6
+    TOK_COLON,           // 7
+    TOK_MINUS,           // 8
+    TOK_PLUS,            // 9
+    TOK_SLASH,           // 10
+    TOK_STAR,            // 11
 
     // One or two character tokens.
     TOK_BANG,           // 12
@@ -43,25 +43,27 @@ typedef enum {
     TOK_IF,       // 30
     TOK_IMPORT,   // 31
     TOK_IN,       // 32
-    TOK_NIL,      // 33
-    TOK_NUM,      // 34
-    TOK_RET,      // 35
-    TOK_STEP,     // 36
-    TOK_STR,      // 37
-    TOK_THEN,     // 38
-    TOK_TO,       // 39
-    TOK_TRUE,     // 40
-    TOK_TYPE,     // 41
-    TOK_VAR,      // 42
+    TOK_LIST,     // 33
+    TOK_MAP,      // 34
+    TOK_NIL,      // 35
+    TOK_NUM,      // 36
+    TOK_RET,      // 37
+    TOK_STEP,     // 38
+    TOK_STR,      // 39
+    TOK_THEN,     // 40
+    TOK_TO,       // 41
+    TOK_TRUE,     // 42
+    TOK_TYPE,     // 43
+    TOK_VAR,      // 44
 
     // Literals.
-    TOK_IDENTIFIER,  // 43
-    TOK_STRING_LIT,  // 44
-    TOK_CHAR_LIT,    // 45
-    TOK_NUM_LIT,     // 46
+    TOK_IDENTIFIER,  // 45
+    TOK_STRING_LIT,  // 46
+    TOK_CHAR_LIT,    // 47
+    TOK_NUM_LIT,     // 48
 
-    TOK_ERROR,  // 47
-    TOK_EOF,    // 48
+    TOK_ERROR,  // 49
+    TOK_EOF,    // 50
     TOK_COUNT
 } TokenType;
 
@@ -90,16 +92,18 @@ static const AriaKeyword keywords[] = {
     {"IF", 2, TOK_IF},            // 30
     {"IMPORT", 6, TOK_IMPORT},    // 31
     {"IN", 2, TOK_IN},            // 32
-    {"NIL", 3, TOK_NIL},          // 33
-    {"NUM", 3, TOK_NUM},          // 34
-    {"RET", 3, TOK_RET},          // 35
-    {"STEP", 4, TOK_STEP},        // 36
-    {"STR", 3, TOK_STR},          // 37
-    {"THEN", 4, TOK_THEN},        // 38
-    {"TO", 2, TOK_TO},            // 39
-    {"TRUE", 2, TOK_TRUE},        // 40
-    {"TYPE", 4, TOK_TYPE},        // 41
-    {"VAR", 3, TOK_VAR},          // 42
+    {"LIST", 4, TOK_LIST},        // 33
+    {"MAP", 3, TOK_MAP},          // 34
+    {"NIL", 3, TOK_NIL},          // 35
+    {"NUM", 3, TOK_NUM},          // 36
+    {"RET", 3, TOK_RET},          // 37
+    {"STEP", 4, TOK_STEP},        // 38
+    {"STR", 3, TOK_STR},          // 39
+    {"THEN", 4, TOK_THEN},        // 40
+    {"TO", 2, TOK_TO},            // 41
+    {"TRUE", 2, TOK_TRUE},        // 42
+    {"TYPE", 4, TOK_TYPE},        // 43
+    {"VAR", 3, TOK_VAR},          // 44
 };
 static const int keyword_count = sizeof(keywords) / sizeof(keywords[0]);
 

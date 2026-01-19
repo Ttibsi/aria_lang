@@ -106,14 +106,14 @@ AriaToken scanToken(AriaLexer* L) {
             // clang-format off
         case '.': advanceChar(L); return makeToken(TOK_DOT, start, 1);
         case ',': advanceChar(L); return makeToken(TOK_COMMA, start, 1);
-        case ';': advanceComment(L); break;
+        case ';': advanceComment(L); return makeToken(TOK_COUNT, 0, 0);
         case ':': advanceChar(L); return makeToken(TOK_COLON, start, 1);
         case '-': advanceChar(L); return makeToken(TOK_MINUS, start, 1);
         case '+': advanceChar(L); return makeToken(TOK_PLUS, start, 1);
         case '*': advanceChar(L); return makeToken(TOK_STAR, start, 1);
         case '/': advanceChar(L); return makeToken(TOK_SLASH, start, 1);
-        case '{': advanceChar(L); return makeToken(TOK_LEFT_BRACE, start, 1);
-        case '}': advanceChar(L); return makeToken(TOK_RIGHT_BRACE, start, 1);
+        case '[': advanceChar(L); return makeToken(TOK_LEFT_SQUACKET, start, 1);
+        case ']': advanceChar(L); return makeToken(TOK_RIGHT_SQUACKET, start, 1);
         case '(': advanceChar(L); return makeToken(TOK_LEFT_PAREN, start, 1);
         case ')': advanceChar(L); return makeToken(TOK_RIGHT_PAREN, start, 1);
         case '!': advanceChar(L); return scanEqualVariant(L, TOK_BANG, TOK_BANG_EQUAL, start);
@@ -206,6 +206,7 @@ void ariaTokenize(AriaLexer* L) {
     AriaToken token = {};
     do {
         token = scanToken(L);
+        if (token.type == TOK_COUNT) { continue; } // Use as a null token
         nob_da_append(L, token);
     } while (token.type != TOK_EOF);
 
