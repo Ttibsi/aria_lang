@@ -1,5 +1,7 @@
 #include "aria.h"
 
+#include "aria_parser.h"
+
 #define NOB_IMPLEMENTATION
 #include "../include/nob.h"
 
@@ -20,6 +22,9 @@ int ariaDoString(AriaVM* vm, const char* str) {
     ariaTokenize(&vm->lexer);
 
     if (vm->debug_mode) { printTokens(&vm->lexer); }
+
+    const ASTNode module = ariaParse(&vm->lexer);
+    if (vm->debug_mode) { printAst(&module); }
 
     NOB_TODO("ariaDoString not implemented");
 }
