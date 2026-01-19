@@ -5,24 +5,24 @@ IMPORT module
 ; supported types: char, string, bool, num (double), func, nil
 ; container types: list[type], map[key, value]
 
-TYPE name
-    VAR foo TYPE
-    VAR bar TYPE = val
-
-    FUNC f_name(arg, arg)
-    END
-
-    ; overloads use single underscores on either side
-    FUNC _add_()
-    END
-
-    FUNC _constructor_(arg)
-        THIS.foo = arg
-    END
-END
+;TYPE name
+;    VAR foo TYPE
+;    VAR bar TYPE = val
+;
+;    FUNC f_name(arg, arg)
+;    END
+;
+;    ; overloads use single underscores on either side
+;    FUNC _add_()
+;    END
+;
+;    FUNC _constructor_(arg)
+;        THIS.foo = arg
+;    END
+;END
 
 ; for obvious reasons, main always returns an int
-FUNC main(argc, argv) TYPE
+FUNC main(argc NUM, argv LIST[STR]) NUM
     IF cond THEN
     ELSE IF cond THEN
     ELSE
