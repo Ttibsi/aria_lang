@@ -238,6 +238,8 @@ static inline int test_match(void) {
     return 0;
 }
 
+static inline int test_checkType(evoid) { return 1; }
+
 static inline int test_getCurrTokenType(void) {
     AriaLexer L = {0};
     ariaLexerInit(&L, "FUNC foo() NUM RET 42 END");

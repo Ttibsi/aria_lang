@@ -20,6 +20,7 @@ int main(void) {
         ONETEST_TEST(test_advance),
         ONETEST_TEST(test_check),
         ONETEST_TEST(test_match),
+        ONETEST_TEST(test_checkType),
         ONETEST_TEST(test_getCurrTokenType),
         ONETEST_TEST(test_getTokenNumber),
         ONETEST_TEST(test_getTokenChar),
