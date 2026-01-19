@@ -14,6 +14,7 @@ int main(void) {
         ONETEST_TEST(test_scanEqualVariant),
         ONETEST_TEST(test_scanStringLiteral),
         ONETEST_TEST(test_scanNumber),
+        ONETEST_TEST(test_advanceComment),
         ONETEST_TEST(test_scanIdentifier),
         ONETEST_TEST(test_scanToken),
         ONETEST_TEST(test_advance),

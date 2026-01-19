@@ -9,7 +9,7 @@
 #define ARIA_EXE "aria"
 
 int usage() {
-    fprintf(stderr, "Valid commands: clean\n");
+    fprintf(stderr, "Valid commands: clean, test\n");
     return 0;
 }
 
@@ -202,6 +202,7 @@ bool test() {
     Cmd cmd = {0};
     cmd_append(&cmd, "gcc");
     cmd_append(&cmd, ARIA_C_VER);
+    cmd_append(&cmd, "-ggdb");
     cmd_append(&cmd, "tests/test.c");
 
     walk_dir("build", collect_archives, .data = &cmd);
@@ -225,15 +226,18 @@ bool build_main_binary() {
 
 int main(int argc, char** argv) {
     GO_REBUILD_URSELF(argc, argv);
-    mkdir_all();
 
     if (argc > 1) {
         if (strcmp(argv[1], "clean") == 0) { return !clean(); }
-        if (strcmp(argv[1], "test") == 0) { return !test(); }
+        if (strcmp(argv[1], "test") == 0) {
+            mkdir_all();
+            return !test();
+        }
 
         return usage();
     }
 
+    mkdir_all();
     if (build_main_binary()) { return 1; }
     return 0;
 }
