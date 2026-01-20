@@ -193,7 +193,7 @@ int compile_exe() {
 
 bool clean() {
     Cmd cmd = {0};
-    cmd_append(&cmd, "rm", "-rf", "build", "nob.old");
+    cmd_append(&cmd, "rm", "-rf", "build", "nob.old", "core");
     return cmd_run(&cmd);
 }
 
