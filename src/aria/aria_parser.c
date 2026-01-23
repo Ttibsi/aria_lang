@@ -9,6 +9,7 @@
 #define parsingError(str, ...)                                                               \
     do {                                                                                     \
         fprintf(stderr, "%s:%d - " str "\n", __func__, __LINE__ __VA_OPT__(, ) __VA_ARGS__); \
+    // asm("brk #0x1"); \
         assert(0);                                                                           \
     } while (0)
 
@@ -60,9 +61,8 @@ binding_t infixBindingPower(const TokenType* tkn) {
 
 ASTNode parseBlock(AriaLexer* L) {
     ASTNode node = ariaCreateNode(AST_BLOCK);
-    if (!match(L, TOK_LEFT_BRACE)) { parsingError("Entered a block inappropriately"); }
 
-    while (!check(L, TOK_RIGHT_BRACE)) {
+    while (!check(L, TOK_END)) {
         ASTNode stmt = parseStatement(L);
         nob_da_append(&node.block, stmt);
     }
@@ -70,10 +70,46 @@ ASTNode parseBlock(AriaLexer* L) {
     return node;
 }
 
-ASTNode parseFunc(AriaLexer* L) {
-    if (!match(L, TOK_FUNC)) { parsingError("parseFunc called with incorrect token\n"); }
+ASTNode* parseArg(AriaLexer* L) {
+    ASTNode* node = malloc(sizeof(ASTNode));
+
+    // name
+    const AriaToken* tok = &L->items[L->index];
+    Nob_String_Builder arg_name = {0};
+    nob_sb_append_buf(&arg_name, &L->source[tok->start], tok->len);
+    nob_sb_append_null(&arg_name);
+    node->arg.name = arg_name.items;
     advance(L);
 
+    // type
+    if (!checkType(L)) { parsingError("Type not defined for argument"); }
+    node->type = L->items[L->index].type;
+    advance(L);
+
+    if (node->type == TOK_LIST || node->type == TOK_MAP) {
+        if (!match(L, TOK_LEFT_SQUACKET)) {
+            parsingError("Container type doesn't define contents types");
+        }
+        if (!checkType(L)) { parsingError("Type not defined for container"); }
+
+        node->arg.inner_type_1 = L->items[L->index].type;
+        advance(L);
+
+        if (node->arg.type == TOK_MAP) {
+            if (!match(L, TOK_COMMA)) {
+                parsingError("Map requires two types separated by commas");
+            }
+            node->arg.inner_type_2 = L->items[L->index].type;
+        }
+
+        if (!match(L, TOK_RIGHT_SQUACKET)) { parsingError("Malformed container type"); }
+    }
+
+    return node;
+}
+
+ASTNode parseFunc(AriaLexer* L) {
+    if (!match(L, TOK_FUNC)) { parsingError("parseFunc called with incorrect token\n"); }
     ASTNode funcNode = ariaCreateNode(AST_FUNC);
 
     // func name
@@ -92,24 +128,14 @@ ASTNode parseFunc(AriaLexer* L) {
         if (!check(L, TOK_IDENTIFIER)) { parsingError("function args contain non-identifiers\n"); }
         if (args_idx >= param_count) { parsingError("Function has too many arguments\n"); }
 
-        ASTNode* arg = malloc(sizeof(ASTNode));
-
-        Nob_String_Builder arg_name = {0};
-        nob_sb_append_buf(&arg_name, &L->source[tok->start], tok->len);
-        nob_sb_append_null(&arg_name);
-        arg->arg.name = arg_name.items;
-        advance(L);
-
-        arg->arg.type = L->items[L->index].type;
-        funcNode.func.args[args_idx] = arg;
-
+        funcNode.func.args[args_idx] = parseArg(L);
         args_idx++;
-        advance(L);
         if (check(L, TOK_COMMA)) { advance(L); }  // Skip commas
     }
     advance(L);
 
     // return type
+    if (!checkType(L)) { parsingError("Function return type not specified\n"); }
     funcNode.func.ret_type = L->items[L->index].type;
     advance(L);
 
@@ -121,10 +147,127 @@ ASTNode parseFunc(AriaLexer* L) {
     return funcNode;
 }
 
-ASTNode parseExpression(AriaLexer* L, const binding_t min_bp) {}
+ASTNode parseFuncCall(AriaLexer* L) {
+    ASTNode funcNode = ariaCreateNode(AST_CALL);
+
+    // func name
+    const AriaToken* tok = &L->items[L->index];
+    Nob_String_Builder name = {0};
+    nob_sb_append_buf(&name, &L->source[tok->start], tok->len);
+    nob_sb_append_null(&name);
+    funcNode.func.name = name.items;
+    advance(L);
+
+    // arguments
+    if (!match(L, TOK_LEFT_PAREN)) { parsingError("Function name not followed by open bracket\n"); }
+    int args_idx = 0;
+    while (!check(L, TOK_RIGHT_PAREN)) {
+        if (!check(L, TOK_IDENTIFIER)) { parsingError("function args contain non-identifiers\n"); }
+        if (args_idx >= param_count) { parsingError("Function has too many arguments\n"); }
+
+        const AriaToken* tok = &L->items[L->index];
+        Nob_String_Builder arg_name = {0};
+        nob_sb_append_buf(&arg_name, &L->source[tok->start], tok->len);
+        nob_sb_append_null(&arg_name);
+        funcNode.funcCall.args[args_idx] = arg_name.items;
+
+        args_idx++;
+        if (check(L, TOK_COMMA)) { advance(L); }  // Skip commas
+    }
+    advance(L);
+
+    // return type
+    if (!checkType(L)) { parsingError("Function return type not specified\n"); }
+    funcNode.func.ret_type = L->items[L->index].type;
+
+    return funcNode;
+}
+
+ASTNode parseExpression(AriaLexer* L, const binding_t min_bp, const TokenType endToken) {
+    ASTNode lhs = {};
+
+    switch (getCurrTokenType(L)) {
+        case TOK_NUM_LIT:
+            lhs = ariaCreateNode(AST_VALUE);
+            lhs.num_literal = getTokenNumber(L, L->index);
+            break;
+        case TOK_LEFT_PAREN:
+            advance(L);
+            lhs = parseExpression(L, 0, endToken);
+            break;
+        case TOK_IDENTIFIER:
+            // TODO: This could also be a variable
+            advance(L);
+            if (check(L, TOK_LEFT_PAREN)) {
+                lhs = parseFuncCall(L);
+            } else {
+                // TODO: parseVariable;
+            }
+            break;
+        default:
+            parsingError("Unknown token found (parseExpression LHS): %d", getCurrTokenType(L));
+            break;
+    };
+
+    const AriaToken* next = &L->items[L->index];
+    if (next->type == TOK_EOF) {
+        parsingError("EOF reached when parsing an expression");
+    } else if (next->type == TOK_RIGHT_PAREN || next->type == endToken) {
+        return lhs;
+    }
+
+    while (true) {
+        advance(L);
+        const TokenType tok_type = getCurrTokenType(L);
+        if (next->type == TOK_RIGHT_PAREN || next->type == endToken) { break; }
+
+        const binding_t bp = infixBindingPower(&tok_type);
+        if (bp < min_bp) { break; }
+        advance(L);
+
+        ASTNode rhs = parseExpression(L, bp + 1, endToken);
+
+        ASTNode* lhs_ptr = malloc(sizeof(ASTNode));
+        ASTNode* rhs_ptr = malloc(sizeof(ASTNode));
+        *lhs_ptr = lhs;
+        *rhs_ptr = rhs;
+
+        lhs = ariaCreateNode(AST_EXPR);
+        lhs.expr.op = tok_type;
+        lhs.expr.lhs = lhs_ptr;
+        lhs.expr.rhs = rhs_ptr;
+    }
+
+    return lhs;
+}
+
 ASTNode parseFor(AriaLexer* L) {}
 ASTNode parseIdentifier(AriaLexer* L) {}
-ASTNode parseIf(AriaLexer* L) {}
+
+ASTNode parseIf(AriaLexer* L) {
+    if (!(match(L, TOK_IF))) { parsingError("If statement invalid"); }
+
+    ASTNode ifNode = ariaCreateNode(AST_IF);
+    ifNode.If.cond = malloc(sizeof(ASTNode));
+    *ifNode.If.cond = parseExpression(L, 0, TOK_THEN);
+
+    if (!(match(L, TOK_THEN))) { parsingError("No THEN keyword found"); }
+    ifNode.If.block = malloc(sizeof(ASTNode));
+    *ifNode.If.block = parseBlock(L);
+
+    if (check(L, TOK_ELSE)) {
+        advance(L);
+        ifNode.If.elseBlock = malloc(sizeof(ASTNode));
+
+        if (check(L, TOK_IF)) {
+            *ifNode.If.elseBlock = parseIf(L);
+        } else {
+            *ifNode.If.elseBlock = parseBlock(L);
+        }
+    }
+
+    return ifNode;
+}
 
 ASTNode parseImport(AriaLexer* L) {
     ASTNode node = ariaCreateNode(AST_IMPORT);
@@ -149,7 +292,7 @@ ASTNode parseReturn(AriaLexer* L) {
     advance(L);
 
     ASTNode* expr = malloc(sizeof(ASTNode));
-    *expr = parseExpression(L, 0);
+    *expr = parseExpression(L, 0, TOK_END);
 
     if (expr->type == AST_EXPR) {
         node.ret.expr = expr;
@@ -168,6 +311,7 @@ ASTNode parseReturn(AriaLexer* L) {
 
 ASTNode parseStatement(AriaLexer* L) {
     AriaToken* tkn = &L->items[L->index];
+    fprintf(stderr, "Statement token type: %d\n", tkn->type);
     switch (tkn->type) {
         case TOK_FOR:
             return parseFor(L);
@@ -194,14 +338,52 @@ ASTNode parseStatement(AriaLexer* L) {
 }
 
 ASTNode parseType(AriaLexer* L) {}
-ASTNode parseVar(AriaLexer* L) {}
+
+ASTNode parseVar(AriaLexer* L) {
+    if (!(match(L, TOK_VAR))) { parsingError("var statement invalid"); }
+    ASTNode node = ariaCreateNode(AST_VAR);
+
+    // variable name
+    const AriaToken* tok = &L->items[L->index];
+    Nob_String_Builder name = {0};
+    nob_sb_append_buf(&name, &L->source[tok->start], tok->len);
+    nob_sb_append_null(&name);
+    node.var.name = name.items;
+    advance(L);
+
+    // variable type
+    if (!checkType(L)) { parsingError("Type not defined for variable"); }
+    node.var.ret_type = L->items[L->index].type;
+    advance(L);
+
+    // value
+    if (!match(L, TOK_EQUAL)) { parsingError("Malformed variable assignment"); }
+    advance(L);
+
+    if (check(L, TOK_STRING_LIT)) {
+        node.var.value = malloc(sizeof(ASTNode));
+        node.var.value->type = AST_STR_LIT;
+        node.var.value->string_literal = getTokenString(L, L->index);
+    } else if (check(L, TOK_NUM_LIT)) {
+        node.var.value = malloc(sizeof(ASTNode));
+        node.var.value->type = AST_NUM_LIT;
+        node.var.value->num_literal = getTokenNumber(L, L->index);
+    } else if (check(L, TOK_CHAR_LIT)) {
+        node.var.value = malloc(sizeof(ASTNode));
+        node.var.value->type = AST_CHAR_LIT;
+        node.var.value->char_literal = getTokenChar(L, L->index);
+    }
+
+    return node;
+}
 
 ASTNode ariaCreateNode(const NodeType type) {
+    fprintf(stderr, "Creating node: %d\n", type);
     switch (type) {
         case AST_BLOCK:
             [[fallthrough]];
         case AST_MODULE:
-            return (ASTNode){.type = type};
+            return (ASTNode){.type = type, .block = {.name = NULL}};
 
         case AST_RETURN:
             return (ASTNode){.type = type};
@@ -217,6 +399,8 @@ ASTNode ariaCreateNode(const NodeType type) {
 
         case AST_FUNC:
             return (ASTNode){.type = type, .func = {.name = NULL, .body = NULL}};
+        case AST_CALL:
+            return (ASTNode){.type = type, .funcCall = {.name = NULL}};
 
         case NODE_COUNT:
             [[fallthrough]];
@@ -225,8 +409,9 @@ ASTNode ariaCreateNode(const NodeType type) {
     }
 }
 
-ASTNode ariaParse(AriaLexer* L) {
+ASTNode ariaParse(AriaLexer* L, char* mod_name) {
     ASTNode module = ariaCreateNode(AST_MODULE);
+    module.block.name = mod_name;
 
     while (!check(L, TOK_EOF)) {
         ASTNode inner = (ASTNode){.type = AST_ERR};
@@ -246,7 +431,9 @@ ASTNode ariaParse(AriaLexer* L) {
                 break;
 
             case TOK_ERROR:
-                [[fallthrough]];
+                NOB_UNREACHABLE("ERROR node at top level in ariaParse");
+                break;
+
             default:
                 NOB_UNREACHABLE("Invalid node at top level in ariaParse");
         };
@@ -257,4 +444,75 @@ ASTNode ariaParse(AriaLexer* L) {
     return module;
 }
 
-void printAst(const ASTNode* root) { (void)root; }
+// Recursive impl for printing nodes
+void printASTNode(const ASTNode* n, int offset) {
+    printf("%*s\n", offset, "");
+
+    switch (n->type) {
+        case AST_ARG:
+            printf("@arg[%s]\n", n->arg.name);
+            break;
+
+        case AST_MODULE:
+            printf("@module[\n");
+            printf("%*sModule name:%s\n", offset + 2, "", n->block.name);
+            nob_da_foreach(ASTNode, inner, &n->block) { printASTNode(inner, offset + 2); }
+            printf("%*s]\n", offset, "");
+            break;
+
+        case AST_BLOCK:
+            printf("@block[\n");
+            nob_da_foreach(ASTNode, inner, &n->block) { printASTNode(inner, offset + 2); }
+            printf("%*s]\n", offset, "");
+            break;
+
+        case AST_ERR:
+            printf("@error\n");
+            break;
+
+        case AST_EXPR:
+            printf("@expr[");
+            printASTNode(n->expr.lhs, offset + 2);
+
+            if (n->expr.rhs != NULL) {
+                printf("%*sop: [%d]\n", offset + 2, "", n->expr.op);
+                printASTNode(n->expr.rhs, offset + 2);
+            };
+            printf("%*s]\n", offset, "");
+            break;
+
+        case AST_FUNC:
+            printf("@func[\n");
+            printf("%*sfunc name: %s\n", offset + 2, "", n->func.name);
+
+            // TODO: args
+            // TODO: ret type
+            // TODO: block
+
+            printf("%*s]\n", offset, "");
+            break;
+
+        case AST_IMPORT:
+            printf("@import[%s]\n", n->import.name);
+            break;
+
+        case AST_RETURN:
+            printf("@ret[\n");
+            printASTNode(n->ret.expr, offset + 2);
+            printf("%*s]\n", offset, "");
+            break;
+
+        case NODE_COUNT:
+            [[fallthrough]];
+        default:
+            break;
+    }
+}
+
+void printAst(const ASTNode* root) {
+    printf("=== AST ===\n");
+    printASTNode(root, 0);
+    // nob_da_foreach(ASTNode, node, &root->block) {
+    //     printASTNode(node, 2);
+    // }
+}

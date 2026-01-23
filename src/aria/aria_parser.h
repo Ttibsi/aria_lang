@@ -8,13 +8,20 @@
 
 typedef enum {
     AST_ARG,
-    AST_IMPORT,
-    AST_RETURN,
-    AST_EXPR,
-    AST_MODULE,
-    AST_ERR,
-    AST_FUNC,
     AST_BLOCK,
+    AST_ERR,
+    AST_EXPR,
+    AST_IF,
+    AST_FUNC,
+    AST_CALL,
+    AST_IMPORT,
+    AST_MODULE,
+    AST_RETURN,
+    AST_VALUE,
+    AST_VAR,
+    AST_STR_LIT,
+    AST_NUM_LIT,
+    AST_CHAR_LIT,
 
     NODE_COUNT
 } NodeType;
@@ -30,12 +37,16 @@ typedef struct _ASTNode {
         struct {
             char* name;
             TokenType type;
+            TokenType inner_type_1;  // used for LIST and MAP types, ignored otherwise
+            TokenType inner_type_2;  // used for MAP type, ignored otherwise
         } arg;
 
         struct {
             struct _ASTNode* items;
             size_t count;
             size_t capacity;
+
+            char* name;
         } block;
 
         struct {
@@ -52,6 +63,18 @@ typedef struct _ASTNode {
         } func;
 
         struct {
+            char* name;
+            char* args[param_count];
+            TokenType ret_type;
+        } funcCall;
+
+        struct {
+            struct _ASTNode* cond;
+            struct _ASTNode* block;
+            struct _ASTNode* elseBlock;
+        } If;
+
+        struct {
             bool local_file;
             char* name;
         } import;
@@ -59,6 +82,16 @@ typedef struct _ASTNode {
         struct {
             struct _ASTNode* expr;
         } ret;
+
+        struct {
+            char* name;
+            TokenType ret_type;
+            struct _ASTNode* value;
+        } var;
+
+        int num_literal;
+        char* string_literal;
+        char char_literal;
     };
 } ASTNode;
 
@@ -69,7 +102,7 @@ binding_t prefixBindingPower(const TokenType* tkn);
 binding_t infixBindingPower(const TokenType* tkn);
 ASTNode parseBlock(AriaLexer* L);
 ASTNode parseFunc(AriaLexer* L);
-ASTNode parseExpression(AriaLexer* L, const binding_t min_bp);
+ASTNode parseExpression(AriaLexer* L, const binding_t min_bp, const TokenType endToken);
 ASTNode parseFor(AriaLexer* L);
 ASTNode parseIdentifier(AriaLexer* L);
 ASTNode parseIf(AriaLexer* L);
@@ -79,7 +112,7 @@ ASTNode parseStatement(AriaLexer* L);
 ASTNode parseType(AriaLexer* L);
 ASTNode parseVar(AriaLexer* L);
 ASTNode ariaCreateNode(const NodeType type);
-ASTNode ariaParse(AriaLexer* L);
+ASTNode ariaParse(AriaLexer* L, char* mod_name);
 void printAst(const ASTNode* root);
 
 #endif  // ARIA_PARSER_H
