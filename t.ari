@@ -23,13 +23,20 @@ IMPORT module
 
 ; for obvious reasons, main always returns an int
 FUNC main(argc NUM, argv LIST[STR]) NUM
-    IF cond THEN
-    ELSE IF cond THEN
+    VAR x NUM = 5
+    VAR y NUM = 10
+
+    IF y < x THEN
+        ...
+    ELSE IF x == y THEN
+        ...
     ELSE
+        ...
     END
 
     ; `STEP int` is optional
-    FOR i = start TO stop STEP int
+    FOR i = 1 TO x STEP 2
+        ...
     END
 
     ; idx and elem for a list, key and value for a map
