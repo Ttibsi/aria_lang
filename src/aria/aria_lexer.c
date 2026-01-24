@@ -162,9 +162,11 @@ bool checkType(AriaLexer* L) {
     const TokenType curType = getCurrTokenType(L);
     if (curType == TOK_BOOL ||
         curType == TOK_CHAR ||
-        curType == TOK_NIL ||
-        curType == TOK_NUM ||
-        curType == TOK_STR
+        curType == TOK_NIL  ||
+        curType == TOK_NUM  ||
+        curType == TOK_STR  ||
+        curType == TOK_LIST ||
+        curType == TOK_MAP
     ) { return true; }
 
     return false;

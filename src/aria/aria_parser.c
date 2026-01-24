@@ -6,10 +6,11 @@
 
 #include "nob.h"
 
+#define MACRO_COMMENT(ignored)
 #define parsingError(str, ...)                                                               \
     do {                                                                                     \
         fprintf(stderr, "%s:%d - " str "\n", __func__, __LINE__ __VA_OPT__(, ) __VA_ARGS__); \
-    // asm("brk #0x1"); \
+        MACRO_COMMENT(asm("brk #0x1");)                                                      \
         assert(0);                                                                           \
     } while (0)
 
