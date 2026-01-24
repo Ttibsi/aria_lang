@@ -23,6 +23,8 @@ typedef enum {
     AST_STR_LIT,
     AST_NUM_LIT,
     AST_CHAR_LIT,
+    AST_FOR,
+    AST_FOREACH,
 
     NODE_COUNT
 } NodeType;
@@ -55,6 +57,21 @@ typedef struct _ASTNode {
             struct _ASTNode* lhs;
             struct _ASTNode* rhs;
         } expr;
+
+        struct {
+            struct _ASTNode* var;
+            struct _ASTNode* start;
+            struct _ASTNode* stop;
+            struct _ASTNode* step;
+            struct _ASTNode* block;
+        } For;
+
+        struct {
+            struct _ASTNode* first_var;
+            struct _ASTNode* sec_var;
+            struct _ASTNode* container;
+            struct _ASTNode* block;
+        } ForEach;
 
         struct {
             char* name;

@@ -204,7 +204,7 @@ ASTNode parseExpression(AriaLexer* L, const binding_t min_bp, const TokenType en
             if (L->items[L->index + 1].type == TOK_LEFT_PAREN) {
                 lhs = parseFuncCall(L);
             } else {
-                lhs = (ASTNode){.type = AST_IDENT, .identifier = getTokenString(L, L->index)};
+                lhs = parseIdentifier(L);
             }
             break;
         default:
@@ -244,8 +244,29 @@ ASTNode parseExpression(AriaLexer* L, const binding_t min_bp, const TokenType en
     return lhs;
 }
 
-ASTNode parseFor(AriaLexer* L) {}
-ASTNode parseIdentifier(AriaLexer* L) {}
+ASTNode parseFor(AriaLexer* L) {
+    if (!(match(L, TOK_FOR))) { parsingError("for statement invalid"); }
+    ASTNode Node = ariaCreateNode(AST_FOR);
+
+    node.var = parseIdentifier(L);
+    advance(L);
+    if (!(match(L, TOK_EQUAL))) { parsingError("for loop assignment invalid"); }
+
+    node.start = parseExpression(L, 0, TOK_TO);
+    advance(L);
+
+    // TODO: This needs thinking through
+    node.stop = parseExpression(L, 0, TOK_TO)
+}
+
+ASTNode parseForEach(AriaLexer* L) {
+    if (!(match(L, TOK_FOREACH))) { parsingError("foreach statement invalid"); }
+    ASTNode Node = ariaCreateNode(AST_FOREACH);
+}
+
+ASTNode parseIdentifier(AriaLexer* L) {
+    return (ASTNode){.type = AST_IDENT, .identifier = getTokenString(L, L->index)};
+}
 
 ASTNode parseIf(AriaLexer* L) {
     if (!(match(L, TOK_IF))) { parsingError("If statement invalid"); }
@@ -317,6 +338,9 @@ ASTNode parseStatement(AriaLexer* L) {
     switch (tkn->type) {
         case TOK_FOR:
             return parseFor(L);
+            break;
+        case TOK_FOREACH:
+            return parseForEach(L);
             break;
         case TOK_IF:
             return parseIf(L);
