@@ -197,12 +197,10 @@ ASTNode parseExpression(AriaLexer* L, const binding_t min_bp, const TokenType en
             lhs = parseExpression(L, 0, endToken);
             break;
         case TOK_IDENTIFIER:
-            // TODO: This could also be a variable
-            advance(L);
-            if (check(L, TOK_LEFT_PAREN)) {
+            if (L->items[L->index + 1].type == TOK_LEFT_PAREN) {
                 lhs = parseFuncCall(L);
             } else {
-                // TODO: parseVariable;
+                lhs = (ASTNode){.type = AST_IDENT, .identifier = getTokenString(L, L->index)};
             }
             break;
         default:
@@ -210,7 +208,7 @@ ASTNode parseExpression(AriaLexer* L, const binding_t min_bp, const TokenType en
             break;
     };
 
-    const AriaToken* next = &L->items[L->index];
+    const AriaToken* next = &L->items[L->index + 1];
     if (next->type == TOK_EOF) {
         parsingError("EOF reached when parsing an expression");
     } else if (next->type == TOK_RIGHT_PAREN || next->type == endToken) {
@@ -312,7 +310,6 @@ ASTNode parseReturn(AriaLexer* L) {
 
 ASTNode parseStatement(AriaLexer* L) {
     AriaToken* tkn = &L->items[L->index];
-    fprintf(stderr, "Statement token type: %d\n", tkn->type);
     switch (tkn->type) {
         case TOK_FOR:
             return parseFor(L);
@@ -379,7 +376,6 @@ ASTNode parseVar(AriaLexer* L) {
 }
 
 ASTNode ariaCreateNode(const NodeType type) {
-    fprintf(stderr, "Creating node: %d\n", type);
     switch (type) {
         case AST_BLOCK:
             [[fallthrough]];
@@ -388,6 +384,9 @@ ASTNode ariaCreateNode(const NodeType type) {
 
         case AST_RETURN:
             return (ASTNode){.type = type};
+
+        case AST_IF:
+            return (ASTNode){.type = type, .If = {.cond = NULL, .block = NULL, .elseBlock = NULL}};
 
         case AST_IMPORT:
             return (ASTNode){.type = type, .import = {.local_file = false, .name = NULL}};
@@ -402,6 +401,11 @@ ASTNode ariaCreateNode(const NodeType type) {
             return (ASTNode){.type = type, .func = {.name = NULL, .body = NULL}};
         case AST_CALL:
             return (ASTNode){.type = type, .funcCall = {.name = NULL}};
+        case AST_EXPR:
+            return (ASTNode){.type = type, .expr = {.lhs = NULL, .rhs = NULL}};
+
+        case AST_VAR:
+            return (ASTNode){.type = type, .var = {.name = NULL, .value = NULL}};
 
         case NODE_COUNT:
             [[fallthrough]];

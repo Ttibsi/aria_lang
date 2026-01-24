@@ -11,6 +11,7 @@ typedef enum {
     AST_BLOCK,
     AST_ERR,
     AST_EXPR,
+    AST_IDENT,
     AST_IF,
     AST_FUNC,
     AST_CALL,
@@ -92,6 +93,7 @@ typedef struct _ASTNode {
         int num_literal;
         char* string_literal;
         char char_literal;
+        char* identifier;
     };
 } ASTNode;
 
