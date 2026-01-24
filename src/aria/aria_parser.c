@@ -64,6 +64,8 @@ ASTNode parseBlock(AriaLexer* L) {
     ASTNode node = ariaCreateNode(AST_BLOCK);
 
     while (!check(L, TOK_END)) {
+        // ellipses aren't parsed but force the end of the block
+        if (check(L, TOK_ELLIPSIS)) { break; }
         ASTNode stmt = parseStatement(L);
         nob_da_append(&node.block, stmt);
     }

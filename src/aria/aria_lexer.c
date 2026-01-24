@@ -104,7 +104,6 @@ AriaToken scanToken(AriaLexer* L) {
     if (c == '\0') { return makeToken(TOK_EOF, start, 0); }
     switch (c) {
             // clang-format off
-        case '.': advanceChar(L); return makeToken(TOK_DOT, start, 1);
         case ',': advanceChar(L); return makeToken(TOK_COMMA, start, 1);
         case ';': advanceComment(L); return makeToken(TOK_COUNT, 0, 0);
         case ':': advanceChar(L); return makeToken(TOK_COLON, start, 1);
@@ -134,6 +133,15 @@ AriaToken scanToken(AriaLexer* L) {
                 advanceChar(L);
                 return makeToken(TOK_OR, start, 2);
             }
+            break;
+        case '.':
+            advanceChar(L);
+            if (peek(L) == '.' && L->source[L->pc+1] == '.') {
+                advanceChar(L);
+                advanceChar(L);
+                return makeToken(TOK_ELLIPSIS, start, 3);
+            }
+            return makeToken(TOK_DOT, start, 1);
             break;
     }
 
@@ -197,7 +205,7 @@ char getTokenChar(AriaLexer* L, size_t index) {
 }
 
 char* getTokenString(AriaLexer* L, size_t index) {
-    const AriaToken* tkn = &L->items[L->index];
+    const AriaToken* tkn = &L->items[index];
     char* str = malloc(sizeof(char) * tkn->len + 1);
     strncpy(str, L->source + tkn->start, tkn->len);
     str[tkn->len] = '\0';
