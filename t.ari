@@ -35,12 +35,12 @@ FUNC main(argc NUM, argv LIST[STR]) NUM
     END
 
     ; `STEP int` is optional
-    FOR i = 1 TO x STEP 2
+    FOR i = 1 TO x STEP 2 THEN
         ...
     END
 
     ; idx and elem for a list, key and value for a map
-    FOREACH idx, elem IN container
+    FOREACH idx, elem IN container THEN
     END
 
     func_call(param)
