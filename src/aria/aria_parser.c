@@ -63,7 +63,7 @@ binding_t infixBindingPower(const TokenType* tkn) {
 ASTNode parseBlock(AriaLexer* L) {
     ASTNode node = ariaCreateNode(AST_BLOCK);
 
-    while (!check(L, TOK_END)) {
+    while (!check(L, TOK_END) || !check(L, TOK_ELSE)) {
         // ellipses aren't parsed but force the end of the block
         if (check(L, TOK_ELLIPSIS)) { break; }
         ASTNode stmt = parseStatement(L);
@@ -190,6 +190,8 @@ ASTNode parseExpression(AriaLexer* L, const binding_t min_bp, const TokenType en
     ASTNode lhs = {};
 
     switch (getCurrTokenType(L)) {
+        case TOK_ELLIPSIS:
+            return lhs;
         case TOK_NUM_LIT:
             lhs = ariaCreateNode(AST_VALUE);
             lhs.num_literal = getTokenNumber(L, L->index);
@@ -220,7 +222,7 @@ ASTNode parseExpression(AriaLexer* L, const binding_t min_bp, const TokenType en
     while (true) {
         advance(L);
         const TokenType tok_type = getCurrTokenType(L);
-        if (next->type == TOK_RIGHT_PAREN || next->type == endToken) { break; }
+        if (tok_type == TOK_RIGHT_PAREN || tok_type == endToken) { break; }
 
         const binding_t bp = infixBindingPower(&tok_type);
         if (bp < min_bp) { break; }
@@ -255,9 +257,9 @@ ASTNode parseIf(AriaLexer* L) {
     if (!(match(L, TOK_THEN))) { parsingError("No THEN keyword found"); }
     ifNode.If.block = malloc(sizeof(ASTNode));
     *ifNode.If.block = parseBlock(L);
+    advance(L);
 
-    if (check(L, TOK_ELSE)) {
-        advance(L);
+    if (match(L, TOK_ELSE)) {
         ifNode.If.elseBlock = malloc(sizeof(ASTNode));
 
         if (check(L, TOK_IF)) {
@@ -318,6 +320,7 @@ ASTNode parseStatement(AriaLexer* L) {
             break;
         case TOK_IF:
             return parseIf(L);
+            advance(L);  // TOK_END
             break;
         case TOK_RET:
             return parseReturn(L);
@@ -421,12 +424,12 @@ ASTNode ariaParse(AriaLexer* L, char* mod_name) {
     module.block.name = mod_name;
 
     while (!check(L, TOK_EOF)) {
-        ASTNode inner = (ASTNode){.type = AST_ERR};
+        ASTNode inner = ERR_NODE;
 
         switch (getCurrTokenType(L)) {
             case TOK_FUNC:
                 inner = parseFunc(L);
-                advance(L);  // TOK_RIGHT_BRACE
+                advance(L);  // TOK_END
                 break;
 
             case TOK_IMPORT:
