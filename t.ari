@@ -41,6 +41,7 @@ FUNC main(argc NUM, argv LIST[STR]) NUM
 
     ; idx and elem for a list, key and value for a map
     FOREACH idx, elem IN container THEN
+        ...
     END
 
     func_call(param)

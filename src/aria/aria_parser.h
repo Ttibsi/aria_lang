@@ -18,7 +18,7 @@ typedef enum {
     AST_IMPORT,
     AST_MODULE,
     AST_RETURN,
-    AST_VALUE,
+    AST_NUM_VALUE,
     AST_VAR,
     AST_STR_LIT,
     AST_NUM_LIT,
