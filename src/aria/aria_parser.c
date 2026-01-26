@@ -17,6 +17,7 @@
 binding_t prefixBindingPower(const TokenType* tkn) {
     switch (*tkn) {
         case TOK_BANG:
+            [[fallthrough]];
         case TOK_MINUS:
             return 8;
             break;
@@ -30,21 +31,29 @@ binding_t prefixBindingPower(const TokenType* tkn) {
 binding_t infixBindingPower(const TokenType* tkn) {
     switch (*tkn) {
         case TOK_DOT:
+            [[fallthrough]];
         case TOK_LEFT_PAREN:
+            [[fallthrough]];
         case TOK_RIGHT_PAREN:
             return 9;
         case TOK_STAR:
+            [[fallthrough]];
         case TOK_SLASH:
             return 7;
         case TOK_PLUS:
+            [[fallthrough]];
         case TOK_MINUS:
             return 6;
         case TOK_GREATER:
+            [[fallthrough]];
         case TOK_GREATER_EQUAL:
+            [[fallthrough]];
         case TOK_LESS:
+            [[fallthrough]];
         case TOK_LESS_EQUAL:
             return 5;
         case TOK_EQUAL_EQUAL:
+            [[fallthrough]];
         case TOK_BANG_EQUAL:
             return 4;
         case TOK_AND:
@@ -63,7 +72,7 @@ binding_t infixBindingPower(const TokenType* tkn) {
 ASTNode parseBlock(AriaLexer* L) {
     ASTNode node = ariaCreateNode(AST_BLOCK);
 
-    while (!check(L, TOK_END) || !check(L, TOK_ELSE)) {
+    while (!(check(L, TOK_END) || check(L, TOK_ELSE))) {
         // ellipses aren't parsed but force the end of the block
         if (match(L, TOK_ELLIPSIS)) { break; }
 
@@ -174,15 +183,12 @@ ASTNode parseFuncCall(AriaLexer* L) {
         nob_sb_append_buf(&arg_name, &L->source[tok->start], tok->len);
         nob_sb_append_null(&arg_name);
         funcNode.funcCall.args[args_idx] = arg_name.items;
+        advance(L);
 
         args_idx++;
         if (check(L, TOK_COMMA)) { advance(L); }  // Skip commas
     }
     advance(L);
-
-    // return type
-    if (!checkType(L)) { parsingError("Function return type not specified\n"); }
-    funcNode.func.ret_type = L->items[L->index].type;
 
     return funcNode;
 }
@@ -226,9 +232,13 @@ ASTNode parseExpression(AriaLexer* L, const binding_t min_bp, const TokenType en
         if (tok_type == TOK_RIGHT_PAREN || tok_type == endToken) { break; }
 
         const binding_t bp = infixBindingPower(&tok_type);
-        if (bp < min_bp) { break; }
         // If the token is anything other than expected, we'll get a bp of 0
-        if (bp == 0) { return lhs; }
+        if (bp == 0) {
+            L->index--;
+            return lhs;
+        }
+
+        if (bp < min_bp) { break; }
         advance(L);
 
         ASTNode rhs = parseExpression(L, bp + 1, endToken);
@@ -263,6 +273,7 @@ ASTNode parseFor(AriaLexer* L) {
 
     node.For.stop = malloc(sizeof(ASTNode));
     *node.For.stop = parseExpression(L, 0, TOK_THEN);
+    if (!check(L, TOK_THEN)) { advance(L); }  // go to TOK_STEP
 
     if (match(L, TOK_STEP)) {
         node.For.step = malloc(sizeof(ASTNode));
@@ -280,13 +291,33 @@ ASTNode parseFor(AriaLexer* L) {
 
 ASTNode parseForEach(AriaLexer* L) {
     if (!(match(L, TOK_FOREACH))) { parsingError("foreach statement invalid"); }
-    ASTNode Node = ariaCreateNode(AST_FOREACH);
+    ASTNode node = ariaCreateNode(AST_FOREACH);
 
-    NOB_UNREACHABLE("FOR EACH TODO");
+    node.ForEach.first_var = malloc(sizeof(ASTNode));
+    *node.ForEach.first_var = parseIdentifier(L);
+    advance(L);
+    match(L, TOK_COMMA);
+
+    node.ForEach.sec_var = malloc(sizeof(ASTNode));
+    *node.ForEach.sec_var = parseIdentifier(L);
+    advance(L);
+    match(L, TOK_IN);
+
+    node.ForEach.container = malloc(sizeof(ASTNode));
+    *node.ForEach.container = parseIdentifier(L);
+    advance(L);
+    match(L, TOK_THEN);
+
+    node.ForEach.block = malloc(sizeof(ASTNode));
+    *node.ForEach.block = parseBlock(L);
+    match(L, TOK_END);
+
+    return node;
 }
 
+// NOTE: Intentionally doesn't swallow TOK_IDENTIFIER
 ASTNode parseIdentifier(AriaLexer* L) {
-    return (ASTNode){.type = AST_IDENT, .identifier = getTokenString(L, L->index)};
+    return (ASTNode){.type = AST_IDENT, .identifier = getTokenString(L, L->index - 1)};
 }
 
 ASTNode parseIf(AriaLexer* L) {
@@ -355,6 +386,37 @@ ASTNode parseReturn(AriaLexer* L) {
     return node;
 }
 
+ASTNode parseMethodCall(AriaLexer* L) {
+    if (!check(L, TOK_IDENTIFIER)) { parsingError("Can't parse method"); }
+    ASTNode node = ariaCreateNode(AST_METHOD_CALL);
+
+    const AriaToken* tok = &L->items[L->index];
+    Nob_String_Builder name = {0};
+    nob_sb_append_buf(&name, &L->source[tok->start], tok->len);
+    nob_sb_append_null(&name);
+    node.methodCall.object = name.items;
+    advance(L);
+
+    if (!match(L, TOK_DOT)) { parsingError("No dot found in method call"); }
+
+    node.methodCall.method = malloc(sizeof(ASTNode));
+    *node.methodCall.method = parseFuncCall(L);
+
+    return node;
+}
+
+ASTNode parseFuncMethodCall(AriaLexer* L) {
+    if (!check(L, TOK_IDENTIFIER)) { parsingError("Can't parse call"); }
+
+    if (L->items[L->index + 1].type == TOK_DOT) {
+        return parseMethodCall(L);
+    } else if (L->items[L->index + 1].type == TOK_LEFT_PAREN) {
+        return parseFuncCall(L);
+    }
+
+    NOB_UNREACHABLE("Error parsing func/method call");
+}
+
 ASTNode parseStatement(AriaLexer* L) {
     AriaToken* tkn = &L->items[L->index];
     switch (tkn->type) {
@@ -375,7 +437,7 @@ ASTNode parseStatement(AriaLexer* L) {
             return parseVar(L);
             break;
         case TOK_IDENTIFIER:
-            return parseIdentifier(L);
+            return parseFuncMethodCall(L);
             break;
         default:
             parsingError("Incorrect token found in parseStatement (default)\n");
@@ -471,6 +533,9 @@ ASTNode ariaCreateNode(const NodeType type) {
                 .type = type,
                 .ForEach = {.first_var = NULL, .sec_var = NULL, .container = NULL, .block = NULL}};
 
+        case AST_METHOD_CALL:
+            return (ASTNode){.type = type, .methodCall = {.object = NULL, .method = NULL}};
+
         case NODE_COUNT:
             [[fallthrough]];
         default:
@@ -510,6 +575,7 @@ ASTNode ariaParse(AriaLexer* L, char* mod_name) {
         nob_da_append(&module.block, inner);
     }
 
+    printf("Module %s parsing complete\n", mod_name);
     return module;
 }
 
