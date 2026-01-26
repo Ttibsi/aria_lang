@@ -65,7 +65,8 @@ ASTNode parseBlock(AriaLexer* L) {
 
     while (!check(L, TOK_END) || !check(L, TOK_ELSE)) {
         // ellipses aren't parsed but force the end of the block
-        if (check(L, TOK_ELLIPSIS)) { break; }
+        if (match(L, TOK_ELLIPSIS)) { break; }
+
         ASTNode stmt = parseStatement(L);
         nob_da_append(&node.block, stmt);
     }
@@ -269,15 +270,19 @@ ASTNode parseFor(AriaLexer* L) {
         advance(L);
     }
 
+    match(L, TOK_THEN);
     node.For.block = malloc(sizeof(ASTNode));
     *node.For.block = parseBlock(L);
 
+    match(L, TOK_END);
     return node;
 }
 
 ASTNode parseForEach(AriaLexer* L) {
     if (!(match(L, TOK_FOREACH))) { parsingError("foreach statement invalid"); }
     ASTNode Node = ariaCreateNode(AST_FOREACH);
+
+    NOB_UNREACHABLE("FOR EACH TODO");
 }
 
 ASTNode parseIdentifier(AriaLexer* L) {
@@ -294,7 +299,6 @@ ASTNode parseIf(AriaLexer* L) {
     if (!(match(L, TOK_THEN))) { parsingError("No THEN keyword found"); }
     ifNode.If.block = malloc(sizeof(ASTNode));
     *ifNode.If.block = parseBlock(L);
-    advance(L);
 
     if (match(L, TOK_ELSE)) {
         ifNode.If.elseBlock = malloc(sizeof(ASTNode));
@@ -303,10 +307,11 @@ ASTNode parseIf(AriaLexer* L) {
             *ifNode.If.elseBlock = parseIf(L);
         } else {
             *ifNode.If.elseBlock = parseBlock(L);
-            advance(L);
         }
     }
 
+    // not always at a TOK_END if we have ELSE/IFs, so we only advance if we're at one
+    match(L, TOK_END);
     return ifNode;
 }
 
