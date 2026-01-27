@@ -26,6 +26,7 @@ typedef enum {
     AST_FOR,
     AST_FOREACH,
     AST_METHOD_CALL,
+    AST_TYPE,
 
     NODE_COUNT
 } NodeType;
@@ -108,6 +109,21 @@ typedef struct _ASTNode {
 
         struct {
             char* name;
+            struct {
+                struct _ASTNode* items;
+                size_t count;
+                size_t capacity;
+            } Vars;
+
+            struct {
+                struct _ASTNode* items;
+                size_t count;
+                size_t capacity;
+            } Methods;
+        } Type;
+
+        struct {
+            char* name;
             TokenType ret_type;
             struct _ASTNode* value;
         } var;
@@ -126,7 +142,7 @@ binding_t prefixBindingPower(const TokenType* tkn);
 binding_t infixBindingPower(const TokenType* tkn);
 ASTNode parseBlock(AriaLexer* L);
 ASTNode parseFunc(AriaLexer* L);
-ASTNode parseExpression(AriaLexer* L, const binding_t min_bp, const TokenType endToken);
+ASTNode parseExpression(AriaLexer* L, const binding_t min_bp);
 ASTNode parseFor(AriaLexer* L);
 ASTNode parseIdentifier(AriaLexer* L);
 ASTNode parseIf(AriaLexer* L);
