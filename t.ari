@@ -6,10 +6,10 @@ IMPORT module
 ; container types: list[type], map[key, value]
 
 TYPE name
-    VAR foo TYPE
-    VAR bar TYPE = val
+    VAR foo BOOL
+    VAR bar STR = "text"
 
-    FUNC f_name(arg, arg) NIL
+    FUNC f_name(arg1 NUM, arg2 CHAR) NIL
         ...
     END
 
@@ -18,7 +18,7 @@ TYPE name
         ...
     END
 
-    FUNC _constructor_(arg) NIL
+    FUNC _constructor_(arg BOOL) NIL
         this.foo = arg
     END
 END
