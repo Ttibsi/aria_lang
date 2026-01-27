@@ -137,6 +137,7 @@ void advance(AriaLexer* L);
 bool check(AriaLexer* L, const TokenType type);
 bool match(AriaLexer* L, const TokenType type);
 bool checkType(AriaLexer* L);
+bool isKeyword(const TokenType type);
 TokenType getCurrTokenType(AriaLexer* L);
 int getTokenNumber(AriaLexer* L, size_t index);
 char getTokenChar(AriaLexer* L, size_t index);

@@ -174,8 +174,17 @@ bool checkType(AriaLexer* L) {
         curType == TOK_NUM  ||
         curType == TOK_STR  ||
         curType == TOK_LIST ||
-        curType == TOK_MAP
+        curType == TOK_MAP  ||
+        curType == TOK_NIL
     ) { return true; }
+
+    return false;
+}
+
+bool isKeyword(const TokenType type) {
+    for (int i = 0; i < keyword_count; i++) {
+        if (keywords[i].tok == type) { return true; }
+    }
 
     return false;
 }
