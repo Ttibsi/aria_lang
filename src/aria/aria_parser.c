@@ -157,6 +157,7 @@ ASTNode parseFunc(AriaLexer* L) {
     *body = parseBlock(L);
     funcNode.func.body = body;
 
+    match(L, TOK_END);
     return funcNode;
 }
 
@@ -209,10 +210,7 @@ ASTNode parseExpression(AriaLexer* L, const binding_t min_bp) {
             if (L->items[L->index + 1].type == TOK_LEFT_PAREN) {
                 lhs = parseFuncCall(L);
             } else {
-                if (L->items[L->index + 1].type == TOK_DOT) {
-                } else {
-                    lhs = parseIdentifier(L);
-                }
+                lhs = parseIdentifier(L);
             }
             break;
         case TOK_ELLIPSIS:
@@ -271,12 +269,12 @@ ASTNode parseFor(AriaLexer* L) {
 
     node.For.start = malloc(sizeof(ASTNode));
     *node.For.start = parseExpression(L, 0);
+    advance(L);  // to TOK_TO
     if (!(match(L, TOK_TO))) { parsingError("for loop startpoint invalid"); }
-    advance(L);  // goes to actual stop section
 
     node.For.stop = malloc(sizeof(ASTNode));
     *node.For.stop = parseExpression(L, 0);
-    if (!check(L, TOK_THEN)) { advance(L); }  // go to TOK_STEP
+    advance(L);
 
     if (match(L, TOK_STEP)) {
         node.For.step = malloc(sizeof(ASTNode));
@@ -393,11 +391,6 @@ ASTNode parseMethodCall(AriaLexer* L) {
     if (!check(L, TOK_IDENTIFIER)) { parsingError("Can't parse method"); }
     ASTNode node = ariaCreateNode(AST_METHOD_CALL);
 
-    const AriaToken* tok = &L->items[L->index];
-    Nob_String_Builder name = {0};
-    nob_sb_append_buf(&name, &L->source[tok->start], tok->len);
-    nob_sb_append_null(&name);
-    node.methodCall.object = name.items;
     advance(L);
 
     if (!match(L, TOK_DOT)) { parsingError("No dot found in method call"); }
@@ -412,20 +405,34 @@ ASTNode parseMethodCallOrAttr(AriaLexer* L) {
     // TOK_IDENT TOK_DOT TOK_IDENT TOK_LEFT_PARAM
     if (L->items[L->index + 3].type == TOK_LEFT_PAREN) { return parseMethodCall(L); }
 
-    // TODO: This doesn't really have a stop point
-    return parseExpression(L, 0);
+    ASTNode object_ident = parseIdentifier(L);
+    match(L, TOK_IDENTIFIER);
+    match(L, TOK_DOT);
+
+    ASTNode assign = parseAssignment(L);
+    assign.assign.object_ident = malloc(sizeof(ASTNode));
+    *assign.assign.object_ident = object_ident;
+
+    return assign;
 }
 
-ASTNode parseFuncMethodCall(AriaLexer* L) {
-    if (!check(L, TOK_IDENTIFIER)) { parsingError("Can't parse call"); }
-
-    if (L->items[L->index + 1].type == TOK_DOT) {
-        return parseMethodCallOrAttr(L);
-    } else if (L->items[L->index + 1].type == TOK_LEFT_PAREN) {
-        return parseFuncCall(L);
+ASTNode parseAssignment(AriaLexer* L) {
+    if (!check(L, TOK_IDENTIFIER)) {
+        parsingError("Assignment statement not starting with identifier");
     }
+    ASTNode node = ariaCreateNode(AST_ASSIGN);
 
-    NOB_UNREACHABLE("Error parsing func/method call");
+    node.assign.ident = malloc(sizeof(ASTNode));
+    *node.assign.ident = parseIdentifier(L);
+    match(L, TOK_IDENTIFIER);
+
+    if (!match(L, TOK_EQUAL)) { parsingError("assignment expression has no = token"); }
+
+    node.assign.expr = malloc(sizeof(ASTNode));
+    *node.assign.expr = parseExpression(L, 0);
+
+    advance(L);
+    return node;
 }
 
 ASTNode parseStatement(AriaLexer* L) {
@@ -448,7 +455,13 @@ ASTNode parseStatement(AriaLexer* L) {
             return parseVar(L);
             break;
         case TOK_IDENTIFIER:
-            return parseFuncMethodCall(L);
+            if (L->items[L->index + 1].type == TOK_DOT) {
+                return parseMethodCallOrAttr(L);
+            } else if (L->items[L->index + 1].type == TOK_EQUAL) {
+                return parseAssignment(L);
+            } else if (L->items[L->index + 1].type == TOK_LEFT_PAREN) {
+                return parseFuncCall(L);
+            }
             break;
         default:
             parsingError("Incorrect token found in parseStatement (default)\n");
@@ -530,6 +543,10 @@ ASTNode ariaCreateNode(const NodeType type) {
         case AST_NUM_LIT:
             return (ASTNode){.type = type, .num_literal = 0};
 
+        case AST_ASSIGN:
+            return (ASTNode){.type = type,
+                             .assign = {.ident = NULL, .object_ident = NULL, .expr = NULL}};
+
         case AST_RETURN:
             return (ASTNode){.type = type};
 
@@ -588,7 +605,6 @@ ASTNode ariaParse(AriaLexer* L, char* mod_name) {
         switch (getCurrTokenType(L)) {
             case TOK_FUNC:
                 inner = parseFunc(L);
-                advance(L);  // TOK_END
                 break;
 
             case TOK_IMPORT:

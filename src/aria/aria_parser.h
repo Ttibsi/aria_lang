@@ -8,6 +8,7 @@
 
 typedef enum {
     AST_ARG,
+    AST_ASSIGN,
     AST_BLOCK,
     AST_ERR,
     AST_EXPR,
@@ -45,6 +46,12 @@ typedef struct _ASTNode {
             TokenType inner_type_1;  // used for LIST and MAP types, ignored otherwise
             TokenType inner_type_2;  // used for MAP type, ignored otherwise
         } arg;
+
+        struct {
+            struct _ASTNode* ident;
+            struct _ASTNode* object_ident;
+            struct _ASTNode* expr;
+        } assign;
 
         struct {
             struct _ASTNode* items;
@@ -149,7 +156,8 @@ ASTNode parseIf(AriaLexer* L);
 ASTNode parseImport(AriaLexer* L);
 ASTNode parseReturn(AriaLexer* L);
 ASTNode parseMethodCall(AriaLexer* L);
-ASTNode parseFuncMethodCall(AriaLexer* L);
+ASTNode parseMethodCallOrAttr(AriaLexer* L);
+ASTNode parseAssignment(AriaLexer* L);
 ASTNode parseStatement(AriaLexer* L);
 ASTNode parseType(AriaLexer* L);
 ASTNode parseVar(AriaLexer* L);
