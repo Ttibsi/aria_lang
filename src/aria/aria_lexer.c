@@ -31,7 +31,7 @@ void skipWhitespace(AriaLexer* L) {
 }
 
 AriaToken scanEqualVariant(AriaLexer* L, TokenType single, TokenType equal, int start) {
-    if (peek(L) == '=') {
+    if (peekNext(L) == '=') {
         advanceChar(L);
         return makeToken(equal, start, 2);
     }
