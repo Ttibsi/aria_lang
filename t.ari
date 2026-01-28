@@ -48,4 +48,6 @@ FUNC main(argc NUM, argv LIST[STR]) NUM
 
     func_call(param)
     object.method_call()
+
+    RET 0
 END
