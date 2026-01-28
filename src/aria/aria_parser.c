@@ -385,24 +385,13 @@ ASTNode parseImport(AriaLexer* L) {
 }
 
 ASTNode parseReturn(AriaLexer* L) {
+    if (!(match(L, TOK_RET))) { parsingError("Return statement invalid"); }
     ASTNode node = ariaCreateNode(AST_RETURN);
-    advance(L);
 
     ASTNode* expr = malloc(sizeof(ASTNode));
     *expr = parseExpression(L, 0);
+    advance(L);
 
-    if (expr->type == AST_EXPR) {
-        node.ret.expr = expr;
-    } else {
-        node.ret.expr = malloc(sizeof(ASTNode));
-        node.ret.expr->type = AST_EXPR;
-        node.ret.expr->expr.lhs = expr;
-        node.ret.expr->expr.rhs = NULL;
-        node.ret.expr->expr.op = expr->type;
-        advance(L);
-    }
-
-    match(L, TOK_SEMICOLON);  // consume semicolon if needed
     return node;
 }
 
