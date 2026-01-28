@@ -9,14 +9,14 @@ TYPE name
     VAR foo BOOL
     VAR bar STR = "text"
 
-    ;FUNC f_name(arg1 NUM, arg2 CHAR) NIL
-    ;    ...
-    ;END
+    FUNC f_name(arg1 NUM, arg2 CHAR) NIL
+        ...
+    END
 
-    ;; overloads use single underscores on either side
-    ;FUNC _add_() NUM
-    ;    ...
-    ;END
+    ; overloads use single underscores on either side
+    FUNC _add_() NUM
+        ...
+    END
 
     FUNC _constructor_(arg BOOL) NIL
         this.foo = arg
