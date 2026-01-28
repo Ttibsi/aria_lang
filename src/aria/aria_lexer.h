@@ -143,6 +143,7 @@ int getTokenNumber(AriaLexer* L, size_t index);
 char getTokenChar(AriaLexer* L, size_t index);
 char* getTokenString(AriaLexer* L, size_t index);
 void ariaTokenize(AriaLexer* L);
+char* tokenStr(const TokenType tok);
 void printTokens(AriaLexer* L);
 
 #endif  // ARIA_LEXER_H

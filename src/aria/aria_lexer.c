@@ -235,6 +235,64 @@ void ariaTokenize(AriaLexer* L) {
     L->pc = 0;
 }
 
+char* tokenStr(const TokenType tok) {
+    switch(tok) {
+        case TOK_LEFT_PAREN: return "TOK_LEFT_PAREN";
+        case TOK_RIGHT_PAREN: return "TOK_RIGHT_PAREN";
+        case TOK_LEFT_SQUACKET: return "TOK_LEFT_SQUACKET";
+        case TOK_RIGHT_SQUACKET: return "TOK_RIGHT_SQUACKET";
+        case TOK_COMMA: return "TOK_COMMA";
+        case TOK_DOT: return "TOK_DOT";
+        case TOK_SEMICOLON: return "TOK_SEMICOLON";
+        case TOK_COLON: return "TOK_COLON";
+        case TOK_MINUS: return "TOK_MINUS";
+        case TOK_PLUS: return "TOK_PLUS";
+        case TOK_SLASH: return "TOK_SLASH";
+        case TOK_STAR: return "TOK_STAR";
+        case TOK_BANG: return "TOK_BANG";
+        case TOK_BANG_EQUAL: return "TOK_BANG_EQUAL";
+        case TOK_EQUAL: return "TOK_EQUAL";
+        case TOK_EQUAL_EQUAL: return "TOK_EQUAL_EQUAL";
+        case TOK_GREATER: return "TOK_GREATER";
+        case TOK_GREATER_EQUAL: return "TOK_GREATER_EQUAL";
+        case TOK_LESS: return "TOK_LESS";
+        case TOK_LESS_EQUAL: return "TOK_LESS_EQUAL";
+        case TOK_AND: return "TOK_AND";
+        case TOK_OR: return "TOK_OR";
+        case TOK_ELLIPSIS: return "TOK_ELLIPSIS";
+        case TOK_BOOL: return "TOK_BOOL";
+        case TOK_CHAR: return "TOK_CHAR";
+        case TOK_ELSE: return "TOK_ELSE";
+        case TOK_END: return "TOK_END";
+        case TOK_FALSE: return "TOK_FALSE";
+        case TOK_FOR: return "TOK_FOR";
+        case TOK_FOREACH: return "TOK_FOREACH";
+        case TOK_FUNC: return "TOK_FUNC";
+        case TOK_IF: return "TOK_IF";
+        case TOK_IMPORT: return "TOK_IMPORT";
+        case TOK_IN: return "TOK_IN";
+        case TOK_LIST: return "TOK_LIST";
+        case TOK_MAP: return "TOK_MAP";
+        case TOK_NIL: return "TOK_NIL";
+        case TOK_NUM: return "TOK_NUM";
+        case TOK_RET: return "TOK_RET";
+        case TOK_STEP: return "TOK_STEP";
+        case TOK_STR: return "TOK_STR";
+        case TOK_THEN: return "TOK_THEN";
+        case TOK_TO: return "TOK_TO";
+        case TOK_TRUE: return "TOK_TRUE";
+        case TOK_TYPE: return "TOK_TYPE";
+        case TOK_VAR: return "TOK_VAR";
+        case TOK_IDENTIFIER: return "TOK_IDENTIFIER";
+        case TOK_STRING_LIT: return "TOK_STRING_LIT";
+        case TOK_CHAR_LIT: return "TOK_CHAR_LIT";
+        case TOK_NUM_LIT: return "TOK_NUM_LIT";
+        case TOK_ERROR: return "TOK_ERROR";
+        case TOK_EOF: return "TOK_EOF";
+        case TOK_COUNT: return "";
+    };
+}
+
 void printTokens(AriaLexer* L) {
     printf("=== TOKENS ===\n");
     nob_da_foreach(AriaToken, x, L) {
