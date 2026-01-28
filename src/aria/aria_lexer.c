@@ -33,8 +33,11 @@ void skipWhitespace(AriaLexer* L) {
 AriaToken scanEqualVariant(AriaLexer* L, TokenType single, TokenType equal, int start) {
     if (peekNext(L) == '=') {
         advanceChar(L);
+        advanceChar(L);
         return makeToken(equal, start, 2);
     }
+
+    advanceChar(L);
     return makeToken(single, start, 1);
 }
 
@@ -115,10 +118,10 @@ AriaToken scanToken(AriaLexer* L) {
         case ']': advanceChar(L); return makeToken(TOK_RIGHT_SQUACKET, start, 1);
         case '(': advanceChar(L); return makeToken(TOK_LEFT_PAREN, start, 1);
         case ')': advanceChar(L); return makeToken(TOK_RIGHT_PAREN, start, 1);
-        case '!': advanceChar(L); return scanEqualVariant(L, TOK_BANG, TOK_BANG_EQUAL, start);
-        case '=': advanceChar(L); return scanEqualVariant(L, TOK_EQUAL, TOK_EQUAL_EQUAL, start);
-        case '<': advanceChar(L); return scanEqualVariant(L, TOK_LESS, TOK_LESS_EQUAL, start);
-        case '>': advanceChar(L); return scanEqualVariant(L, TOK_GREATER, TOK_GREATER_EQUAL, start);
+        case '!': return scanEqualVariant(L, TOK_BANG, TOK_BANG_EQUAL, start);
+        case '=': return scanEqualVariant(L, TOK_EQUAL, TOK_EQUAL_EQUAL, start);
+        case '<': return scanEqualVariant(L, TOK_LESS, TOK_LESS_EQUAL, start);
+        case '>': return scanEqualVariant(L, TOK_GREATER, TOK_GREATER_EQUAL, start);
         case '"': return scanStringLiteral(L, start);
         case '&':
             if (peek(L) == '&') {
