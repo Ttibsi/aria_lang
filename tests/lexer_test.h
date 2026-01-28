@@ -1,5 +1,3 @@
-#include <stdbool.h>
-
 #include "aria/aria_lexer.h"
 #include "onetest.h"
 
@@ -238,7 +236,8 @@ static inline int test_match(void) {
     return 0;
 }
 
-static inline int test_checkType(evoid) { return 1; }
+static inline int test_checkType(void) { return 1; }
+static inline int test_isKeyword(void) { return 1; }
 
 static inline int test_getCurrTokenType(void) {
     AriaLexer L = {0};
