@@ -10,24 +10,23 @@ typedef enum {
     AST_ARG,
     AST_ASSIGN,
     AST_BLOCK,
+    AST_CALL,
+    AST_CHAR_LIT,
     AST_ERR,
     AST_EXPR,
-    AST_IDENT,
-    AST_IF,
-    AST_FUNC,
-    AST_CALL,
-    AST_IMPORT,
-    AST_MODULE,
-    AST_RETURN,
-    AST_NUM_VALUE,
-    AST_VAR,
-    AST_STR_LIT,
-    AST_NUM_LIT,
-    AST_CHAR_LIT,
     AST_FOR,
     AST_FOREACH,
+    AST_FUNC,
+    AST_IDENT,
+    AST_IF,
+    AST_IMPORT,
     AST_METHOD_CALL,
+    AST_MODULE,
+    AST_NUM_LIT,
+    AST_RETURN,
+    AST_STR_LIT,
     AST_TYPE,
+    AST_VAR,
 
     NODE_COUNT
 } NodeType;
@@ -95,11 +94,6 @@ typedef struct _ASTNode {
         } funcCall;
 
         struct {
-            char* object;
-            struct _ASTNode* method;  // ptr to funcCall object
-        } methodCall;
-
-        struct {
             struct _ASTNode* cond;
             struct _ASTNode* block;
             struct _ASTNode* elseBlock;
@@ -109,6 +103,11 @@ typedef struct _ASTNode {
             bool local_file;
             char* name;
         } import;
+
+        struct {
+            char* object;
+            struct _ASTNode* method;  // ptr to funcCall object
+        } methodCall;
 
         struct {
             struct _ASTNode* expr;

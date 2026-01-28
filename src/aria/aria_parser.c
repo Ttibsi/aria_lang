@@ -535,42 +535,29 @@ ASTNode parseVar(AriaLexer* L) {
 
 ASTNode ariaCreateNode(const NodeType type) {
     switch (type) {
-        case AST_BLOCK:
-            [[fallthrough]];
-        case AST_MODULE:
-            return (ASTNode){.type = type, .block = {.name = NULL}};
-
-        case AST_NUM_LIT:
-            return (ASTNode){.type = type, .num_literal = 0};
-
-        case AST_ASSIGN:
-            return (ASTNode){.type = type,
-                             .assign = {.ident = NULL, .object_ident = NULL, .expr = NULL}};
-
-        case AST_RETURN:
-            return (ASTNode){.type = type};
-
-        case AST_IF:
-            return (ASTNode){.type = type, .If = {.cond = NULL, .block = NULL, .elseBlock = NULL}};
-
-        case AST_IMPORT:
-            return (ASTNode){.type = type, .import = {.local_file = false, .name = NULL}};
-
         case AST_ARG:
             return (ASTNode){.type = type,
                              .arg = {
                                  .name = NULL,
                              }};
 
-        case AST_FUNC:
-            return (ASTNode){.type = type, .func = {.name = NULL, .body = NULL}};
+        case AST_ASSIGN:
+            return (ASTNode){.type = type,
+                             .assign = {.ident = NULL, .object_ident = NULL, .expr = NULL}};
+
+        case AST_BLOCK:
+            [[fallthrough]];
+        case AST_MODULE:
+            return (ASTNode){.type = type, .block = {.name = NULL}};
+
         case AST_CALL:
             return (ASTNode){.type = type, .funcCall = {.name = NULL}};
+
+        case AST_CHAR_LIT:
+            return (ASTNode){.type = type, .char_literal = '\0'};
+
         case AST_EXPR:
             return (ASTNode){.type = type, .expr = {.lhs = NULL, .rhs = NULL}};
-
-        case AST_VAR:
-            return (ASTNode){.type = type, .var = {.name = NULL, .value = NULL}};
 
         case AST_FOR:
             return (ASTNode){
@@ -582,11 +569,32 @@ ASTNode ariaCreateNode(const NodeType type) {
                 .type = type,
                 .ForEach = {.first_var = NULL, .sec_var = NULL, .container = NULL, .block = NULL}};
 
+        case AST_FUNC:
+            return (ASTNode){.type = type, .func = {.name = NULL, .body = NULL}};
+
+        case AST_IF:
+            return (ASTNode){.type = type, .If = {.cond = NULL, .block = NULL, .elseBlock = NULL}};
+
+        case AST_IMPORT:
+            return (ASTNode){.type = type, .import = {.local_file = false, .name = NULL}};
+
         case AST_METHOD_CALL:
             return (ASTNode){.type = type, .methodCall = {.object = NULL, .method = NULL}};
 
+        case AST_NUM_LIT:
+            return (ASTNode){.type = type, .num_literal = 0};
+
+        case AST_RETURN:
+            return (ASTNode){.type = type};
+
+        case AST_STR_LIT:
+            return (ASTNode){.type = type, .string_literal = ""};
+
         case AST_TYPE:
             return (ASTNode){.type = type, .Type = {.name = NULL}};
+
+        case AST_VAR:
+            return (ASTNode){.type = type, .var = {.name = NULL, .value = NULL}};
 
         case NODE_COUNT:
             [[fallthrough]];
