@@ -69,20 +69,6 @@ binding_t infixBindingPower(const TokenType* tkn) {
     return 0;
 }
 
-ASTNode parseBlock(AriaLexer* L) {
-    ASTNode node = ariaCreateNode(AST_BLOCK);
-
-    while (!(check(L, TOK_END) || check(L, TOK_ELSE))) {
-        // ellipses aren't parsed but force the end of the block
-        if (match(L, TOK_ELLIPSIS)) { break; }
-
-        ASTNode stmt = parseStatement(L);
-        nob_da_append(&node.block, stmt);
-    }
-
-    return node;
-}
-
 ASTNode* parseArg(AriaLexer* L) {
     ASTNode* node = malloc(sizeof(ASTNode));
 
@@ -116,6 +102,39 @@ ASTNode* parseArg(AriaLexer* L) {
         }
 
         if (!match(L, TOK_RIGHT_SQUACKET)) { parsingError("Malformed container type"); }
+    }
+
+    return node;
+}
+
+ASTNode parseAssignment(AriaLexer* L) {
+    if (!check(L, TOK_IDENTIFIER)) {
+        parsingError("Assignment statement not starting with identifier");
+    }
+    ASTNode node = ariaCreateNode(AST_ASSIGN);
+
+    node.assign.ident = malloc(sizeof(ASTNode));
+    *node.assign.ident = parseIdentifier(L);
+    match(L, TOK_IDENTIFIER);
+
+    if (!match(L, TOK_EQUAL)) { parsingError("assignment expression has no = token"); }
+
+    node.assign.expr = malloc(sizeof(ASTNode));
+    *node.assign.expr = parseExpression(L, 0);
+
+    advance(L);
+    return node;
+}
+
+ASTNode parseBlock(AriaLexer* L) {
+    ASTNode node = ariaCreateNode(AST_BLOCK);
+
+    while (!(check(L, TOK_END) || check(L, TOK_ELSE))) {
+        // ellipses aren't parsed but force the end of the block
+        if (match(L, TOK_ELLIPSIS)) { break; }
+
+        ASTNode stmt = parseStatement(L);
+        nob_da_append(&node.block, stmt);
     }
 
     return node;
@@ -414,25 +433,6 @@ ASTNode parseMethodCallOrAttr(AriaLexer* L) {
     *assign.assign.object_ident = object_ident;
 
     return assign;
-}
-
-ASTNode parseAssignment(AriaLexer* L) {
-    if (!check(L, TOK_IDENTIFIER)) {
-        parsingError("Assignment statement not starting with identifier");
-    }
-    ASTNode node = ariaCreateNode(AST_ASSIGN);
-
-    node.assign.ident = malloc(sizeof(ASTNode));
-    *node.assign.ident = parseIdentifier(L);
-    match(L, TOK_IDENTIFIER);
-
-    if (!match(L, TOK_EQUAL)) { parsingError("assignment expression has no = token"); }
-
-    node.assign.expr = malloc(sizeof(ASTNode));
-    *node.assign.expr = parseExpression(L, 0);
-
-    advance(L);
-    return node;
 }
 
 ASTNode parseStatement(AriaLexer* L) {

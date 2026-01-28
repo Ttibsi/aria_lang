@@ -146,17 +146,20 @@ typedef struct _ASTNode {
 
 binding_t prefixBindingPower(const TokenType* tkn);
 binding_t infixBindingPower(const TokenType* tkn);
+ASTNode* parseArg(AriaLexer* L);
+ASTNode parseAssignment(AriaLexer* L);
 ASTNode parseBlock(AriaLexer* L);
 ASTNode parseFunc(AriaLexer* L);
+ASTNode parseFuncCall(AriaLexer* L);
 ASTNode parseExpression(AriaLexer* L, const binding_t min_bp);
 ASTNode parseFor(AriaLexer* L);
+ASTNode parseForEach(AriaLexer* L);
 ASTNode parseIdentifier(AriaLexer* L);
 ASTNode parseIf(AriaLexer* L);
 ASTNode parseImport(AriaLexer* L);
 ASTNode parseReturn(AriaLexer* L);
 ASTNode parseMethodCall(AriaLexer* L);
 ASTNode parseMethodCallOrAttr(AriaLexer* L);
-ASTNode parseAssignment(AriaLexer* L);
 ASTNode parseStatement(AriaLexer* L);
 ASTNode parseType(AriaLexer* L);
 ASTNode parseVar(AriaLexer* L);
