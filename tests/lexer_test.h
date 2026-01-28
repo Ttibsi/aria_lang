@@ -236,8 +236,24 @@ static inline int test_match(void) {
     return 0;
 }
 
-static inline int test_checkType(void) { return 1; }
-static inline int test_isKeyword(void) { return 1; }
+static inline int test_checkType(void) {
+    AriaLexer L = {0};
+    ariaLexerInit(&L, "BOOL foo");
+    ariaTokenize(&L);
+
+    onetest_assert(checkType(&L));
+    advance(&L);
+    onetest_assert(!checkType(&L));
+
+    return 0;
+}
+
+static inline int test_isKeyword(void) {
+    onetest_assert(isKeyword(TOK_FOREACH));
+    onetest_assert(isKeyword(TOK_VAR));
+    onetest_assert(!isKeyword(TOK_NUM_LIT));
+    return 0;
+}
 
 static inline int test_getCurrTokenType(void) {
     AriaLexer L = {0};
