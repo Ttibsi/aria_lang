@@ -71,6 +71,7 @@ binding_t infixBindingPower(const TokenType* tkn) {
 
 ASTNode* parseArg(AriaLexer* L) {
     ASTNode* node = malloc(sizeof(ASTNode));
+    node->type = AST_ARG;
 
     // name
     const AriaToken* tok = &L->items[L->index];
@@ -82,10 +83,10 @@ ASTNode* parseArg(AriaLexer* L) {
 
     // type
     if (!checkType(L)) { parsingError("Type not defined for argument"); }
-    node->type = L->items[L->index].type;
+    node->arg.type = L->items[L->index].type;
     advance(L);
 
-    if (node->type == TOK_LIST || node->type == TOK_MAP) {
+    if (node->arg.type == TOK_LIST || node->arg.type == TOK_MAP) {
         if (!match(L, TOK_LEFT_SQUACKET)) {
             parsingError("Container type doesn't define contents types");
         }
@@ -188,7 +189,7 @@ ASTNode parseFuncCall(AriaLexer* L) {
     Nob_String_Builder name = {0};
     nob_sb_append_buf(&name, &L->source[tok->start], tok->len);
     nob_sb_append_null(&name);
-    funcNode.func.name = name.items;
+    funcNode.funcCall.name = name.items;
     advance(L);
 
     // arguments
@@ -214,36 +215,37 @@ ASTNode parseFuncCall(AriaLexer* L) {
 }
 
 ASTNode parseExpression(AriaLexer* L, const binding_t min_bp) {
-    ASTNode lhs = {};
+    ASTNode node = ariaCreateNode(AST_EXPR);
+    node.expr.lhs = malloc(sizeof(ASTNode));
 
     switch (getCurrTokenType(L)) {
         case TOK_NUM_LIT:
-            lhs = ariaCreateNode(AST_NUM_LIT);
-            lhs.num_literal = getTokenNumber(L, L->index);
+            *node.expr.lhs = ariaCreateNode(AST_NUM_LIT);
+            node.expr.lhs->num_literal = getTokenNumber(L, L->index);
             break;
         case TOK_LEFT_PAREN:
             advance(L);
-            lhs = parseExpression(L, 0);
+            *node.expr.lhs = parseExpression(L, 0);
             break;
         case TOK_IDENTIFIER:
             if (L->items[L->index + 1].type == TOK_LEFT_PAREN) {
-                lhs = parseFuncCall(L);
+                *node.expr.lhs = parseFuncCall(L);
             } else {
-                lhs = parseIdentifier(L);
+                *node.expr.lhs = parseIdentifier(L);
             }
             break;
         case TOK_ELLIPSIS:
             [[fallthrough]];
         default:
             parsingError("Unknown token found (parseExpression LHS): %d", getCurrTokenType(L));
-            return lhs;
+            return node;
     };
 
     const AriaToken* next = &L->items[L->index + 1];
     if (next->type == TOK_EOF) {
         parsingError("EOF reached when parsing an expression");
     } else if (next->type == TOK_RIGHT_PAREN || isKeyword(next->type)) {
-        return lhs;
+        return node;
     }
 
     while (true) {
@@ -255,26 +257,18 @@ ASTNode parseExpression(AriaLexer* L, const binding_t min_bp) {
         // If the token is anything other than expected, we'll get a bp of 0
         if (bp == 0) {
             L->index--;
-            return lhs;
+            return node;
         }
 
         if (bp < min_bp) { break; }
         advance(L);
 
-        ASTNode rhs = parseExpression(L, bp + 1);
-
-        ASTNode* lhs_ptr = malloc(sizeof(ASTNode));
-        ASTNode* rhs_ptr = malloc(sizeof(ASTNode));
-        *lhs_ptr = lhs;
-        *rhs_ptr = rhs;
-
-        lhs = ariaCreateNode(AST_EXPR);
-        lhs.expr.op = tok_type;
-        lhs.expr.lhs = lhs_ptr;
-        lhs.expr.rhs = rhs_ptr;
+        node.expr.rhs = malloc(sizeof(ASTNode));
+        *node.expr.rhs = parseExpression(L, bp + 1);
+        node.expr.op = tok_type;
     }
 
-    return lhs;
+    return node;
 }
 
 ASTNode parseFor(AriaLexer* L) {
@@ -388,8 +382,8 @@ ASTNode parseReturn(AriaLexer* L) {
     if (!(match(L, TOK_RET))) { parsingError("Return statement invalid"); }
     ASTNode node = ariaCreateNode(AST_RETURN);
 
-    ASTNode* expr = malloc(sizeof(ASTNode));
-    *expr = parseExpression(L, 0);
+    node.ret.expr = malloc(sizeof(ASTNode));
+    *node.ret.expr = parseExpression(L, 0);
     advance(L);
 
     return node;
@@ -399,6 +393,11 @@ ASTNode parseMethodCall(AriaLexer* L) {
     if (!check(L, TOK_IDENTIFIER)) { parsingError("Can't parse method"); }
     ASTNode node = ariaCreateNode(AST_METHOD_CALL);
 
+    const AriaToken* tok = &L->items[L->index];
+    Nob_String_Builder name = {0};
+    nob_sb_append_buf(&name, &L->source[tok->start], tok->len);
+    nob_sb_append_null(&name);
+    node.methodCall.object = name.items;
     advance(L);
 
     if (!match(L, TOK_DOT)) { parsingError("No dot found in method call"); }
@@ -559,7 +558,7 @@ ASTNode ariaCreateNode(const NodeType type) {
                 .ForEach = {.first_var = NULL, .sec_var = NULL, .container = NULL, .block = NULL}};
 
         case AST_FUNC:
-            return (ASTNode){.type = type, .func = {.name = NULL, .body = NULL}};
+            return (ASTNode){.type = type, .func = {.name = NULL, .args = {}, .body = NULL}};
 
         case AST_IF:
             return (ASTNode){.type = type, .If = {.cond = NULL, .block = NULL, .elseBlock = NULL}};
@@ -623,23 +622,25 @@ ASTNode ariaParse(AriaLexer* L, char* mod_name) {
         nob_da_append(&module.block, inner);
     }
 
-    printf("Module %s parsing complete\n", mod_name);
     return module;
 }
 
 // Recursive impl for printing nodes
 void printASTNode(const ASTNode* n, int offset) {
-    printf("%*s\n", offset, "");
+    printf("%*s", offset, "");
 
     switch (n->type) {
         case AST_ARG:
-            printf("@arg[%s]\n", n->arg.name);
+            printf("@arg[ %s ]\n", n->arg.name);
             break;
 
-        case AST_MODULE:
-            printf("@module[\n");
-            printf("%*sModule name:%s\n", offset + 2, "", n->block.name);
-            nob_da_foreach(ASTNode, inner, &n->block) { printASTNode(inner, offset + 2); }
+        case AST_ASSIGN:
+            printf("@assign[\n");
+            if (n->assign.object_ident != NULL) {
+                printASTNode(n->assign.object_ident, offset + 2);
+            }
+            printASTNode(n->assign.ident, offset + 2);
+            printASTNode(n->assign.expr, offset + 2);
             printf("%*s]\n", offset, "");
             break;
 
@@ -649,12 +650,29 @@ void printASTNode(const ASTNode* n, int offset) {
             printf("%*s]\n", offset, "");
             break;
 
+        case AST_CALL:
+            printf("@func_call[\n");
+            printf("%*sfunc name: %s\n", offset + 2, "", n->funcCall.name);
+
+            // args
+            for (size_t i = 0; i < param_count; i++) {
+                if (n->funcCall.args[i] == 0) { break; }
+                printf("%*s@arg[ %s ]\n", offset + 2, "", n->funcCall.args[i]);
+            }
+
+            printf("%*s]\n", offset, "");
+            break;
+
+        case AST_CHAR_LIT:
+            printf("@char_lit[ %c ]\n", n->char_literal);
+            break;
+
         case AST_ERR:
             printf("@error\n");
             break;
 
         case AST_EXPR:
-            printf("@expr[");
+            printf("@expr[\n");
             printASTNode(n->expr.lhs, offset + 2);
 
             if (n->expr.rhs != NULL) {
@@ -664,19 +682,78 @@ void printASTNode(const ASTNode* n, int offset) {
             printf("%*s]\n", offset, "");
             break;
 
+        case AST_FOR:
+            printf("@for[\n");
+            printASTNode(n->For.var, offset + 2);
+            printASTNode(n->For.start, offset + 2);
+            printASTNode(n->For.stop, offset + 2);
+
+            if (n->For.step != NULL) { printASTNode(n->For.step, offset + 2); }
+
+            printASTNode(n->For.block, offset + 2);
+            printf("%*s]\n", offset, "");
+            break;
+
+        case AST_FOREACH:
+            printf("@foreach[\n");
+            printASTNode(n->ForEach.first_var, offset + 2);
+            printASTNode(n->ForEach.sec_var, offset + 2);
+            printASTNode(n->ForEach.container, offset + 2);
+            printASTNode(n->ForEach.block, offset + 2);
+            printf("%*s]\n", offset, "");
+            break;
+
         case AST_FUNC:
             printf("@func[\n");
             printf("%*sfunc name: %s\n", offset + 2, "", n->func.name);
 
-            // TODO: args
-            // TODO: ret type
-            // TODO: block
+            // args
+            for (size_t i = 0; i < param_count; i++) {
+                if (n->func.args[i] == 0) { break; }
+                printASTNode(n->func.args[i], offset + 2);
+            }
+
+            printf("%*sReturn type: %s\n", offset + 2, "", tokenStr(n->func.ret_type));
+
+            // block
+            printASTNode(n->func.body, offset + 2);
+            printf("%*s]\n", offset, "");
+            break;
+
+        case AST_IDENT:
+            printf("@identifier[ %s ]\n", n->string_literal);
+            break;
+
+        case AST_IF:
+            printf("@if[\n");
+            printASTNode(n->If.cond, offset + 2);
+            printASTNode(n->If.block, offset + 2);
+
+            if (n->If.elseBlock != NULL) { printASTNode(n->If.elseBlock, offset + 2); }
 
             printf("%*s]\n", offset, "");
             break;
 
         case AST_IMPORT:
-            printf("@import[%s]\n", n->import.name);
+            printf("@import[ %s ]\n", n->import.name);
+            break;
+
+        case AST_METHOD_CALL:
+            printf("@method call[\n");
+            printf("%*sObject: %s\n", offset + 2, "", n->methodCall.object);
+            printASTNode(n->methodCall.method, offset + 2);
+            printf("%*s]\n", offset, "");
+            break;
+
+        case AST_MODULE:
+            printf("@module[\n");
+            printf("%*sModule name: %s\n", offset + 2, "", n->block.name);
+            nob_da_foreach(ASTNode, inner, &n->block) { printASTNode(inner, offset + 2); }
+            printf("%*s]\n", offset, "");
+            break;
+
+        case AST_NUM_LIT:
+            printf("@num_lit[ %d ]\n", n->num_literal);
             break;
 
         case AST_RETURN:
@@ -685,17 +762,35 @@ void printASTNode(const ASTNode* n, int offset) {
             printf("%*s]\n", offset, "");
             break;
 
-        case NODE_COUNT:
-            [[fallthrough]];
-        default:
+        case AST_STR_LIT:
+            printf("@str_lit[ %s ]\n", n->string_literal);
             break;
+
+        case AST_TYPE:
+            printf("@type[\n");
+            printf("%*sName: %s\n", offset + 2, "", n->Type.name);
+            nob_da_foreach(ASTNode, inner, &n->Type.Vars) { printASTNode(inner, offset + 2); }
+            nob_da_foreach(ASTNode, inner, &n->Type.Methods) { printASTNode(inner, offset + 2); }
+            printf("%*s]\n", offset, "");
+            break;
+
+        case AST_VAR:
+            printf("@var[ Name: %s, Type %s\n", n->var.name, tokenStr(n->var.ret_type));
+            // vars might be defined in a type without a default value
+            if (n->var.value != NULL) { printASTNode(n->var.value, offset + 2); }
+            printf("%*s]\n", offset, "");
+            break;
+
+            // clang-format off
+        case NODE_COUNT: [[fallthrough]];
+        default:
+            parsingError("Missing node from printing");
+            break;
+            // clang-format on
     }
 }
 
 void printAst(const ASTNode* root) {
     printf("=== AST ===\n");
     printASTNode(root, 0);
-    // nob_da_foreach(ASTNode, node, &root->block) {
-    //     printASTNode(node, 2);
-    // }
 }
