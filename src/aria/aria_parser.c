@@ -238,14 +238,13 @@ ASTNode parseExpression(AriaLexer* L, const binding_t min_bp) {
             [[fallthrough]];
         default:
             parsingError("Unknown token found (parseExpression LHS): %d", getCurrTokenType(L));
-            return node;
     };
 
     const AriaToken* next = &L->items[L->index + 1];
     if (next->type == TOK_EOF) {
         parsingError("EOF reached when parsing an expression");
     } else if (next->type == TOK_RIGHT_PAREN || isKeyword(next->type)) {
-        return node;
+        return *node.expr.lhs;
     }
 
     while (true) {
@@ -257,7 +256,7 @@ ASTNode parseExpression(AriaLexer* L, const binding_t min_bp) {
         // If the token is anything other than expected, we'll get a bp of 0
         if (bp == 0) {
             L->index--;
-            return node;
+            return *node.expr.lhs;
         }
 
         if (bp < min_bp) { break; }
@@ -775,10 +774,15 @@ void printASTNode(const ASTNode* n, int offset) {
             break;
 
         case AST_VAR:
-            printf("@var[ Name: %s, Type %s\n", n->var.name, tokenStr(n->var.ret_type));
+            printf("@var[ Name: %s, Type %s", n->var.name, tokenStr(n->var.ret_type));
             // vars might be defined in a type without a default value
-            if (n->var.value != NULL) { printASTNode(n->var.value, offset + 2); }
-            printf("%*s]\n", offset, "");
+            if (n->var.value != NULL) {
+                printf("\n");
+                printASTNode(n->var.value, offset + 2);
+                printf("%*s]\n", offset, "");
+            } else {
+                printf(" ]\n");
+            }
             break;
 
             // clang-format off

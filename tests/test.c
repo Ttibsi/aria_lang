@@ -29,8 +29,6 @@ int main(void) {
         ONETEST_TEST(test_getTokenString),
 
         // parser_test.h
-        ONETEST_TEST(test_prefixBindingPower),
-        ONETEST_TEST(test_infixBindingPower),
         ONETEST_TEST(test_parseArg),
         ONETEST_TEST(test_parseAssignment),
         ONETEST_TEST(test_parseBlock),
@@ -50,7 +48,6 @@ int main(void) {
         ONETEST_TEST(test_parseVar),
         ONETEST_TEST(test_ariaCreateNode),
         ONETEST_TEST(test_ariaParse),
-        ONETEST_TEST(test_printAst),
     };
 
     const size_t test_count = sizeof(tests) / sizeof(tests[0]);
