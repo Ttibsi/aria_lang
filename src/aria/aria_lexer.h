@@ -114,14 +114,14 @@ typedef struct {
     size_t count;
     size_t capacity;
 
-    char* source;
+    const char* source;
     size_t pc;
 
     // For indexing into the dynamic array when needed;
     size_t index;
 } AriaLexer;
 
-void ariaLexerInit(AriaLexer* lexer, char* source);
+void ariaLexerInit(AriaLexer* lexer, const char* source);
 AriaToken makeToken(TokenType type, int start, int length);
 char peek(AriaLexer* L);
 char peekNext(AriaLexer* L);

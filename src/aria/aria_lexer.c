@@ -8,7 +8,7 @@
 
 #include "../include/nob.h"
 
-void ariaLexerInit(AriaLexer* lexer, char* source) {
+void ariaLexerInit(AriaLexer* lexer, const char* source) {
     nob_da_reserve(lexer, 32);
     lexer->source = source;
     lexer->pc = 0;

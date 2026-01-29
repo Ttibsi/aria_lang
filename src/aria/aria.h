@@ -67,6 +67,6 @@ void ariaPushTop(AriaStack*, AriaObj*);
 AriaObj ariaGetTop(AriaStack*);
 void ariaCleanup(AriaVM*);
 
-double ariaUnwrapNumObject(AriaObj*);
+double ariaUnwrapNumObject(const AriaObj*);
 
 #endif  // ARIA_H
