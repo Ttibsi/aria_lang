@@ -111,7 +111,24 @@ static inline int test_parseExpression(void) {
     return 0;
 }
 
-static inline int test_parseFor(void) { return 1; }
+static inline int test_parseFor(void) {
+    AriaLexer L = {0};
+    ariaLexerInit(&L, "FOR i = 0 TO 5 THEN ... END");
+    ariaTokenize(&L);
+
+    ASTNode n = parseFor(&L);
+    onetest_assert(n.type == AST_FOR);
+
+    onetest_assert(n.For.var->type == AST_IDENT);
+    onetest_assert(strcmp(n.For.var->identifier, "i") == 0);
+
+    onetest_assert(n.For.start->type == AST_NUM_LIT);
+    onetest_assert(n.For.stop->type == AST_NUM_LIT);
+    onetest_assert(n.For.step == NULL);
+    onetest_assert(n.For.block->type == AST_BLOCK);
+
+    return 0;
+}
 
 static inline int test_parseForEach(void) { return 1; }
 
