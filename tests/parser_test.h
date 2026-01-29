@@ -152,9 +152,36 @@ static inline int test_parseForEach(void) {
     return 0;
 }
 
-static inline int test_parseIdentifier(void) { return 1; }
+static inline int test_parseIdentifier(void) {
+    AriaLexer L = {0};
+    ariaLexerInit(&L, "\"hello world\"");
+    ariaTokenize(&L);
 
-static inline int test_parseIf(void) { return 1; }
+    ASTNode n = parseIdentifier(&L);
+    onetest_assert(n.type == AST_IDENT);
+    onetest_assert(strcmp(n.identifier, "\"hello world\"") == 0);
+
+    return 0;
+}
+
+static inline int test_parseIf(void) {
+    AriaLexer L = {0};
+    ariaLexerInit(&L, "IF 3 < 5 THEN ... ELSE ... END");
+    ariaTokenize(&L);
+
+    ASTNode n = parseIf(&L);
+    onetest_assert(n.type == AST_IF);
+
+    onetest_assert(n.If.cond->type == AST_EXPR);
+    onetest_assert(n.If.block->type == AST_BLOCK);
+    onetest_assert(n.If.elseBlock->type == AST_BLOCK);
+
+    onetest_assert(n.If.cond->expr.lhs->num_literal == 3);
+    onetest_assert(n.If.cond->expr.op == TOK_LESS);
+    onetest_assert(n.If.cond->expr.rhs->num_literal == 5);
+
+    return 0;
+}
 
 static inline int test_parseImport(void) { return 1; }
 
