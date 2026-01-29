@@ -130,7 +130,27 @@ static inline int test_parseFor(void) {
     return 0;
 }
 
-static inline int test_parseForEach(void) { return 1; }
+static inline int test_parseForEach(void) {
+    AriaLexer L = {0};
+    ariaLexerInit(&L, "FOREACH idx, elem IN myList THEN ... END");
+    ariaTokenize(&L);
+
+    ASTNode n = parseForEach(&L);
+    onetest_assert(n.type == AST_FOREACH);
+
+    onetest_assert(n.ForEach.first_var->type == AST_IDENT);
+    onetest_assert(strcmp(n.ForEach.first_var->identifier, "idx") == 0);
+
+    onetest_assert(n.ForEach.sec_var->type == AST_IDENT);
+    onetest_assert(strcmp(n.ForEach.sec_var->identifier, "elem") == 0);
+
+    onetest_assert(n.ForEach.container->type == AST_IDENT);
+    onetest_assert(strcmp(n.ForEach.container->identifier, "myList") == 0);
+
+    onetest_assert(n.ForEach.block->type == AST_BLOCK);
+
+    return 0;
+}
 
 static inline int test_parseIdentifier(void) { return 1; }
 
