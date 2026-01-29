@@ -199,7 +199,7 @@ TokenType getCurrTokenType(AriaLexer* L) {
 }
 
 int getTokenNumber(AriaLexer* L, size_t index) {
-    const AriaToken* tkn = &L->items[L->index];
+    const AriaToken* tkn = &L->items[index];
     if (tkn->type != TOK_NUM_LIT) return 0;
 
     char* num_str = malloc(tkn->len + 1);
@@ -211,7 +211,7 @@ int getTokenNumber(AriaLexer* L, size_t index) {
 }
 
 char getTokenChar(AriaLexer* L, size_t index) {
-    const AriaToken* tkn = &L->items[L->index];
+    const AriaToken* tkn = &L->items[index];
     if (tkn->len == 0) return '\0';
     return L->source[tkn->start];
 }
@@ -291,6 +291,8 @@ char* tokenStr(const TokenType tok) {
         case TOK_EOF: return "TOK_EOF";
         case TOK_COUNT: return "";
     };
+
+    return "UNKNOWN TOKEN";
 }
 
 void printTokens(AriaLexer* L) {
@@ -300,5 +302,5 @@ void printTokens(AriaLexer* L) {
         printf("[%ld] Token: %d, start: %d, len: %d\n", idx, x->type, x->start, x->len);
     }
 
-    printf("--- %ld tokens found ---\n", L->count);
+    printf("--- %ld tokens found ---\n\n", L->count);
 }
