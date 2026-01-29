@@ -183,7 +183,19 @@ static inline int test_parseIf(void) {
     return 0;
 }
 
-static inline int test_parseImport(void) { return 1; }
+static inline int test_parseImport(void) {
+    AriaLexer L = {0};
+    ariaLexerInit(&L, "IMPORT foo");
+    ariaTokenize(&L);
+
+    ASTNode n = parseImport(&L);
+    onetest_assert(n.type == AST_IMPORT);
+
+    onetest_assert(n.import.local_file == false);
+    onetest_assert(strcmp(n.import.name, "foo") == 0);
+
+    return 0;
+}
 
 static inline int test_parseReturn(void) { return 1; }
 

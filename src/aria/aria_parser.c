@@ -362,17 +362,18 @@ ASTNode parseIf(AriaLexer* L) {
 ASTNode parseImport(AriaLexer* L) {
     ASTNode node = ariaCreateNode(AST_IMPORT);
     advance(L);
-    if (!(match(L, TOK_IDENTIFIER) || match(L, TOK_STRING_LIT))) {
+    if (!(check(L, TOK_IDENTIFIER) || check(L, TOK_STRING_LIT))) {
         parsingError("Import statement invalid");
     }
 
-    if (match(L, TOK_STRING_LIT)) { node.import.local_file = true; }
+    if (check(L, TOK_STRING_LIT)) { node.import.local_file = true; }
 
     const AriaToken* tok = &L->items[L->index];
     Nob_String_Builder name = {0};
     nob_sb_append_buf(&name, &L->source[tok->start], tok->len);
     nob_sb_append_null(&name);
     node.import.name = name.items;
+    advance(L);
 
     return node;
 }
