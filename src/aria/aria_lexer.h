@@ -102,7 +102,7 @@ static const AriaKeyword keywords[] = {
     {"STR", 3, TOK_STR},          // 40
     {"THEN", 4, TOK_THEN},        // 41
     {"TO", 2, TOK_TO},            // 42
-    {"TRUE", 2, TOK_TRUE},        // 43
+    {"TRUE", 4, TOK_TRUE},        // 43
     {"TYPE", 4, TOK_TYPE},        // 44
     {"VAR", 3, TOK_VAR},          // 45
 };

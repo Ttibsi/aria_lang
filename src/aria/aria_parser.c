@@ -513,6 +513,10 @@ ASTNode parseVar(AriaLexer* L) {
             node.var.value = malloc(sizeof(ASTNode));
             node.var.value->type = AST_CHAR_LIT;
             node.var.value->char_literal = getTokenChar(L, L->index);
+        } else if (check(L, TOK_TRUE) || check(L, TOK_FALSE)) {
+            node.var.value = malloc(sizeof(ASTNode));
+            node.var.value->type = AST_CHAR_LIT;
+            node.var.value->bool_literal = (check(L, TOK_TRUE) ? true : false);
         }
 
         advance(L);

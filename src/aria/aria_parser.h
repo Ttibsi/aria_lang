@@ -138,6 +138,7 @@ typedef struct _ASTNode {
         char* string_literal;
         char char_literal;
         char* identifier;
+        bool bool_literal;
     };
 } ASTNode;
 
