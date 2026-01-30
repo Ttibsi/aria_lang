@@ -276,7 +276,20 @@ static inline int test_parseType(void) {
     return 0;
 }
 
-static inline int test_parseVar(void) { return 1; }
+static inline int test_parseVar(void) {
+    AriaLexer L = {0};
+    ariaLexerInit(&L, "VAR isLegal BOOL = TRUE END");
+    ariaTokenize(&L);
+
+    ASTNode n = parseVar(&L);
+    onetest_assert(n.type == AST_VAR);
+
+    onetest_assert(strcmp(n.var.name, "isLegal") == 0);
+    onetest_assert(n.var.ret_type == TOK_BOOL);
+    onetest_assert(n.var.value->bool_literal == true);
+
+    return 0;
+}
 
 static inline int test_ariaCreateNode(void) { return 1; }
 
