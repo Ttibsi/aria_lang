@@ -573,7 +573,7 @@ ASTNode ariaCreateNode(const NodeType type) {
             return (ASTNode){.type = type, .num_literal = 0};
 
         case AST_RETURN:
-            return (ASTNode){.type = type};
+            return (ASTNode){.type = type, .ret = {.expr = NULL}};
 
         case AST_STR_LIT:
             return (ASTNode){.type = type, .string_literal = ""};

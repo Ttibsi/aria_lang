@@ -197,11 +197,62 @@ static inline int test_parseImport(void) {
     return 0;
 }
 
-static inline int test_parseReturn(void) { return 1; }
+static inline int test_parseReturn(void) {
+    AriaLexer L = {0};
+    ariaLexerInit(&L, "RET 4 END");
+    ariaTokenize(&L);
 
-static inline int test_parseMethodCall(void) { return 1; }
+    ASTNode n = parseReturn(&L);
+    onetest_assert(n.type == AST_RETURN);
 
-static inline int test_parseMethodCallOrAttr(void) { return 1; }
+    onetest_assert(n.ret.expr != NULL);
+    onetest_assert(n.ret.expr->type == AST_NUM_LIT);
+    onetest_assert(n.ret.expr->num_literal == 4);
+
+    return 0;
+}
+
+static inline int test_parseMethodCall(void) {
+    AriaLexer L = {0};
+    ariaLexerInit(&L, "object.method(arg)");
+    ariaTokenize(&L);
+
+    ASTNode n = parseMethodCall(&L);
+    onetest_assert(n.type == AST_METHOD_CALL);
+
+    onetest_assert(strcmp(n.methodCall.object, "object") == 0);
+    onetest_assert(n.methodCall.method != NULL);
+
+    onetest_assert(n.methodCall.method->type == AST_CALL);
+    onetest_assert(strcmp(n.methodCall.method->funcCall.name, "method") == 0);
+    onetest_assert(strcmp(n.methodCall.method->funcCall.args[0], "arg") == 0);
+
+    return 0;
+}
+
+static inline int test_parseMethodCallOrAttr(void) {
+    AriaLexer L = {0};
+    ariaLexerInit(&L, "object.attr = 2 + 2 END");
+    ariaTokenize(&L);
+
+    ASTNode n = parseMethodCallOrAttr(&L);
+    onetest_assert(n.type == AST_ASSIGN);
+
+    onetest_assert(n.assign.ident->type == AST_IDENT);
+    onetest_assert(strcmp(n.assign.ident->identifier, "attr") == 0);
+
+    onetest_assert(n.assign.object_ident->type == AST_IDENT);
+    onetest_assert(strcmp(n.assign.object_ident->identifier, "object") == 0);
+
+    onetest_assert(n.assign.expr->type == AST_EXPR);
+    onetest_assert(n.assign.expr->expr.op == TOK_PLUS);
+    onetest_assert(n.assign.expr->expr.lhs->type == AST_NUM_LIT);
+    onetest_assert(n.assign.expr->expr.rhs->type == AST_NUM_LIT);
+    onetest_assert(n.assign.expr->expr.lhs->num_literal == 2);
+    onetest_assert(n.assign.expr->expr.rhs->num_literal == 2);
+
+    return 0;
+}
 
 static inline int test_parseStatement(void) { return 1; }
 
