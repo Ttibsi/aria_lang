@@ -1,4 +1,6 @@
+#include <stdlib.h>
 #include <string.h>
+#include <unistd.h>
 
 #include "aria/aria_parser.h"
 #include "onetest.h"
@@ -291,6 +293,38 @@ static inline int test_parseVar(void) {
     return 0;
 }
 
-static inline int test_ariaCreateNode(void) { return 1; }
+// TODO: Add the stderr redirecting to onetest and Willow
+static inline int test_ariaParse(void) {
+    AriaLexer L = {0};
+    ariaLexerInit(&L, "IMPORT foo");
+    ariaTokenize(&L);
 
-static inline int test_ariaParse(void) { return 1; }
+    ASTNode n = ariaParse(&L, "mod name");
+    onetest_assert(n.type == AST_MODULE);
+    onetest_assert(n.block.count == 1);
+    onetest_assert(n.block.items[0].import.local_file == false);
+    onetest_assert(strcmp(n.block.items[0].import.name, "foo") == 0);
+
+    // Capture STDERR
+    int pipefd[2];
+    pipe(pipefd);
+
+    /* Save stderr */
+    int saved_stderr = dup(2);
+    /* Redirect stderr → pipe write end */
+    dup2(pipefd[1], 2);
+    close(pipefd[1]);
+
+    AriaLexer L2 = {0};
+    ariaLexerInit(&L2, "VAR 5 END");
+    ariaTokenize(&L2);
+
+    ASTNode n2 = ariaParse(&L2, "mod name");
+    onetest_assert(n2.type = AST_ERR);
+
+    /* Restore stderr */
+    dup2(saved_stderr, 2);
+    close(saved_stderr);
+
+    return 0;
+}

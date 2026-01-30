@@ -616,11 +616,14 @@ ASTNode ariaParse(AriaLexer* L, char* mod_name) {
                 break;
 
             case TOK_ERROR:
-                NOB_UNREACHABLE("ERROR node at top level in ariaParse");
+                fprintf(stderr, "ERROR node at top level in ariaParse");
+                return ERR_NODE;
                 break;
 
             default:
-                NOB_UNREACHABLE("Invalid node at top level in ariaParse");
+                fprintf(stderr, "Invalid node at top level in ariaParse");
+                return ERR_NODE;
+                break;
         };
 
         nob_da_append(&module.block, inner);
