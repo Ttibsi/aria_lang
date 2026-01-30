@@ -254,9 +254,27 @@ static inline int test_parseMethodCallOrAttr(void) {
     return 0;
 }
 
-static inline int test_parseStatement(void) { return 1; }
+static inline int test_parseType(void) {
+    const char* type_str
+        = "TYPE name\n"
+          "VAR x BOOL VAR y NUM\n"
+          "FUNC f1(arg BOOL) NIL ... END\n"
+          "FUNC f2(arg1 NUM, arg2 NUM) NUM ... END\n"
+          "END";
 
-static inline int test_parseType(void) { return 1; }
+    AriaLexer L = {0};
+    ariaLexerInit(&L, type_str);
+    ariaTokenize(&L);
+
+    ASTNode n = parseType(&L);
+    onetest_assert(n.type == AST_TYPE);
+
+    onetest_assert(strcmp(n.Type.name, "name") == 0);
+    onetest_assert(n.Type.Vars.count == 2);
+    onetest_assert(n.Type.Methods.count == 2);
+
+    return 0;
+}
 
 static inline int test_parseVar(void) { return 1; }
 

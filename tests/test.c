@@ -43,7 +43,6 @@ int main(void) {
         ONETEST_TEST(test_parseReturn),
         ONETEST_TEST(test_parseMethodCall),
         ONETEST_TEST(test_parseMethodCallOrAttr),
-        ONETEST_TEST(test_parseStatement),
         ONETEST_TEST(test_parseType),
         ONETEST_TEST(test_parseVar),
         ONETEST_TEST(test_ariaCreateNode),
