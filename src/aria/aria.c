@@ -45,7 +45,7 @@ AriaObj ariaGetTop(AriaStack* stk) {
     return obj;
 }
 
-double ariaUnwrapNumObject(AriaObj* obj) {
+double ariaUnwrapNumObject(const AriaObj* obj) {
     if (obj->type == OBJ_TYPE_NUM) { return obj->as.i; };
 
     return 0.0;

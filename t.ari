@@ -5,37 +5,49 @@ IMPORT module
 ; supported types: char, string, bool, num (double), func, nil
 ; container types: list[type], map[key, value]
 
-;TYPE name
-;    VAR foo TYPE
-;    VAR bar TYPE = val
-;
-;    FUNC f_name(arg, arg)
-;    END
-;
-;    ; overloads use single underscores on either side
-;    FUNC _add_()
-;    END
-;
-;    FUNC _constructor_(arg)
-;        THIS.foo = arg
-;    END
-;END
+TYPE name
+    VAR foo BOOL
+    VAR bar STR = "text"
+
+    FUNC f_name(arg1 NUM, arg2 CHAR) NIL
+        ...
+    END
+
+    ; overloads use single underscores on either side
+    FUNC _add_() NUM
+        ...
+    END
+
+    FUNC _constructor_(arg BOOL) NIL
+        this.foo = arg
+    END
+END
 
 ; for obvious reasons, main always returns an int
 FUNC main(argc NUM, argv LIST[STR]) NUM
-    IF cond THEN
-    ELSE IF cond THEN
+    VAR x NUM = 5
+    VAR y NUM = 10
+
+    IF y < x THEN
+        ...
+    ELSE IF x == y THEN
+        ...
     ELSE
+        ...
     END
 
     ; `STEP int` is optional
-    FOR i = start TO stop STEP int
+    FOR i = 1 TO x STEP 2 THEN
+        ...
     END
 
     ; idx and elem for a list, key and value for a map
-    FOREACH idx, elem IN container
+    FOREACH idx, elem IN container THEN
+        ...
     END
 
     func_call(param)
     object.method_call()
+
+    RET 0
 END

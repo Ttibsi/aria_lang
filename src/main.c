@@ -2,8 +2,11 @@
 
 #include "aria/aria.h"
 
-int someFunc(AriaVM* vm) {}
-void writeFn(AriaVM* vm) {}
+int someFunc(AriaVM* vm) {
+    (void)vm;
+    return 0;
+}
+void writeFn(AriaVM* vm) { (void)vm; }
 
 int main(int argc, char* argv[]) {
     AriaVM vm = {0};
