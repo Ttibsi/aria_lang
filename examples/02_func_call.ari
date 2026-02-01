@@ -1,7 +1,7 @@
-func foo() {
-    return 17 * 2;
-}
+FUNC foo() NIL
+    RET 17 * 2
+END
 
-func main() {
-    return 35 + foo();
-}
+FUNC main() NUM
+    RET 35 + foo()
+END
