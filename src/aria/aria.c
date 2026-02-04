@@ -30,6 +30,7 @@ int ariaDoString(AriaVM* vm, const char* str) {
     const ASTNode module = ariaParse(&vm->lexer, "main", &parser_arena);
     if (vm->debug_mode) { printAst(&module); }
 
+    // arena_free(&parser_arena);
     NOB_TODO("ariaDoString not implemented");
 }
 
