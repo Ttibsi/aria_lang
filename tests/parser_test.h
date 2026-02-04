@@ -2,6 +2,7 @@
 #include <string.h>
 #include <unistd.h>
 
+#include "arena.h"
 #include "aria/aria_parser.h"
 #include "onetest.h"
 
@@ -9,8 +10,9 @@ static inline int test_parseArg(void) {
     AriaLexer L = {0};
     ariaLexerInit(&L, "foo LIST[BOOL]");
     ariaTokenize(&L);
+    Arena A = {0};
 
-    ASTNode* n = parseArg(&L);
+    ASTNode* n = parseArg(&L, &A);
     onetest_assert(n->type == AST_ARG);
 
     onetest_assert(strcmp(n->arg.name, "foo") == 0);
@@ -27,8 +29,9 @@ static inline int test_parseAssignment(void) {
     AriaLexer L = {0};
     ariaLexerInit(&L, "foo = 2 + 3 END");
     ariaTokenize(&L);
+    Arena A = {0};
 
-    ASTNode n = parseAssignment(&L);
+    ASTNode n = parseAssignment(&L, &A);
     onetest_assert(n.type == AST_ASSIGN);
 
     onetest_assert(n.assign.ident->type == AST_IDENT);
@@ -44,8 +47,9 @@ static inline int test_parseBlock(void) {
     AriaLexer L = {0};
     ariaLexerInit(&L, "VAR x NUM = 5 VAR y NUM = 2 END");
     ariaTokenize(&L);
+    Arena A = {0};
 
-    ASTNode n = parseBlock(&L);
+    ASTNode n = parseBlock(&L, &A);
     onetest_assert(n.type == AST_BLOCK);
 
     onetest_assert(n.block.count == 2);
@@ -57,8 +61,9 @@ static inline int test_parseFunc(void) {
     AriaLexer L = {0};
     ariaLexerInit(&L, "FUNC f(arg NUM) NUM RET 0 END");
     ariaTokenize(&L);
+    Arena A = {0};
 
-    ASTNode n = parseFunc(&L);
+    ASTNode n = parseFunc(&L, &A);
     onetest_assert(n.type == AST_FUNC);
 
     onetest_assert(strcmp(n.func.name, "f") == 0);
@@ -89,8 +94,9 @@ static inline int test_parseExpression(void) {
     AriaLexer L = {0};
     ariaLexerInit(&L, "(17 * 2) + 35 END");
     ariaTokenize(&L);
+    Arena A = {0};
 
-    ASTNode n = parseExpression(&L, 0);
+    ASTNode n = parseExpression(&L, &A, 0);
     onetest_assert(n.type == AST_EXPR);
 
     onetest_assert(n.expr.lhs != NULL);
@@ -117,8 +123,9 @@ static inline int test_parseFor(void) {
     AriaLexer L = {0};
     ariaLexerInit(&L, "FOR i = 0 TO 5 THEN ... END");
     ariaTokenize(&L);
+    Arena A = {0};
 
-    ASTNode n = parseFor(&L);
+    ASTNode n = parseFor(&L, &A);
     onetest_assert(n.type == AST_FOR);
 
     onetest_assert(n.For.var->type == AST_IDENT);
@@ -136,8 +143,9 @@ static inline int test_parseForEach(void) {
     AriaLexer L = {0};
     ariaLexerInit(&L, "FOREACH idx, elem IN myList THEN ... END");
     ariaTokenize(&L);
+    Arena A = {0};
 
-    ASTNode n = parseForEach(&L);
+    ASTNode n = parseForEach(&L, &A);
     onetest_assert(n.type == AST_FOREACH);
 
     onetest_assert(n.ForEach.first_var->type == AST_IDENT);
@@ -170,8 +178,9 @@ static inline int test_parseIf(void) {
     AriaLexer L = {0};
     ariaLexerInit(&L, "IF 3 < 5 THEN ... ELSE ... END");
     ariaTokenize(&L);
+    Arena A = {0};
 
-    ASTNode n = parseIf(&L);
+    ASTNode n = parseIf(&L, &A);
     onetest_assert(n.type == AST_IF);
 
     onetest_assert(n.If.cond->type == AST_EXPR);
@@ -203,8 +212,9 @@ static inline int test_parseReturn(void) {
     AriaLexer L = {0};
     ariaLexerInit(&L, "RET 4 END");
     ariaTokenize(&L);
+    Arena A = {0};
 
-    ASTNode n = parseReturn(&L);
+    ASTNode n = parseReturn(&L, &A);
     onetest_assert(n.type == AST_RETURN);
 
     onetest_assert(n.ret.expr != NULL);
@@ -218,8 +228,9 @@ static inline int test_parseMethodCall(void) {
     AriaLexer L = {0};
     ariaLexerInit(&L, "object.method(arg)");
     ariaTokenize(&L);
+    Arena A = {0};
 
-    ASTNode n = parseMethodCall(&L);
+    ASTNode n = parseMethodCall(&L, &A);
     onetest_assert(n.type == AST_METHOD_CALL);
 
     onetest_assert(strcmp(n.methodCall.object, "object") == 0);
@@ -236,8 +247,9 @@ static inline int test_parseMethodCallOrAttr(void) {
     AriaLexer L = {0};
     ariaLexerInit(&L, "object.attr = 2 + 2 END");
     ariaTokenize(&L);
+    Arena A = {0};
 
-    ASTNode n = parseMethodCallOrAttr(&L);
+    ASTNode n = parseMethodCallOrAttr(&L, &A);
     onetest_assert(n.type == AST_ASSIGN);
 
     onetest_assert(n.assign.ident->type == AST_IDENT);
@@ -267,8 +279,9 @@ static inline int test_parseType(void) {
     AriaLexer L = {0};
     ariaLexerInit(&L, type_str);
     ariaTokenize(&L);
+    Arena A = {0};
 
-    ASTNode n = parseType(&L);
+    ASTNode n = parseType(&L, &A);
     onetest_assert(n.type == AST_TYPE);
 
     onetest_assert(strcmp(n.Type.name, "name") == 0);
@@ -282,8 +295,9 @@ static inline int test_parseVar(void) {
     AriaLexer L = {0};
     ariaLexerInit(&L, "VAR isLegal BOOL = TRUE END");
     ariaTokenize(&L);
+    Arena A = {0};
 
-    ASTNode n = parseVar(&L);
+    ASTNode n = parseVar(&L, &A);
     onetest_assert(n.type == AST_VAR);
 
     onetest_assert(strcmp(n.var.name, "isLegal") == 0);
@@ -298,8 +312,9 @@ static inline int test_ariaParse(void) {
     AriaLexer L = {0};
     ariaLexerInit(&L, "IMPORT foo");
     ariaTokenize(&L);
+    Arena A = {0};
 
-    ASTNode n = ariaParse(&L, "mod name");
+    ASTNode n = ariaParse(&L, "mod name", &A);
     onetest_assert(n.type == AST_MODULE);
     onetest_assert(n.block.count == 1);
     onetest_assert(n.block.items[0].import.local_file == false);
@@ -319,7 +334,7 @@ static inline int test_ariaParse(void) {
     ariaLexerInit(&L2, "VAR 5 END");
     ariaTokenize(&L2);
 
-    ASTNode n2 = ariaParse(&L2, "mod name");
+    ASTNode n2 = ariaParse(&L2, "mod name", &A);
     onetest_assert(n2.type = AST_ERR);
 
     /* Restore stderr */

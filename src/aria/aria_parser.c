@@ -69,8 +69,8 @@ binding_t infixBindingPower(const TokenType* tkn) {
     return 0;
 }
 
-ASTNode* parseArg(AriaLexer* L) {
-    ASTNode* node = malloc(sizeof(ASTNode));
+ASTNode* parseArg(AriaLexer* L, Arena* A) {
+    ASTNode* node = arena_alloc(A, sizeof(ASTNode));
     node->type = AST_ARG;
 
     // name
@@ -108,40 +108,40 @@ ASTNode* parseArg(AriaLexer* L) {
     return node;
 }
 
-ASTNode parseAssignment(AriaLexer* L) {
+ASTNode parseAssignment(AriaLexer* L, Arena* A) {
     if (!check(L, TOK_IDENTIFIER)) {
         parsingError("Assignment statement not starting with identifier");
     }
     ASTNode node = ariaCreateNode(AST_ASSIGN);
 
-    node.assign.ident = malloc(sizeof(ASTNode));
+    node.assign.ident = arena_alloc(A, sizeof(ASTNode));
     *node.assign.ident = parseIdentifier(L);
     match(L, TOK_IDENTIFIER);
 
     if (!match(L, TOK_EQUAL)) { parsingError("assignment expression has no = token"); }
 
-    node.assign.expr = malloc(sizeof(ASTNode));
-    *node.assign.expr = parseExpression(L, 0);
+    node.assign.expr = arena_alloc(A, sizeof(ASTNode));
+    *node.assign.expr = parseExpression(L, A, 0);
 
     advance(L);
     return node;
 }
 
-ASTNode parseBlock(AriaLexer* L) {
+ASTNode parseBlock(AriaLexer* L, Arena* A) {
     ASTNode node = ariaCreateNode(AST_BLOCK);
 
     while (!(check(L, TOK_END) || check(L, TOK_ELSE))) {
         // ellipses aren't parsed but force the end of the block
         if (match(L, TOK_ELLIPSIS)) { break; }
 
-        ASTNode stmt = parseStatement(L);
+        ASTNode stmt = parseStatement(L, A);
         nob_da_append(&node.block, stmt);
     }
 
     return node;
 }
 
-ASTNode parseFunc(AriaLexer* L) {
+ASTNode parseFunc(AriaLexer* L, Arena* A) {
     if (!match(L, TOK_FUNC)) { parsingError("parseFunc called with incorrect token\n"); }
     ASTNode funcNode = ariaCreateNode(AST_FUNC);
 
@@ -161,7 +161,7 @@ ASTNode parseFunc(AriaLexer* L) {
         if (!check(L, TOK_IDENTIFIER)) { parsingError("function args contain non-identifiers\n"); }
         if (args_idx >= param_count) { parsingError("Function has too many arguments\n"); }
 
-        funcNode.func.args[args_idx] = parseArg(L);
+        funcNode.func.args[args_idx] = parseArg(L, A);
         args_idx++;
         if (check(L, TOK_COMMA)) { advance(L); }  // Skip commas
     }
@@ -173,8 +173,8 @@ ASTNode parseFunc(AriaLexer* L) {
     advance(L);
 
     // body
-    ASTNode* body = malloc(sizeof(ASTNode));
-    *body = parseBlock(L);
+    ASTNode* body = arena_alloc(A, sizeof(ASTNode));
+    *body = parseBlock(L, A);
     funcNode.func.body = body;
 
     match(L, TOK_END);
@@ -214,9 +214,9 @@ ASTNode parseFuncCall(AriaLexer* L) {
     return funcNode;
 }
 
-ASTNode parseExpression(AriaLexer* L, const binding_t min_bp) {
+ASTNode parseExpression(AriaLexer* L, Arena* A, const binding_t min_bp) {
     ASTNode node = ariaCreateNode(AST_EXPR);
-    node.expr.lhs = malloc(sizeof(ASTNode));
+    node.expr.lhs = arena_alloc(A, sizeof(ASTNode));
 
     switch (getCurrTokenType(L)) {
         case TOK_NUM_LIT:
@@ -225,7 +225,7 @@ ASTNode parseExpression(AriaLexer* L, const binding_t min_bp) {
             break;
         case TOK_LEFT_PAREN:
             advance(L);
-            *node.expr.lhs = parseExpression(L, 0);
+            *node.expr.lhs = parseExpression(L, A, 0);
             break;
         case TOK_IDENTIFIER:
             if (L->items[L->index + 1].type == TOK_LEFT_PAREN) {
@@ -262,67 +262,67 @@ ASTNode parseExpression(AriaLexer* L, const binding_t min_bp) {
         if (bp < min_bp) { break; }
         advance(L);
 
-        node.expr.rhs = malloc(sizeof(ASTNode));
-        *node.expr.rhs = parseExpression(L, bp + 1);
+        node.expr.rhs = arena_alloc(A, sizeof(ASTNode));
+        *node.expr.rhs = parseExpression(L, A, bp + 1);
         node.expr.op = tok_type;
     }
 
     return node;
 }
 
-ASTNode parseFor(AriaLexer* L) {
+ASTNode parseFor(AriaLexer* L, Arena* A) {
     if (!(match(L, TOK_FOR))) { parsingError("for statement invalid"); }
     ASTNode node = ariaCreateNode(AST_FOR);
 
-    node.For.var = malloc(sizeof(ASTNode));
+    node.For.var = arena_alloc(A, sizeof(ASTNode));
     *node.For.var = parseIdentifier(L);
     advance(L);
     if (!(match(L, TOK_EQUAL))) { parsingError("for loop assignment invalid"); }
 
-    node.For.start = malloc(sizeof(ASTNode));
-    *node.For.start = parseExpression(L, 0);
+    node.For.start = arena_alloc(A, sizeof(ASTNode));
+    *node.For.start = parseExpression(L, A, 0);
     advance(L);  // to TOK_TO
     if (!(match(L, TOK_TO))) { parsingError("for loop startpoint invalid"); }
 
-    node.For.stop = malloc(sizeof(ASTNode));
-    *node.For.stop = parseExpression(L, 0);
+    node.For.stop = arena_alloc(A, sizeof(ASTNode));
+    *node.For.stop = parseExpression(L, A, 0);
     advance(L);
 
     if (match(L, TOK_STEP)) {
-        node.For.step = malloc(sizeof(ASTNode));
-        *node.For.step = parseExpression(L, 0);
+        node.For.step = arena_alloc(A, sizeof(ASTNode));
+        *node.For.step = parseExpression(L, A, 0);
         advance(L);
     }
 
     if (!(match(L, TOK_THEN))) { parsingError("for loop block invalid"); }
-    node.For.block = malloc(sizeof(ASTNode));
-    *node.For.block = parseBlock(L);
+    node.For.block = arena_alloc(A, sizeof(ASTNode));
+    *node.For.block = parseBlock(L, A);
 
     match(L, TOK_END);
     return node;
 }
 
-ASTNode parseForEach(AriaLexer* L) {
+ASTNode parseForEach(AriaLexer* L, Arena* A) {
     if (!(match(L, TOK_FOREACH))) { parsingError("foreach statement invalid"); }
     ASTNode node = ariaCreateNode(AST_FOREACH);
 
-    node.ForEach.first_var = malloc(sizeof(ASTNode));
+    node.ForEach.first_var = arena_alloc(A, sizeof(ASTNode));
     *node.ForEach.first_var = parseIdentifier(L);
     advance(L);
     match(L, TOK_COMMA);
 
-    node.ForEach.sec_var = malloc(sizeof(ASTNode));
+    node.ForEach.sec_var = arena_alloc(A, sizeof(ASTNode));
     *node.ForEach.sec_var = parseIdentifier(L);
     advance(L);
     match(L, TOK_IN);
 
-    node.ForEach.container = malloc(sizeof(ASTNode));
+    node.ForEach.container = arena_alloc(A, sizeof(ASTNode));
     *node.ForEach.container = parseIdentifier(L);
     advance(L);
     match(L, TOK_THEN);
 
-    node.ForEach.block = malloc(sizeof(ASTNode));
-    *node.ForEach.block = parseBlock(L);
+    node.ForEach.block = arena_alloc(A, sizeof(ASTNode));
+    *node.ForEach.block = parseBlock(L, A);
     match(L, TOK_END);
 
     return node;
@@ -333,24 +333,24 @@ ASTNode parseIdentifier(AriaLexer* L) {
     return (ASTNode){.type = AST_IDENT, .identifier = getTokenString(L, L->index)};
 }
 
-ASTNode parseIf(AriaLexer* L) {
+ASTNode parseIf(AriaLexer* L, Arena* A) {
     if (!(match(L, TOK_IF))) { parsingError("If statement invalid"); }
 
     ASTNode ifNode = ariaCreateNode(AST_IF);
-    ifNode.If.cond = malloc(sizeof(ASTNode));
-    *ifNode.If.cond = parseExpression(L, 0);
+    ifNode.If.cond = arena_alloc(A, sizeof(ASTNode));
+    *ifNode.If.cond = parseExpression(L, A, 0);
     if (!(match(L, TOK_THEN))) { parsingError("No THEN keyword found"); }
 
-    ifNode.If.block = malloc(sizeof(ASTNode));
-    *ifNode.If.block = parseBlock(L);
+    ifNode.If.block = arena_alloc(A, sizeof(ASTNode));
+    *ifNode.If.block = parseBlock(L, A);
 
     if (match(L, TOK_ELSE)) {
-        ifNode.If.elseBlock = malloc(sizeof(ASTNode));
+        ifNode.If.elseBlock = arena_alloc(A, sizeof(ASTNode));
 
         if (check(L, TOK_IF)) {
-            *ifNode.If.elseBlock = parseIf(L);
+            *ifNode.If.elseBlock = parseIf(L, A);
         } else {
-            *ifNode.If.elseBlock = parseBlock(L);
+            *ifNode.If.elseBlock = parseBlock(L, A);
         }
     }
 
@@ -378,18 +378,18 @@ ASTNode parseImport(AriaLexer* L) {
     return node;
 }
 
-ASTNode parseReturn(AriaLexer* L) {
+ASTNode parseReturn(AriaLexer* L, Arena* A) {
     if (!(match(L, TOK_RET))) { parsingError("Return statement invalid"); }
     ASTNode node = ariaCreateNode(AST_RETURN);
 
-    node.ret.expr = malloc(sizeof(ASTNode));
-    *node.ret.expr = parseExpression(L, 0);
+    node.ret.expr = arena_alloc(A, sizeof(ASTNode));
+    *node.ret.expr = parseExpression(L, A, 0);
     advance(L);
 
     return node;
 }
 
-ASTNode parseMethodCall(AriaLexer* L) {
+ASTNode parseMethodCall(AriaLexer* L, Arena* A) {
     if (!check(L, TOK_IDENTIFIER)) { parsingError("Can't parse method"); }
     ASTNode node = ariaCreateNode(AST_METHOD_CALL);
 
@@ -402,51 +402,51 @@ ASTNode parseMethodCall(AriaLexer* L) {
 
     if (!match(L, TOK_DOT)) { parsingError("No dot found in method call"); }
 
-    node.methodCall.method = malloc(sizeof(ASTNode));
+    node.methodCall.method = arena_alloc(A, sizeof(ASTNode));
     *node.methodCall.method = parseFuncCall(L);
 
     return node;
 }
 
-ASTNode parseMethodCallOrAttr(AriaLexer* L) {
+ASTNode parseMethodCallOrAttr(AriaLexer* L, Arena* A) {
     // TOK_IDENT TOK_DOT TOK_IDENT TOK_LEFT_PARAM
-    if (L->items[L->index + 3].type == TOK_LEFT_PAREN) { return parseMethodCall(L); }
+    if (L->items[L->index + 3].type == TOK_LEFT_PAREN) { return parseMethodCall(L, A); }
 
     ASTNode object_ident = parseIdentifier(L);
     match(L, TOK_IDENTIFIER);
     match(L, TOK_DOT);
 
-    ASTNode assign = parseAssignment(L);
-    assign.assign.object_ident = malloc(sizeof(ASTNode));
+    ASTNode assign = parseAssignment(L, A);
+    assign.assign.object_ident = arena_alloc(A, sizeof(ASTNode));
     *assign.assign.object_ident = object_ident;
 
     return assign;
 }
 
-ASTNode parseStatement(AriaLexer* L) {
+ASTNode parseStatement(AriaLexer* L, Arena* A) {
     AriaToken* tkn = &L->items[L->index];
     switch (tkn->type) {
         case TOK_FOR:
-            return parseFor(L);
+            return parseFor(L, A);
             break;
         case TOK_FOREACH:
-            return parseForEach(L);
+            return parseForEach(L, A);
             break;
         case TOK_IF:
-            return parseIf(L);
+            return parseIf(L, A);
             advance(L);  // TOK_END
             break;
         case TOK_RET:
-            return parseReturn(L);
+            return parseReturn(L, A);
             break;
         case TOK_VAR:
-            return parseVar(L);
+            return parseVar(L, A);
             break;
         case TOK_IDENTIFIER:
             if (L->items[L->index + 1].type == TOK_DOT) {
-                return parseMethodCallOrAttr(L);
+                return parseMethodCallOrAttr(L, A);
             } else if (L->items[L->index + 1].type == TOK_EQUAL) {
-                return parseAssignment(L);
+                return parseAssignment(L, A);
             } else if (L->items[L->index + 1].type == TOK_LEFT_PAREN) {
                 return parseFuncCall(L);
             }
@@ -460,7 +460,7 @@ ASTNode parseStatement(AriaLexer* L) {
     return ERR_NODE;
 }
 
-ASTNode parseType(AriaLexer* L) {
+ASTNode parseType(AriaLexer* L, Arena* A) {
     if (!(match(L, TOK_TYPE))) { parsingError("var statement invalid"); }
     ASTNode node = ariaCreateNode(AST_TYPE);
 
@@ -473,16 +473,16 @@ ASTNode parseType(AriaLexer* L) {
     advance(L);
 
     // attributes
-    while (check(L, TOK_VAR)) { nob_da_append(&node.Type.Vars, parseVar(L)); }
+    while (check(L, TOK_VAR)) { nob_da_append(&node.Type.Vars, parseVar(L, A)); }
 
     // methods
-    while (check(L, TOK_FUNC)) { nob_da_append(&node.Type.Methods, parseFunc(L)); }
+    while (check(L, TOK_FUNC)) { nob_da_append(&node.Type.Methods, parseFunc(L, A)); }
 
     match(L, TOK_END);
     return node;
 }
 
-ASTNode parseVar(AriaLexer* L) {
+ASTNode parseVar(AriaLexer* L, Arena* A) {
     if (!(match(L, TOK_VAR))) { parsingError("var statement invalid"); }
     ASTNode node = ariaCreateNode(AST_VAR);
 
@@ -502,19 +502,19 @@ ASTNode parseVar(AriaLexer* L) {
     // value
     if (match(L, TOK_EQUAL)) {
         if (check(L, TOK_STRING_LIT)) {
-            node.var.value = malloc(sizeof(ASTNode));
+            node.var.value = arena_alloc(A, sizeof(ASTNode));
             node.var.value->type = AST_STR_LIT;
             node.var.value->string_literal = getTokenString(L, L->index);
         } else if (check(L, TOK_NUM_LIT)) {
-            node.var.value = malloc(sizeof(ASTNode));
+            node.var.value = arena_alloc(A, sizeof(ASTNode));
             node.var.value->type = AST_NUM_LIT;
             node.var.value->num_literal = getTokenNumber(L, L->index);
         } else if (check(L, TOK_CHAR_LIT)) {
-            node.var.value = malloc(sizeof(ASTNode));
+            node.var.value = arena_alloc(A, sizeof(ASTNode));
             node.var.value->type = AST_CHAR_LIT;
             node.var.value->char_literal = getTokenChar(L, L->index);
         } else if (check(L, TOK_TRUE) || check(L, TOK_FALSE)) {
-            node.var.value = malloc(sizeof(ASTNode));
+            node.var.value = arena_alloc(A, sizeof(ASTNode));
             node.var.value->type = AST_CHAR_LIT;
             node.var.value->bool_literal = (check(L, TOK_TRUE) ? true : false);
         }
@@ -595,7 +595,7 @@ ASTNode ariaCreateNode(const NodeType type) {
     }
 }
 
-ASTNode ariaParse(AriaLexer* L, char* mod_name) {
+ASTNode ariaParse(AriaLexer* L, char* mod_name, Arena* A) {
     ASTNode module = ariaCreateNode(AST_MODULE);
     module.block.name = mod_name;
 
@@ -604,7 +604,7 @@ ASTNode ariaParse(AriaLexer* L, char* mod_name) {
 
         switch (getCurrTokenType(L)) {
             case TOK_FUNC:
-                inner = parseFunc(L);
+                inner = parseFunc(L, A);
                 break;
 
             case TOK_IMPORT:
@@ -612,7 +612,7 @@ ASTNode ariaParse(AriaLexer* L, char* mod_name) {
                 break;
 
             case TOK_TYPE:
-                inner = parseType(L);
+                inner = parseType(L, A);
                 break;
 
             case TOK_ERROR:

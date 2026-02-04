@@ -4,6 +4,7 @@
 #include <stdint.h>
 #include <stdlib.h>
 
+#include "../include/arena.h"
 #include "aria_lexer.h"
 
 typedef enum {
@@ -147,25 +148,25 @@ typedef struct _ASTNode {
 
 binding_t prefixBindingPower(const TokenType* tkn);
 binding_t infixBindingPower(const TokenType* tkn);
-ASTNode* parseArg(AriaLexer* L);
-ASTNode parseAssignment(AriaLexer* L);
-ASTNode parseBlock(AriaLexer* L);
-ASTNode parseFunc(AriaLexer* L);
+ASTNode* parseArg(AriaLexer* L, Arena* A);
+ASTNode parseAssignment(AriaLexer* L, Arena* A);
+ASTNode parseBlock(AriaLexer* L, Arena* A);
+ASTNode parseFunc(AriaLexer* L, Arena* A);
 ASTNode parseFuncCall(AriaLexer* L);
-ASTNode parseExpression(AriaLexer* L, const binding_t min_bp);
-ASTNode parseFor(AriaLexer* L);
-ASTNode parseForEach(AriaLexer* L);
+ASTNode parseExpression(AriaLexer* L, Arena* A, const binding_t min_bp);
+ASTNode parseFor(AriaLexer* L, Arena* A);
+ASTNode parseForEach(AriaLexer* L, Arena* A);
 ASTNode parseIdentifier(AriaLexer* L);
-ASTNode parseIf(AriaLexer* L);
+ASTNode parseIf(AriaLexer* L, Arena* A);
 ASTNode parseImport(AriaLexer* L);
-ASTNode parseReturn(AriaLexer* L);
-ASTNode parseMethodCall(AriaLexer* L);
-ASTNode parseMethodCallOrAttr(AriaLexer* L);
-ASTNode parseStatement(AriaLexer* L);
-ASTNode parseType(AriaLexer* L);
-ASTNode parseVar(AriaLexer* L);
+ASTNode parseReturn(AriaLexer* L, Arena* A);
+ASTNode parseMethodCall(AriaLexer* L, Arena* A);
+ASTNode parseMethodCallOrAttr(AriaLexer* L, Arena* A);
+ASTNode parseStatement(AriaLexer* L, Arena* A);
+ASTNode parseType(AriaLexer* L, Arena* A);
+ASTNode parseVar(AriaLexer* L, Arena* A);
 ASTNode ariaCreateNode(const NodeType type);
-ASTNode ariaParse(AriaLexer* L, char* mod_name);
+ASTNode ariaParse(AriaLexer* L, char* mod_name, Arena* A);
 void printAst(const ASTNode* root);
 
 #endif  // ARIA_PARSER_H
