@@ -29,6 +29,7 @@ int main(void) {
         ONETEST_TEST(test_getTokenString),
 
         // parser_test.h
+        ONETEST_TEST(test_getStringName),
         ONETEST_TEST(test_parseArg),
         ONETEST_TEST(test_parseAssignment),
         ONETEST_TEST(test_parseBlock),

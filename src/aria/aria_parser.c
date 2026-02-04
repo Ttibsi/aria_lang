@@ -69,16 +69,20 @@ binding_t infixBindingPower(const TokenType* tkn) {
     return 0;
 }
 
+char* getStringName(AriaLexer* L) {
+    const AriaToken* tok = &L->items[L->index];
+    Nob_String_Builder str = {0};
+    nob_sb_append_buf(&str, &L->source[tok->start], tok->len);
+    nob_sb_append_null(&str);
+    return str.items;
+}
+
 ASTNode* parseArg(AriaLexer* L) {
     ASTNode* node = malloc(sizeof(ASTNode));
     node->type = AST_ARG;
 
     // name
-    const AriaToken* tok = &L->items[L->index];
-    Nob_String_Builder arg_name = {0};
-    nob_sb_append_buf(&arg_name, &L->source[tok->start], tok->len);
-    nob_sb_append_null(&arg_name);
-    node->arg.name = arg_name.items;
+    node->arg.name = getStringName(L);
     advance(L);
 
     // type
@@ -146,11 +150,7 @@ ASTNode parseFunc(AriaLexer* L) {
     ASTNode funcNode = ariaCreateNode(AST_FUNC);
 
     // func name
-    const AriaToken* tok = &L->items[L->index];
-    Nob_String_Builder name = {0};
-    nob_sb_append_buf(&name, &L->source[tok->start], tok->len);
-    nob_sb_append_null(&name);
-    funcNode.func.name = name.items;
+    funcNode.func.name = getStringName(L);
     advance(L);
 
     // arguments
@@ -185,11 +185,7 @@ ASTNode parseFuncCall(AriaLexer* L) {
     ASTNode funcNode = ariaCreateNode(AST_CALL);
 
     // func name
-    const AriaToken* tok = &L->items[L->index];
-    Nob_String_Builder name = {0};
-    nob_sb_append_buf(&name, &L->source[tok->start], tok->len);
-    nob_sb_append_null(&name);
-    funcNode.funcCall.name = name.items;
+    funcNode.funcCall.name = getStringName(L);
     advance(L);
 
     // arguments
@@ -199,11 +195,7 @@ ASTNode parseFuncCall(AriaLexer* L) {
         if (!check(L, TOK_IDENTIFIER)) { parsingError("function args contain non-identifiers\n"); }
         if (args_idx >= param_count) { parsingError("Function has too many arguments\n"); }
 
-        const AriaToken* tok = &L->items[L->index];
-        Nob_String_Builder arg_name = {0};
-        nob_sb_append_buf(&arg_name, &L->source[tok->start], tok->len);
-        nob_sb_append_null(&arg_name);
-        funcNode.funcCall.args[args_idx] = arg_name.items;
+        funcNode.funcCall.args[args_idx] = getStringName(L);
         advance(L);
 
         args_idx++;
@@ -368,11 +360,7 @@ ASTNode parseImport(AriaLexer* L) {
 
     if (check(L, TOK_STRING_LIT)) { node.import.local_file = true; }
 
-    const AriaToken* tok = &L->items[L->index];
-    Nob_String_Builder name = {0};
-    nob_sb_append_buf(&name, &L->source[tok->start], tok->len);
-    nob_sb_append_null(&name);
-    node.import.name = name.items;
+    node.import.name = getStringName(L);
     advance(L);
 
     return node;
@@ -393,11 +381,7 @@ ASTNode parseMethodCall(AriaLexer* L) {
     if (!check(L, TOK_IDENTIFIER)) { parsingError("Can't parse method"); }
     ASTNode node = ariaCreateNode(AST_METHOD_CALL);
 
-    const AriaToken* tok = &L->items[L->index];
-    Nob_String_Builder name = {0};
-    nob_sb_append_buf(&name, &L->source[tok->start], tok->len);
-    nob_sb_append_null(&name);
-    node.methodCall.object = name.items;
+    node.methodCall.object = getStringName(L);
     advance(L);
 
     if (!match(L, TOK_DOT)) { parsingError("No dot found in method call"); }
@@ -465,11 +449,7 @@ ASTNode parseType(AriaLexer* L) {
     ASTNode node = ariaCreateNode(AST_TYPE);
 
     // type name
-    const AriaToken* tok = &L->items[L->index];
-    Nob_String_Builder name = {0};
-    nob_sb_append_buf(&name, &L->source[tok->start], tok->len);
-    nob_sb_append_null(&name);
-    node.Type.name = name.items;
+    node.Type.name = getStringName(L);
     advance(L);
 
     // attributes
@@ -487,11 +467,7 @@ ASTNode parseVar(AriaLexer* L) {
     ASTNode node = ariaCreateNode(AST_VAR);
 
     // variable name
-    const AriaToken* tok = &L->items[L->index];
-    Nob_String_Builder name = {0};
-    nob_sb_append_buf(&name, &L->source[tok->start], tok->len);
-    nob_sb_append_null(&name);
-    node.var.name = name.items;
+    node.var.name = getStringName(L);
     advance(L);
 
     // variable type
