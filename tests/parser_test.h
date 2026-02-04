@@ -5,6 +5,18 @@
 #include "aria/aria_parser.h"
 #include "onetest.h"
 
+static inline int test_getStringName(void) {
+    AriaLexer L = {0};
+    ariaLexerInit(&L, "ident");
+    ariaTokenize(&L);
+
+    const char* actual = getStringName(&L);
+    const char* expected = "ident";
+    onetest_assert(strcmp(actual, expected) == 0);
+
+    return 0;
+}
+
 static inline int test_parseArg(void) {
     AriaLexer L = {0};
     ariaLexerInit(&L, "foo LIST[BOOL]");

@@ -147,6 +147,7 @@ typedef struct _ASTNode {
 
 binding_t prefixBindingPower(const TokenType* tkn);
 binding_t infixBindingPower(const TokenType* tkn);
+char* getStringName(AriaLexer* L);
 ASTNode* parseArg(AriaLexer* L);
 ASTNode parseAssignment(AriaLexer* L);
 ASTNode parseBlock(AriaLexer* L);
