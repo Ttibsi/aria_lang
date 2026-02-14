@@ -2,6 +2,9 @@
 
 #include "aria_parser.h"
 
+#define ARENA_IMPLEMENTATION
+#include "../include/arena.h"
+
 #define NOB_IMPLEMENTATION
 #include "../include/nob.h"
 
@@ -23,9 +26,11 @@ int ariaDoString(AriaVM* vm, const char* str) {
 
     if (vm->debug_mode) { printTokens(&vm->lexer); }
 
-    const ASTNode module = ariaParse(&vm->lexer, "main");
+    Arena parser_arena = {0};
+    const ASTNode module = ariaParse(&vm->lexer, "main", &parser_arena);
     if (vm->debug_mode) { printAst(&module); }
 
+    // arena_free(&parser_arena);
     NOB_TODO("ariaDoString not implemented");
 }
 
