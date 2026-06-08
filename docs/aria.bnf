@@ -1,0 +1,21 @@
+
+<argument> ::= <ident> <type>
+
+<assignment> ::= <ident> '=' <expr>
+
+<block> ::= <statement> <block>
+          | <statement>
+
+<arglist> ::= <argument> <arglist>
+            | <argument>
+            | ""
+
+<func> ::= "FUNC" <ident> "(" <arglist> ")" <type> <block>
+
+<paramlist> ::= <ident> <paramlist>
+              | <ident>
+              | ""
+
+<func_call> ::= <ident> "(" <paramlist> ")"
+
+<expr> ::=
