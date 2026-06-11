@@ -9,6 +9,9 @@
 #define NOB_IMPLEMENTATION
 #include "../include/nob.h"
 
+#define HT_IMPLEMENTATION
+#include "../include/ht.h"
+
 void ariaInit(AriaVM* vm) {
     AriaStack stack = {0};
     vm->global_stack = stack;

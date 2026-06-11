@@ -1,6 +1,7 @@
 #ifndef ARIA_BYTECODE_H
 #define ARIA_BYTECODE_H
 
+#include "../include/ht.h"
 #include "aria_parser.h"
 
 typedef enum { OP_COUNT } Opcode;
@@ -20,14 +21,18 @@ typedef struct _Bytecode {
 // stores a linked list of instructions
 typedef struct {
     char* name;
+    size_t size;
     Bytecode* buf;
 } Aria_Chunk;
+
+typedef Ht(const char*, Aria_Chunk) Chunk_map_t;
 
 // A module is the contents of a given `.ari` file
 typedef struct {
     char* name;
+    Chunk_map_t chunks;
 } Aria_Module;
 
-Aria_Module ariaEmitBytecode(ASTNode module);
+Aria_Module ariaEmitBytecode(ASTNode ast);
 
 #endif  // ARIA_BYTECODE_H
