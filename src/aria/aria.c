@@ -7,10 +7,8 @@
 #include "../include/arena.h"
 
 #define NOB_IMPLEMENTATION
-#include "../include/nob.h"
-
-#define HT_IMPLEMENTATION
 #include "../include/ht.h"
+#include "../include/nob.h"
 
 void ariaInit(AriaVM* vm) {
     AriaStack stack = {0};

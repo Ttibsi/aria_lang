@@ -564,8 +564,6 @@ ASTNode ariaCreateNode(const NodeType type) {
         case AST_VAR:
             return (ASTNode){.type = type, .var = {.name = NULL, .value = NULL}};
 
-        case NODE_COUNT:
-            [[fallthrough]];
         default:
             NOB_UNREACHABLE("Unhandled type in ariaCreateNode");
     }
@@ -770,7 +768,6 @@ void printASTNode(const ASTNode* n, int offset) {
             break;
 
             // clang-format off
-        case NODE_COUNT: [[fallthrough]];
         default:
             parsingError("Missing node from printing");
             break;

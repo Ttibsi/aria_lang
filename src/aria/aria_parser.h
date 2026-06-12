@@ -28,8 +28,6 @@ typedef enum {
     AST_STR_LIT,
     AST_TYPE,
     AST_VAR,
-
-    NODE_COUNT
 } NodeType;
 
 typedef uint8_t binding_t;
