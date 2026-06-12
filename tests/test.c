@@ -1,4 +1,5 @@
 #define ONETEST_IMPLEMENTATION
+#include "bytecode_test.h"
 #include "lexer_test.h"
 #include "onetest.h"
 #include "parser_test.h"
@@ -47,6 +48,9 @@ int main(void) {
         ONETEST_TEST(test_parseType),
         ONETEST_TEST(test_parseVar),
         ONETEST_TEST(test_ariaParse),
+
+        // bytecode_test.h
+        ONETEST_TEST(test_ariaEmitBytecode),
     };
 
     const size_t test_count = sizeof(tests) / sizeof(tests[0]);

@@ -1,5 +1,6 @@
 #include "aria.h"
 
+#include "aria_bytecode.h"
 #include "aria_parser.h"
 
 #define ARENA_IMPLEMENTATION
@@ -7,6 +8,9 @@
 
 #define NOB_IMPLEMENTATION
 #include "../include/nob.h"
+
+#define HT_IMPLEMENTATION
+#include "../include/ht.h"
 
 void ariaInit(AriaVM* vm) {
     AriaStack stack = {0};
@@ -29,6 +33,9 @@ int ariaDoString(AriaVM* vm, const char* str) {
     Arena parser_arena = {0};
     const ASTNode module = ariaParse(&vm->lexer, "main", &parser_arena);
     if (vm->debug_mode) { printAst(&module); }
+
+    Aria_Module main_mod = ariaEmitBytecode(module);
+    printf("Module: %s\n", main_mod.name);
 
     // arena_free(&parser_arena);
     NOB_TODO("ariaDoString not implemented");
