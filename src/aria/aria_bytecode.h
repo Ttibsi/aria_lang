@@ -37,5 +37,7 @@ typedef struct {
 } Aria_Module;
 
 Aria_Module ariaEmitBytecode(ASTNode ast);
+void printBytecode(Aria_Module* mod);
+char* opcodeName(Opcode op);
 
 #endif  // ARIA_BYTECODE_H

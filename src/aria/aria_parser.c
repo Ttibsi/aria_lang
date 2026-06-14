@@ -778,4 +778,5 @@ void printASTNode(const ASTNode* n, int offset) {
 void printAst(const ASTNode* root) {
     printf("=== AST ===\n");
     printASTNode(root, 0);
+    printf("\n");
 }

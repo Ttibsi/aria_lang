@@ -81,20 +81,43 @@ Aria_Module ariaEmitBytecode(ASTNode ast) {
 
     nob_da_foreach(ASTNode, node, &ast.block) {
         switch (node->type) {
-            case TOK_FUNC:
+            case AST_FUNC:
                 Aria_Chunk c = compileFunc(node);
                 *ht_put(&mod.chunks, c.name) = c;
                 break;
-            case TOK_IMPORT:
+            case AST_IMPORT:
                 break;
-            case TOK_TYPE:
+            case AST_TYPE:
                 break;
 
-            case TOK_ERROR:
+            case AST_ERR:
                 [[fallthrough]];
             default:
         }
     }
 
     return mod;
+}
+
+void printBytecode(Aria_Module* mod) {
+    printf("=== BYTECODE ===");
+    printf("Module: %s\n", mod->name);
+
+    ht_foreach(chunk, &mod->chunks) {
+        printf("  Chunk: %s\n", ht_key(&mod->chunks, chunk));
+
+        nob_da_foreach(Aria_Bytecode, i, chunk) {
+            printf("    %s (%ld, %ld, %ld)\n", opcodeName(i->op), i->operand_1, i->operand_2,
+                   i->operand_3);
+        }
+    }
+}
+
+char* opcodeName(Opcode op) {
+    switch (op) {
+        case OP_RETURN:
+            return "OP_RETURN";
+        case OP_STORE:
+            return "OP_STORE";
+    }
 }

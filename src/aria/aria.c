@@ -33,7 +33,7 @@ int ariaDoString(AriaVM* vm, const char* str) {
     if (vm->debug_mode) { printAst(&module); }
 
     Aria_Module main_mod = ariaEmitBytecode(module);
-    printf("Module: %s\n", main_mod.name);
+    if (vm->debug_mode) { printBytecode(&main_mod); }
 
     // arena_free(&parser_arena);
     NOB_TODO("ariaDoString not implemented");
