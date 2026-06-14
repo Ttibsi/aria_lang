@@ -4,7 +4,7 @@
 #include <stdint.h>
 #include <stdlib.h>
 
-#include "../include/arena.h"
+#include "arena.h"
 #include "aria_lexer.h"
 
 typedef enum {

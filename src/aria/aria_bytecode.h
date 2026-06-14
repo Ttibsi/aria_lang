@@ -1,8 +1,8 @@
 #ifndef ARIA_BYTECODE_H
 #define ARIA_BYTECODE_H
 
-#include "../include/ht.h"
 #include "aria_parser.h"
+#include "ht.h"
 
 typedef enum {
     OP_RETURN,
@@ -36,7 +36,11 @@ typedef struct {
     Chunk_map_t chunks;
 } Aria_Module;
 
+Aria_Bytecode compileExpr(ASTNode* node);
+void compileStmt(Aria_Chunk* chunk, ASTNode* node);
+Aria_Chunk compileFunc(ASTNode* node);
 Aria_Module ariaEmitBytecode(ASTNode ast);
+
 void printBytecode(Aria_Module* mod);
 char* opcodeName(Opcode op);
 

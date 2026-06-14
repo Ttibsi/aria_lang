@@ -50,7 +50,11 @@ int main(void) {
         ONETEST_TEST(test_ariaParse),
 
         // bytecode_test.h
+        ONETEST_TEST(test_compileExpr),
+        ONETEST_TEST(test_compileStmt),
+        ONETEST_TEST(test_compileFunc),
         ONETEST_TEST(test_ariaEmitBytecode),
+        ONETEST_TEST(test_opcodeName),
     };
 
     const size_t test_count = sizeof(tests) / sizeof(tests[0]);

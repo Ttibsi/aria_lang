@@ -6,7 +6,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "../include/nob.h"
+#include "nob.h"
 
 void ariaLexerInit(AriaLexer* lexer, const char* source) {
     nob_da_reserve(lexer, 32);

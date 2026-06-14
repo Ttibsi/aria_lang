@@ -4,11 +4,13 @@
 #include "aria_parser.h"
 
 #define ARENA_IMPLEMENTATION
-#include "../include/arena.h"
+#include "arena.h"
 
 #define NOB_IMPLEMENTATION
-#include "../include/ht.h"
-#include "../include/nob.h"
+#include "nob.h"
+
+#define HT_IMPLEMENTATION
+#include "ht.h"
 
 void ariaInit(AriaVM* vm) {
     AriaStack stack = {0};

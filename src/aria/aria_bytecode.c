@@ -2,14 +2,14 @@
 
 #include <assert.h>
 
-#include "../include/nob.h"
-#define HT_IMPLEMENTATION
-#include "../include/ht.h"
+#include "nob.h"
 
 Aria_Bytecode compileExpr(ASTNode* node) {
     if (node->type == AST_NUM_LIT) {
         return (Aria_Bytecode){.op = OP_STORE, .operand_1 = node->num_literal};
     }
+
+    NOB_UNREACHABLE("Expr called incorrectly");
 }
 
 void compileStmt(Aria_Chunk* chunk, ASTNode* node) {
@@ -120,4 +120,6 @@ char* opcodeName(Opcode op) {
         case OP_STORE:
             return "OP_STORE";
     }
+
+    return "";
 }
