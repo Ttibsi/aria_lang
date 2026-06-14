@@ -12,7 +12,7 @@ Aria_Bytecode compileExpr(ASTNode* node) {
     }
 }
 
-Aria_Bytecode compileStmt(ASTNode* node) {
+void compileStmt(Aria_Chunk* chunk, ASTNode* node) {
     switch (node->type) {
         case AST_ARG:
             break;
@@ -46,8 +46,10 @@ Aria_Bytecode compileStmt(ASTNode* node) {
             break;
         case AST_NUM_LIT:
             break;
-        case AST_RETURN:
-            return compileExpr(node->ret.expr);
+        case AST_RETURN: {
+            nob_da_append(chunk, compileExpr(node->ret.expr));
+            nob_da_append(chunk, (Aria_Bytecode){.op = OP_RETURN});
+        } break;
         case AST_STR_LIT:
             break;
         case AST_TYPE:
@@ -65,8 +67,7 @@ Aria_Chunk compileFunc(ASTNode* node) {
 
     for (size_t i = 0; i < node->func.body->block.count; i++) {
         ASTNode* item = &node->func.body->block.items[i];
-        Aria_Bytecode inst = compileStmt(item);
-        nob_da_append(&chunk, inst);
+        compileStmt(&chunk, item);
     }
 
     return chunk;

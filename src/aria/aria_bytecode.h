@@ -4,7 +4,10 @@
 #include "../include/ht.h"
 #include "aria_parser.h"
 
-typedef enum { OP_STORE, OP_COUNT } Opcode;
+typedef enum {
+    OP_RETURN,
+    OP_STORE,
+} Opcode;
 
 // A single instruction
 typedef struct {
