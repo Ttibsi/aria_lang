@@ -1,7 +1,7 @@
-FUNC foo() NIL
-    RET 17 * 2
+FUNC foo(x NUM) NIL
+    RET x * 2
 END
 
 FUNC main() NUM
-    RET 35 + foo()
+    RET 35 + foo(17)
 END

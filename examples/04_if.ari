@@ -1,0 +1,9 @@
+FUNC main() NUM
+    IF y < x THEN
+        RET 0
+    ELSE IF x == y THEN
+        RET 1
+    ELSE
+        RET 2
+    END
+END

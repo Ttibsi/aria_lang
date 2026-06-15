@@ -1,0 +1,3 @@
+FUNC main() NUM
+    VAR x NUM = 5
+END

@@ -1,0 +1,5 @@
+IMPORT "file.ari"
+IMPORT math
+
+FUNC name() NUM
+END
