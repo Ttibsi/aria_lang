@@ -4,7 +4,7 @@
 #include <stdint.h>
 #include <stdlib.h>
 
-#include "../include/arena.h"
+#include "arena.h"
 #include "aria_lexer.h"
 
 typedef enum {
@@ -28,8 +28,6 @@ typedef enum {
     AST_STR_LIT,
     AST_TYPE,
     AST_VAR,
-
-    NODE_COUNT
 } NodeType;
 
 typedef uint8_t binding_t;

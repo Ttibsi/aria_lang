@@ -19,6 +19,7 @@ int main(int argc, char* argv[]) {
     vm.writeFn = writeFn;
 
     // Create a module that contains multiple functions
+    // TODO: translate this into something that works with an AriaModule from aria_bytecode.h
     AriaMod module = {0};
     module.name = "module_name";
     AriaFunc funcs[] = {
@@ -32,7 +33,7 @@ int main(int argc, char* argv[]) {
     //     = "import module_name\n\n"
     //       "print(module_name.someFunc())\n";
     // [[maybe_unused]] int retcode_str = ariaDoString(&vm, src);
-    [[maybe_unused]] int retcode_file = ariaDoFile(&vm, "t.ari");
+    [[maybe_unused]] int retcode_file = ariaDoFile(&vm, "examples/01_ret.ari");
 
     // C <> lang value interop
     AriaObj obj = {.as = {69}};

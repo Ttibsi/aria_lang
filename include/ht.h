@@ -509,13 +509,13 @@ enum {
     HT__FIRST_VALID_HASH,
 };
 
-static void *ht__put(Ht__Abstract *ht, void *key, Ht__Layout l);
-static void *ht__find(Ht__Abstract *ht, void *key, Ht__Layout l);
+void *ht__put(Ht__Abstract *ht, void *key, Ht__Layout l);
+void *ht__find(Ht__Abstract *ht, void *key, Ht__Layout l);
 static void *ht__find_or_put(Ht__Abstract *ht, void *key, Ht__Layout l);
 static void ht__delete(Ht__Abstract *ht, void *slot, Ht__Layout l);
 static bool ht__find_and_delete(Ht__Abstract *ht, void *key, Ht__Layout l);
-static void *ht__key(void *slot, Ht__Layout l);
-static bool ht__next(Ht__Abstract *ht, void **slot, Ht__Layout l);
+void *ht__key(void *slot, Ht__Layout l);
+bool ht__next(Ht__Abstract *ht, void **slot, Ht__Layout l);
 static void ht__reset(Ht__Abstract *ht, Ht__Layout l);
 static void ht__free(Ht__Abstract *ht);
 static void *ht__find_slot(Ht__Abstract *ht, uintptr_t hash, Ht_Hasheq hasheq, void *key, Ht__Layout l);
@@ -556,13 +556,13 @@ static int ht__memcmp(const void *vl, const void *vr, size_t n);
 
 #ifdef HT_IMPLEMENTATION
 
-static void *ht__put(Ht__Abstract *ht, void *key, Ht__Layout l)
+void *ht__put(Ht__Abstract *ht, void *key, Ht__Layout l)
 {
     ht__expand(ht, l);
     return ht__put_no_expand(ht, key, l);
 }
 
-static void *ht__find(Ht__Abstract *ht, void *key, Ht__Layout l)
+void *ht__find(Ht__Abstract *ht, void *key, Ht__Layout l)
 {
     if (ht->impl_capacity == 0) return NULL;
 
@@ -599,12 +599,12 @@ static bool ht__find_and_delete(Ht__Abstract *ht, void *key, Ht__Layout l)
     return true;
 }
 
-static void *ht__key(void *slot, Ht__Layout l)
+void *ht__key(void *slot, Ht__Layout l)
 {
     return ht__slot_key(slot, l);
 }
 
-static bool ht__next(Ht__Abstract *ht, void **slot, Ht__Layout l)
+bool ht__next(Ht__Abstract *ht, void **slot, Ht__Layout l)
 {
     if (ht->impl_capacity == 0) {
         *slot = NULL;
