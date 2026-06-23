@@ -222,6 +222,9 @@ ASTNode parseExpression(AriaLexer* L, Arena* A, const binding_t min_bp) {
         case TOK_IDENTIFIER:
             if (L->items[L->index + 1].type == TOK_LEFT_PAREN) {
                 *node.expr.lhs = parseFuncCall(L);
+                // The current token needs to be RPAREN so we can lookahead at the start of the
+                // while loop
+                L->index--;
             } else {
                 *node.expr.lhs = parseIdentifier(L);
             }
@@ -232,17 +235,11 @@ ASTNode parseExpression(AriaLexer* L, Arena* A, const binding_t min_bp) {
             parsingError("Unknown token found (parseExpression LHS): %d", getCurrTokenType(L));
     };
 
-    const AriaToken* next = &L->items[L->index + 1];
-    if (next->type == TOK_EOF) {
-        parsingError("EOF reached when parsing an expression");
-    } else if (next->type == TOK_RIGHT_PAREN || isKeyword(next->type)) {
-        return *node.expr.lhs;
-    }
-
     while (true) {
+        const TokenType tok_type = L->items[L->index + 1].type;
+        if (tok_type == TOK_RIGHT_PAREN || isKeyword(tok_type)) { return *node.expr.lhs; }
+        if (tok_type == TOK_EOF) { parsingError("EOF reached when parsing an expression"); }
         advance(L);
-        const TokenType tok_type = getCurrTokenType(L);
-        if (tok_type == TOK_RIGHT_PAREN || isKeyword(tok_type)) { break; }
 
         const binding_t bp = infixBindingPower(&tok_type);
         // If the token is anything other than expected, we'll get a bp of 0
