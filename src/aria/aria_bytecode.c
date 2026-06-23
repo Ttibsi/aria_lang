@@ -100,7 +100,7 @@ Aria_Module ariaEmitBytecode(ASTNode ast) {
 }
 
 void printBytecode(Aria_Module* mod) {
-    printf("=== BYTECODE ===");
+    printf("=== BYTECODE ===\n");
     printf("Module: %s\n", mod->name);
 
     ht_foreach(chunk, &mod->chunks) {
