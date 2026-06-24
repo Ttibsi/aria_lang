@@ -1,5 +1,5 @@
 #include "aria_bytecode.h"
-#define ARIA_STACK_IMPL
+
 #include <assert.h>
 
 #include "aria_stack.h"
@@ -8,6 +8,12 @@
 void compileExpr(Aria_Chunk* chunk, ASTNode* node) {
     if (node->type == AST_NUM_LIT) {
         Aria_Bytecode bc = {.op = OP_STORE, .operand_1 = node->num_literal};
+        nob_da_append(chunk, bc);
+        return;
+
+    } else if (node->type == AST_CALL) {
+        nob_da_append(&chunk->heap, node->funcCall.name);
+        Aria_Bytecode bc = {.op = OP_CALL, .operand_1 = chunk->heap.count};
         nob_da_append(chunk, bc);
         return;
 
@@ -90,7 +96,6 @@ void compileStmt(Aria_Chunk* chunk, ASTNode* node) {
 Aria_Chunk compileFunc(ASTNode* node) {
     Aria_Chunk chunk = {0};
     chunk.name = node->func.name;
-    chunk.stack = createStack(32);
 
     for (size_t i = 0; i < node->func.body->block.count; i++) {
         ASTNode* item = &node->func.body->block.items[i];
@@ -146,6 +151,16 @@ char* opcodeName(Opcode op) {
             return "OP_RETURN";
         case OP_STORE:
             return "OP_STORE";
+        case OP_ADD:
+            return "OP_ADD";
+        case OP_SUB:
+            return "OP_SUB";
+        case OP_MUL:
+            return "OP_MUL";
+        case OP_DIV:
+            return "OP_DIV";
+        case OP_CALL:
+            return "OP_CALL";
     }
 
     return "";

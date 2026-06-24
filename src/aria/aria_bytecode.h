@@ -7,7 +7,7 @@
 
 typedef enum {
     OP_ADD,
-    OP_CALL,
+    OP_CALL,  // operand_1 is the heap index of the function name to call
     OP_DIV,
     OP_MUL,
     OP_RETURN,
@@ -23,6 +23,12 @@ typedef struct {
     size_t operand_3;
 } Aria_Bytecode;
 
+typedef struct {
+    char** items;
+    size_t count;
+    size_t capacity;
+} Heap;
+
 // A chunk is a named block (ex function, class)
 // stores a linked list of instructions
 typedef struct {
@@ -32,7 +38,7 @@ typedef struct {
     size_t count;
     size_t capacity;
 
-    Stack* stack;
+    Heap heap;
 } Aria_Chunk;
 
 typedef Ht(const char*, Aria_Chunk) Chunk_map_t;
