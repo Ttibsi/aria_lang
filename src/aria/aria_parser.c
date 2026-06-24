@@ -235,9 +235,17 @@ ASTNode parseExpression(AriaLexer* L, Arena* A, const binding_t min_bp) {
             parsingError("Unknown token found (parseExpression LHS): %d", getCurrTokenType(L));
     };
 
+    // NOTE: This code is duplicated at the top of the while loop as we need to return
+    // only the LHS if there's no rhs, which happens here, but if there's both halves,
+    // then we need to return the whole expr, which happens at the top of the while
+    // loop
+    TokenType tok_type = L->items[L->index + 1].type;
+    if (tok_type == TOK_RIGHT_PAREN || isKeyword(tok_type)) { return *node.expr.lhs; }
+    if (tok_type == TOK_EOF) { parsingError("EOF reached when parsing an expression"); }
+
     while (true) {
-        const TokenType tok_type = L->items[L->index + 1].type;
-        if (tok_type == TOK_RIGHT_PAREN || isKeyword(tok_type)) { return *node.expr.lhs; }
+        TokenType tok_type = L->items[L->index + 1].type;
+        if (tok_type == TOK_RIGHT_PAREN || isKeyword(tok_type)) { return node; }
         if (tok_type == TOK_EOF) { parsingError("EOF reached when parsing an expression"); }
         advance(L);
 
