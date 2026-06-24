@@ -1,12 +1,38 @@
 #include "aria_bytecode.h"
-
+#define ARIA_STACK_IMPL
 #include <assert.h>
 
+#include "aria_stack.h"
 #include "nob.h"
 
-Aria_Bytecode compileExpr(ASTNode* node) {
+void compileExpr(Aria_Chunk* chunk, ASTNode* node) {
     if (node->type == AST_NUM_LIT) {
-        return (Aria_Bytecode){.op = OP_STORE, .operand_1 = node->num_literal};
+        Aria_Bytecode bc = {.op = OP_STORE, .operand_1 = node->num_literal};
+        nob_da_append(chunk, bc);
+        return;
+
+    } else if (node->type == AST_EXPR) {
+        compileExpr(chunk, node->expr.rhs);
+        compileExpr(chunk, node->expr.lhs);
+
+        switch (node->expr.op) {
+            case TOK_PLUS:
+                nob_da_append(chunk, (Aria_Bytecode){.op = OP_ADD});
+                break;
+            case TOK_MINUS:
+                nob_da_append(chunk, (Aria_Bytecode){.op = OP_SUB});
+                break;
+            case TOK_STAR:
+                nob_da_append(chunk, (Aria_Bytecode){.op = OP_MUL});
+                break;
+            case TOK_SLASH:
+                nob_da_append(chunk, (Aria_Bytecode){.op = OP_DIV});
+                break;
+            default:
+                NOB_UNREACHABLE("Unhandled operation in expr");
+        }
+
+        return;
     }
 
     NOB_UNREACHABLE("Expr called incorrectly");
@@ -47,7 +73,7 @@ void compileStmt(Aria_Chunk* chunk, ASTNode* node) {
         case AST_NUM_LIT:
             break;
         case AST_RETURN: {
-            nob_da_append(chunk, compileExpr(node->ret.expr));
+            compileExpr(chunk, node->ret.expr);
             nob_da_append(chunk, (Aria_Bytecode){.op = OP_RETURN});
         } break;
         case AST_STR_LIT:
@@ -64,6 +90,7 @@ void compileStmt(Aria_Chunk* chunk, ASTNode* node) {
 Aria_Chunk compileFunc(ASTNode* node) {
     Aria_Chunk chunk = {0};
     chunk.name = node->func.name;
+    chunk.stack = createStack(32);
 
     for (size_t i = 0; i < node->func.body->block.count; i++) {
         ASTNode* item = &node->func.body->block.items[i];
