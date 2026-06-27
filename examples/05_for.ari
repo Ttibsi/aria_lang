@@ -1,0 +1,10 @@
+FUNC main() NUM
+    VAR x NUM = 5
+    FOR i = 1 TO x THEN
+        ...
+    END
+
+    FOR j = 1 TO x STEP 2 THEN
+        ...
+    END
+END

@@ -1,0 +1,13 @@
+TYPE C
+    VAR foo BOOL
+    VAR bar NUM = 5
+
+    FUNC f() NIL
+        ...
+    END
+END
+
+FUNC main() NUM
+    VAR c C()
+    VAR c2 C(FALSE, 42)
+END

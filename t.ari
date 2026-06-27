@@ -46,8 +46,9 @@ FUNC main(argc NUM, argv LIST[STR]) NUM
         ...
     END
 
+    VAR obj name()
     func_call(param)
-    object.method_call()
+    obj.method_call()
 
     RET 0
 END
