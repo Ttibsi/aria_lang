@@ -214,26 +214,23 @@ ASTNode parseExpression(AriaLexer* L, Arena* A, const binding_t min_bp) {
         case TOK_NUM_LIT:
             *node.expr.lhs = ariaCreateNode(AST_NUM_LIT);
             node.expr.lhs->num_literal = getTokenNumber(L, L->index);
-            advance(L);
             break;
         case TOK_LEFT_PAREN:
             advance(L);
             *node.expr.lhs = parseExpression(L, A, 0);
-            if (!check(L, TOK_RIGHT_PAREN)) {
+            advance(L);
+            if (!match(L, TOK_RIGHT_PAREN)) {
                 parsingError("Missing closing parenthesis in expression");
             }
+            L->index--;
             break;
         case TOK_IDENTIFIER:
             if (L->items[L->index + 1].type == TOK_LEFT_PAREN) {
                 *node.expr.lhs = parseFuncCall(L);
-                // The current token needs to be RPAREN so we can lookahead at the start of the
-                // while loop
                 L->index--;
             } else {
                 *node.expr.lhs = parseIdentifier(L);
             }
-
-            advance(L);
             break;
         case TOK_ELLIPSIS:
             [[fallthrough]];
@@ -245,7 +242,7 @@ ASTNode parseExpression(AriaLexer* L, Arena* A, const binding_t min_bp) {
     // only the LHS if there's no rhs, which happens here, but if there's both halves,
     // then we need to return the whole expr, which happens at the top of the while
     // loop
-    TokenType tok_type = L->items[L->index].type;
+    TokenType tok_type = L->items[L->index + 1].type;
     if (tok_type == TOK_RIGHT_PAREN) { return *node.expr.lhs; }
     if (isKeyword(tok_type)) { return *node.expr.lhs; }
     if (tok_type == TOK_EOF) { parsingError("EOF reached when parsing an expression"); }
@@ -253,28 +250,28 @@ ASTNode parseExpression(AriaLexer* L, Arena* A, const binding_t min_bp) {
     while (true) {
         tok_type = L->items[L->index + 1].type;
         if (tok_type == TOK_RIGHT_PAREN || isKeyword(tok_type)) {
-            if (tok_type == TOK_RIGHT_PAREN) { advance(L); }
-            return node;
+            return node.expr.rhs == NULL ? *node.expr.lhs : node;
         }
         if (tok_type == TOK_EOF) { parsingError("EOF reached when parsing an expression"); }
-        advance(L);
 
+        advance(L);
         const binding_t bp = infixBindingPower(tok_type);
         // If the token is anything other than expected, we'll get a bp of 0
         if (bp == 0) {
             L->index--;
-            return *node.expr.lhs;
+            return node.expr.rhs == NULL ? *node.expr.lhs : node;
         }
 
-        if (bp < min_bp) { break; }
+        if (bp < min_bp) {
+            L->index--;
+            return node.expr.rhs == NULL ? *node.expr.lhs : node;
+        }
         advance(L);
 
         node.expr.rhs = arena_alloc(A, sizeof(ASTNode));
         *node.expr.rhs = parseExpression(L, A, bp + 1);
         node.expr.op = tok_type;
     }
-
-    return node;
 }
 
 ASTNode parseFor(AriaLexer* L, Arena* A) {
@@ -346,6 +343,7 @@ ASTNode parseIf(AriaLexer* L, Arena* A) {
     ASTNode ifNode = ariaCreateNode(AST_IF);
     ifNode.If.cond = arena_alloc(A, sizeof(ASTNode));
     *ifNode.If.cond = parseExpression(L, A, 0);
+    advance(L);
     if (!(match(L, TOK_THEN))) { parsingError("No THEN keyword found"); }
 
     ifNode.If.block = arena_alloc(A, sizeof(ASTNode));
