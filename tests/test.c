@@ -3,6 +3,7 @@
 #include "lexer_test.h"
 #include "onetest.h"
 #include "parser_test.h"
+#include "stack_test.h"
 
 int main(void) {
     onetest_test_t tests[] = {
@@ -55,6 +56,13 @@ int main(void) {
         ONETEST_TEST(test_compileFunc),
         ONETEST_TEST(test_ariaEmitBytecode),
         ONETEST_TEST(test_opcodeName),
+
+        // stack_test.h
+        ONETEST_TEST(test_isFull),
+        ONETEST_TEST(test_isEmpty),
+        ONETEST_TEST(test_stackPush),
+        ONETEST_TEST(test_stackPop),
+        ONETEST_TEST(test_stackPeek),
     };
 
     const size_t test_count = sizeof(tests) / sizeof(tests[0]);
