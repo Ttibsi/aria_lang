@@ -144,8 +144,8 @@ typedef struct _ASTNode {
 #define ERR_NODE \
     (ASTNode) { .type = AST_ERR }
 
-binding_t prefixBindingPower(const TokenType* tkn);
-binding_t infixBindingPower(const TokenType* tkn);
+binding_t prefixBindingPower(const TokenType tkn);
+binding_t infixBindingPower(const TokenType tkn);
 char* getStringName(AriaLexer* L);
 ASTNode* parseArg(AriaLexer* L, Arena* A);
 ASTNode parseAssignment(AriaLexer* L, Arena* A);

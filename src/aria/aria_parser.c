@@ -14,8 +14,8 @@
         assert(0);                                                                           \
     } while (0)
 
-binding_t prefixBindingPower(const TokenType* tkn) {
-    switch (*tkn) {
+binding_t prefixBindingPower(const TokenType tkn) {
+    switch (tkn) {
         case TOK_BANG:
             [[fallthrough]];
         case TOK_MINUS:
@@ -28,8 +28,8 @@ binding_t prefixBindingPower(const TokenType* tkn) {
     return 0;
 }
 
-binding_t infixBindingPower(const TokenType* tkn) {
-    switch (*tkn) {
+binding_t infixBindingPower(const TokenType tkn) {
+    switch (tkn) {
         case TOK_DOT:
             [[fallthrough]];
         case TOK_LEFT_PAREN:
@@ -214,10 +214,14 @@ ASTNode parseExpression(AriaLexer* L, Arena* A, const binding_t min_bp) {
         case TOK_NUM_LIT:
             *node.expr.lhs = ariaCreateNode(AST_NUM_LIT);
             node.expr.lhs->num_literal = getTokenNumber(L, L->index);
+            advance(L);
             break;
         case TOK_LEFT_PAREN:
             advance(L);
             *node.expr.lhs = parseExpression(L, A, 0);
+            if (!check(L, TOK_RIGHT_PAREN)) {
+                parsingError("Missing closing parenthesis in expression");
+            }
             break;
         case TOK_IDENTIFIER:
             if (L->items[L->index + 1].type == TOK_LEFT_PAREN) {
@@ -228,6 +232,8 @@ ASTNode parseExpression(AriaLexer* L, Arena* A, const binding_t min_bp) {
             } else {
                 *node.expr.lhs = parseIdentifier(L);
             }
+
+            advance(L);
             break;
         case TOK_ELLIPSIS:
             [[fallthrough]];
@@ -239,17 +245,21 @@ ASTNode parseExpression(AriaLexer* L, Arena* A, const binding_t min_bp) {
     // only the LHS if there's no rhs, which happens here, but if there's both halves,
     // then we need to return the whole expr, which happens at the top of the while
     // loop
-    TokenType tok_type = L->items[L->index + 1].type;
-    if (tok_type == TOK_RIGHT_PAREN || isKeyword(tok_type)) { return *node.expr.lhs; }
+    TokenType tok_type = L->items[L->index].type;
+    if (tok_type == TOK_RIGHT_PAREN) { return *node.expr.lhs; }
+    if (isKeyword(tok_type)) { return *node.expr.lhs; }
     if (tok_type == TOK_EOF) { parsingError("EOF reached when parsing an expression"); }
 
     while (true) {
-        TokenType tok_type = L->items[L->index + 1].type;
-        if (tok_type == TOK_RIGHT_PAREN || isKeyword(tok_type)) { return node; }
+        tok_type = L->items[L->index + 1].type;
+        if (tok_type == TOK_RIGHT_PAREN || isKeyword(tok_type)) {
+            if (tok_type == TOK_RIGHT_PAREN) { advance(L); }
+            return node;
+        }
         if (tok_type == TOK_EOF) { parsingError("EOF reached when parsing an expression"); }
         advance(L);
 
-        const binding_t bp = infixBindingPower(&tok_type);
+        const binding_t bp = infixBindingPower(tok_type);
         // If the token is anything other than expected, we'll get a bp of 0
         if (bp == 0) {
             L->index--;
