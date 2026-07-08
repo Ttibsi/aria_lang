@@ -9,6 +9,9 @@ int someFunc(AriaVM* vm) {
 void writeFn(AriaVM* vm) { (void)vm; }
 
 int main(int argc, char* argv[]) {
+    char* input_file = NULL;
+    if (argc > 1) { input_file = argv[1]; }
+
     AriaVM vm = {0};
     ariaInit(&vm);
     ariaStoreArgs(&vm, argc, argv);
@@ -33,7 +36,7 @@ int main(int argc, char* argv[]) {
     //     = "import module_name\n\n"
     //       "print(module_name.someFunc())\n";
     // [[maybe_unused]] int retcode_str = ariaDoString(&vm, src);
-    [[maybe_unused]] int retcode_file = ariaDoFile(&vm, "examples/01_ret.ari");
+    [[maybe_unused]] int retcode_file = ariaDoFile(&vm, input_file);
 
     // C <> lang value interop
     AriaObj obj = {.as = {69}};

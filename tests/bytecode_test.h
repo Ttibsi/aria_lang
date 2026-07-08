@@ -7,8 +7,11 @@
 #include "onetest.h"
 
 static inline int test_compileExpr(void) {
+    Aria_Chunk c = {0};
     ASTNode n = (ASTNode){.type = AST_NUM_LIT, .num_literal = 69};
-    const Aria_Bytecode bc = compileExpr(&n);
+    compileExpr(&c, &n);
+    Aria_Bytecode bc = *c.items;
+
     onetest_assert(bc.op == OP_STORE);
     onetest_assert(bc.operand_1 == 69);
 

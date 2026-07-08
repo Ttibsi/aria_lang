@@ -233,6 +233,19 @@ static inline int test_parseReturn(void) {
     onetest_assert(n.ret.expr->type == AST_NUM_LIT);
     onetest_assert(n.ret.expr->num_literal == 4);
 
+    AriaLexer L2 = {0};
+    ariaLexerInit(&L2, "RET 35 + foo() END");
+    ariaTokenize(&L2);
+    ASTNode n2 = parseReturn(&L2, &A);
+    onetest_assert(n2.type == AST_RETURN);
+    onetest_assert(n2.ret.expr != NULL);
+    onetest_assert(n2.ret.expr->type == AST_EXPR);
+    onetest_assert(n2.ret.expr->expr.op == TOK_PLUS);
+    onetest_assert(n2.ret.expr->expr.lhs->type == AST_NUM_LIT);
+    onetest_assert(n2.ret.expr->expr.lhs->num_literal == 35);
+    onetest_assert(n2.ret.expr->expr.rhs->type == AST_CALL);
+    onetest_assert(strcmp(n2.ret.expr->expr.rhs->funcCall.name, "foo") == 0);
+
     return 0;
 }
 

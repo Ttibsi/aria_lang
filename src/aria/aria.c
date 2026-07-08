@@ -1,7 +1,9 @@
 #include "aria.h"
 
+#define ARIA_STACK_IMPL
 #include "aria_bytecode.h"
 #include "aria_parser.h"
+#include "aria_stack.h"
 
 #define ARENA_IMPLEMENTATION
 #include "arena.h"

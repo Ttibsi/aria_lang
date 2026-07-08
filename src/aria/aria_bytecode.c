@@ -2,11 +2,43 @@
 
 #include <assert.h>
 
+#include "aria_stack.h"
 #include "nob.h"
 
-Aria_Bytecode compileExpr(ASTNode* node) {
+void compileExpr(Aria_Chunk* chunk, ASTNode* node) {
     if (node->type == AST_NUM_LIT) {
-        return (Aria_Bytecode){.op = OP_STORE, .operand_1 = node->num_literal};
+        Aria_Bytecode bc = {.op = OP_STORE, .operand_1 = node->num_literal};
+        nob_da_append(chunk, bc);
+        return;
+
+    } else if (node->type == AST_CALL) {
+        nob_da_append(&chunk->heap, node->funcCall.name);
+        Aria_Bytecode bc = {.op = OP_CALL, .operand_1 = chunk->heap.count};
+        nob_da_append(chunk, bc);
+        return;
+
+    } else if (node->type == AST_EXPR) {
+        compileExpr(chunk, node->expr.rhs);
+        compileExpr(chunk, node->expr.lhs);
+
+        switch (node->expr.op) {
+            case TOK_PLUS:
+                nob_da_append(chunk, (Aria_Bytecode){.op = OP_ADD});
+                break;
+            case TOK_MINUS:
+                nob_da_append(chunk, (Aria_Bytecode){.op = OP_SUB});
+                break;
+            case TOK_STAR:
+                nob_da_append(chunk, (Aria_Bytecode){.op = OP_MUL});
+                break;
+            case TOK_SLASH:
+                nob_da_append(chunk, (Aria_Bytecode){.op = OP_DIV});
+                break;
+            default:
+                NOB_UNREACHABLE("Unhandled operation in expr");
+        }
+
+        return;
     }
 
     NOB_UNREACHABLE("Expr called incorrectly");
@@ -47,7 +79,7 @@ void compileStmt(Aria_Chunk* chunk, ASTNode* node) {
         case AST_NUM_LIT:
             break;
         case AST_RETURN: {
-            nob_da_append(chunk, compileExpr(node->ret.expr));
+            compileExpr(chunk, node->ret.expr);
             nob_da_append(chunk, (Aria_Bytecode){.op = OP_RETURN});
         } break;
         case AST_STR_LIT:
@@ -100,7 +132,7 @@ Aria_Module ariaEmitBytecode(ASTNode ast) {
 }
 
 void printBytecode(Aria_Module* mod) {
-    printf("=== BYTECODE ===");
+    printf("=== BYTECODE ===\n");
     printf("Module: %s\n", mod->name);
 
     ht_foreach(chunk, &mod->chunks) {
@@ -119,6 +151,16 @@ char* opcodeName(Opcode op) {
             return "OP_RETURN";
         case OP_STORE:
             return "OP_STORE";
+        case OP_ADD:
+            return "OP_ADD";
+        case OP_SUB:
+            return "OP_SUB";
+        case OP_MUL:
+            return "OP_MUL";
+        case OP_DIV:
+            return "OP_DIV";
+        case OP_CALL:
+            return "OP_CALL";
     }
 
     return "";

@@ -14,8 +14,8 @@
         assert(0);                                                                           \
     } while (0)
 
-binding_t prefixBindingPower(const TokenType* tkn) {
-    switch (*tkn) {
+binding_t prefixBindingPower(const TokenType tkn) {
+    switch (tkn) {
         case TOK_BANG:
             [[fallthrough]];
         case TOK_MINUS:
@@ -28,8 +28,8 @@ binding_t prefixBindingPower(const TokenType* tkn) {
     return 0;
 }
 
-binding_t infixBindingPower(const TokenType* tkn) {
-    switch (*tkn) {
+binding_t infixBindingPower(const TokenType tkn) {
+    switch (tkn) {
         case TOK_DOT:
             [[fallthrough]];
         case TOK_LEFT_PAREN:
@@ -218,10 +218,16 @@ ASTNode parseExpression(AriaLexer* L, Arena* A, const binding_t min_bp) {
         case TOK_LEFT_PAREN:
             advance(L);
             *node.expr.lhs = parseExpression(L, A, 0);
+            advance(L);
+            if (!match(L, TOK_RIGHT_PAREN)) {
+                parsingError("Missing closing parenthesis in expression");
+            }
+            L->index--;
             break;
         case TOK_IDENTIFIER:
             if (L->items[L->index + 1].type == TOK_LEFT_PAREN) {
                 *node.expr.lhs = parseFuncCall(L);
+                L->index--;
             } else {
                 *node.expr.lhs = parseIdentifier(L);
             }
@@ -232,34 +238,40 @@ ASTNode parseExpression(AriaLexer* L, Arena* A, const binding_t min_bp) {
             parsingError("Unknown token found (parseExpression LHS): %d", getCurrTokenType(L));
     };
 
-    const AriaToken* next = &L->items[L->index + 1];
-    if (next->type == TOK_EOF) {
-        parsingError("EOF reached when parsing an expression");
-    } else if (next->type == TOK_RIGHT_PAREN || isKeyword(next->type)) {
-        return *node.expr.lhs;
-    }
+    // NOTE: This code is duplicated at the top of the while loop as we need to return
+    // only the LHS if there's no rhs, which happens here, but if there's both halves,
+    // then we need to return the whole expr, which happens at the top of the while
+    // loop
+    TokenType tok_type = L->items[L->index + 1].type;
+    if (tok_type == TOK_RIGHT_PAREN) { return *node.expr.lhs; }
+    if (isKeyword(tok_type)) { return *node.expr.lhs; }
+    if (tok_type == TOK_EOF) { parsingError("EOF reached when parsing an expression"); }
 
     while (true) {
-        advance(L);
-        const TokenType tok_type = getCurrTokenType(L);
-        if (tok_type == TOK_RIGHT_PAREN || isKeyword(tok_type)) { break; }
+        tok_type = L->items[L->index + 1].type;
+        if (tok_type == TOK_RIGHT_PAREN || isKeyword(tok_type)) {
+            return node.expr.rhs == NULL ? *node.expr.lhs : node;
+        }
+        if (tok_type == TOK_EOF) { parsingError("EOF reached when parsing an expression"); }
 
-        const binding_t bp = infixBindingPower(&tok_type);
+        advance(L);
+        const binding_t bp = infixBindingPower(tok_type);
         // If the token is anything other than expected, we'll get a bp of 0
         if (bp == 0) {
             L->index--;
-            return *node.expr.lhs;
+            return node.expr.rhs == NULL ? *node.expr.lhs : node;
         }
 
-        if (bp < min_bp) { break; }
+        if (bp < min_bp) {
+            L->index--;
+            return node.expr.rhs == NULL ? *node.expr.lhs : node;
+        }
         advance(L);
 
         node.expr.rhs = arena_alloc(A, sizeof(ASTNode));
         *node.expr.rhs = parseExpression(L, A, bp + 1);
         node.expr.op = tok_type;
     }
-
-    return node;
 }
 
 ASTNode parseFor(AriaLexer* L, Arena* A) {
@@ -331,6 +343,7 @@ ASTNode parseIf(AriaLexer* L, Arena* A) {
     ASTNode ifNode = ariaCreateNode(AST_IF);
     ifNode.If.cond = arena_alloc(A, sizeof(ASTNode));
     *ifNode.If.cond = parseExpression(L, A, 0);
+    advance(L);
     if (!(match(L, TOK_THEN))) { parsingError("No THEN keyword found"); }
 
     ifNode.If.block = arena_alloc(A, sizeof(ASTNode));

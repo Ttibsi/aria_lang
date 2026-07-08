@@ -2,11 +2,17 @@
 #define ARIA_BYTECODE_H
 
 #include "aria_parser.h"
+#include "aria_stack.h"
 #include "ht.h"
 
 typedef enum {
+    OP_ADD,
+    OP_CALL,  // operand_1 is the heap index of the function name to call
+    OP_DIV,
+    OP_MUL,
     OP_RETURN,
     OP_STORE,
+    OP_SUB,
 } Opcode;
 
 // A single instruction
@@ -17,6 +23,12 @@ typedef struct {
     size_t operand_3;
 } Aria_Bytecode;
 
+typedef struct {
+    char** items;
+    size_t count;
+    size_t capacity;
+} Heap;
+
 // A chunk is a named block (ex function, class)
 // stores a linked list of instructions
 typedef struct {
@@ -25,6 +37,8 @@ typedef struct {
     Aria_Bytecode* items;
     size_t count;
     size_t capacity;
+
+    Heap heap;
 } Aria_Chunk;
 
 typedef Ht(const char*, Aria_Chunk) Chunk_map_t;
@@ -36,7 +50,7 @@ typedef struct {
     Chunk_map_t chunks;
 } Aria_Module;
 
-Aria_Bytecode compileExpr(ASTNode* node);
+void compileExpr(Aria_Chunk* chunk, ASTNode* node);
 void compileStmt(Aria_Chunk* chunk, ASTNode* node);
 Aria_Chunk compileFunc(ASTNode* node);
 Aria_Module ariaEmitBytecode(ASTNode ast);
