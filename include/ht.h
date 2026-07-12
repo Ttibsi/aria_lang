@@ -511,20 +511,20 @@ enum {
 
 void *ht__put(Ht__Abstract *ht, void *key, Ht__Layout l);
 void *ht__find(Ht__Abstract *ht, void *key, Ht__Layout l);
-static void *ht__find_or_put(Ht__Abstract *ht, void *key, Ht__Layout l);
-static void ht__delete(Ht__Abstract *ht, void *slot, Ht__Layout l);
-static bool ht__find_and_delete(Ht__Abstract *ht, void *key, Ht__Layout l);
+void *ht__find_or_put(Ht__Abstract *ht, void *key, Ht__Layout l);
+void ht__delete(Ht__Abstract *ht, void *slot, Ht__Layout l);
+bool ht__find_and_delete(Ht__Abstract *ht, void *key, Ht__Layout l);
 void *ht__key(void *slot, Ht__Layout l);
 bool ht__next(Ht__Abstract *ht, void **slot, Ht__Layout l);
-static void ht__reset(Ht__Abstract *ht, Ht__Layout l);
-static void ht__free(Ht__Abstract *ht);
-static void *ht__find_slot(Ht__Abstract *ht, uintptr_t hash, Ht_Hasheq hasheq, void *key, Ht__Layout l);
-static void *ht__put_no_expand(Ht__Abstract *ht, void *key, Ht__Layout l);
-static void ht__expand(Ht__Abstract *ht, Ht__Layout l);
-static size_t ht__strlen(const char *s);
-static int ht__strcmp(const char *l, const char *r);
-static void *ht__memcpy(void *dest, const void *src, size_t n);
-static int ht__memcmp(const void *vl, const void *vr, size_t n);
+void ht__reset(Ht__Abstract *ht, Ht__Layout l);
+void ht__free(Ht__Abstract *ht);
+void *ht__find_slot(Ht__Abstract *ht, uintptr_t hash, Ht_Hasheq hasheq, void *key, Ht__Layout l);
+void *ht__put_no_expand(Ht__Abstract *ht, void *key, Ht__Layout l);
+void ht__expand(Ht__Abstract *ht, Ht__Layout l);
+size_t ht__strlen(const char *s);
+int ht__strcmp(const char *l, const char *r);
+void *ht__memcpy(void *dest, const void *src, size_t n);
+int ht__memcmp(const void *vl, const void *vr, size_t n);
 
 #if defined(__cplusplus)
     static inline auto *ht__put_cpp(auto *ht, auto key)
@@ -577,21 +577,21 @@ void *ht__find(Ht__Abstract *ht, void *key, Ht__Layout l)
     return slot;
 }
 
-static void *ht__find_or_put(Ht__Abstract *ht, void *key, Ht__Layout l)
+void *ht__find_or_put(Ht__Abstract *ht, void *key, Ht__Layout l)
 {
     void *slot = ht__find(ht, key, l);
     if (slot) return slot;
     return ht__put(ht, key, l);
 }
 
-static void ht__delete(Ht__Abstract *ht, void *slot, Ht__Layout l)
+void ht__delete(Ht__Abstract *ht, void *slot, Ht__Layout l)
 {
     if (slot == NULL) return;
     *ht__slot_hash(slot, l) = HT__DELETED;
     ht->count -= 1;
 }
 
-static bool ht__find_and_delete(Ht__Abstract *ht, void *key, Ht__Layout l)
+bool ht__find_and_delete(Ht__Abstract *ht, void *key, Ht__Layout l)
 {
     void *slot = ht__find(ht, key, l);
     if (slot == NULL) return false;
@@ -634,7 +634,7 @@ bool ht__next(Ht__Abstract *ht, void **slot, Ht__Layout l)
     }
 }
 
-static void ht__reset(Ht__Abstract *ht, Ht__Layout l)
+void ht__reset(Ht__Abstract *ht, Ht__Layout l)
 {
     if (ht->impl_filled_slots == 0) return; // Since ht_reset() is O(capacity) do not do it if ht is already empty
     uint8_t *slots_start = (uint8_t*)ht->impl_slots;
@@ -646,7 +646,7 @@ static void ht__reset(Ht__Abstract *ht, Ht__Layout l)
     ht->count = 0;
 }
 
-static void ht__free(Ht__Abstract *ht)
+void ht__free(Ht__Abstract *ht)
 {
     HT_FREE(ht->impl_slots);
     ht->impl_slots        = NULL;
@@ -762,7 +762,7 @@ HT_PUBDEF uintptr_t ht_lose_lose_hash(void const *data, size_t size)
     return hash;
 }
 
-static void *ht__find_slot(Ht__Abstract *ht, uintptr_t hash, Ht_Hasheq hasheq, void *key, Ht__Layout l)
+void *ht__find_slot(Ht__Abstract *ht, uintptr_t hash, Ht_Hasheq hasheq, void *key, Ht__Layout l)
 {
     HT_ASSERT(!(ht->impl_capacity & (ht->impl_capacity - 1)));
     HT_ASSERT(hash >= HT__FIRST_VALID_HASH);
@@ -783,7 +783,7 @@ static void *ht__find_slot(Ht__Abstract *ht, uintptr_t hash, Ht_Hasheq hasheq, v
     return NULL;
 }
 
-static void *ht__put_no_expand(Ht__Abstract *ht, void *key, Ht__Layout l)
+void *ht__put_no_expand(Ht__Abstract *ht, void *key, Ht__Layout l)
 {
     Ht_Hasheq hasheq = ht->hasheq ? ht->hasheq : ht_mem_hasheq;
     uintptr_t hash = hasheq(HT_HASH, key, NULL, l.key_size);
@@ -809,7 +809,7 @@ static void *ht__put_no_expand(Ht__Abstract *ht, void *key, Ht__Layout l)
     return slot;
 }
 
-static void ht__expand(Ht__Abstract *ht, Ht__Layout l)
+void ht__expand(Ht__Abstract *ht, Ht__Layout l)
 {
     if (ht->impl_capacity == 0 || ht->impl_filled_slots*100 >= HT__LOAD_FACTOR_PERCENT*ht->impl_capacity) {
         size_t   old_impl_capacity = ht->impl_capacity;
@@ -850,20 +850,20 @@ static void ht__expand(Ht__Abstract *ht, Ht__Layout l)
     }
 }
 
-static size_t ht__strlen(const char *s)
+size_t ht__strlen(const char *s)
 {
     const char *a = s;
     for (; *s; s++);
     return s-a;
 }
 
-static int ht__strcmp(const char *l, const char *r)
+int ht__strcmp(const char *l, const char *r)
 {
     for (; *l==*r && *l; l++, r++);
     return *(uint8_t *)l - *(uint8_t *)r;
 }
 
-static void *ht__memcpy(void *dest, const void *src, size_t n)
+void *ht__memcpy(void *dest, const void *src, size_t n)
 {
     uint8_t *d = (uint8_t*)dest;
     const uint8_t *s = (const uint8_t *)src;
@@ -871,7 +871,7 @@ static void *ht__memcpy(void *dest, const void *src, size_t n)
     return dest;
 }
 
-static int ht__memcmp(const void *vl, const void *vr, size_t n)
+int ht__memcmp(const void *vl, const void *vr, size_t n)
 {
     const uint8_t *l=(const uint8_t *)vl, *r=(const uint8_t *)vr;
     for (; n && *l == *r; n--, l++, r++);
