@@ -2,6 +2,7 @@
 
 #include <assert.h>
 
+#include "aria_lexer.h"
 #include "aria_stack.h"
 #include "nob.h"
 
@@ -42,6 +43,23 @@ void compileExpr(Aria_Chunk* chunk, ASTNode* node) {
     }
 
     NOB_UNREACHABLE("Expr called incorrectly");
+}
+
+void compileVar(Aria_Chunk* chunk, ASTNode* node) {
+    switch (node->var.ret_type) {
+        case TOK_BOOL:
+            break;
+        case TOK_CHAR:
+            break;
+        case TOK_NUM:
+            Aria_Bytecode bc = {.op = OP_STORE, .operand_1 = node->var.value->num_literal};
+            nob_da_append(chunk, bc);
+            break;
+        case TOK_STR:
+            break;
+        default:
+            // class/type
+    }
 }
 
 void compileStmt(Aria_Chunk* chunk, ASTNode* node) {
@@ -87,6 +105,7 @@ void compileStmt(Aria_Chunk* chunk, ASTNode* node) {
         case AST_TYPE:
             break;
         case AST_VAR:
+            compileVar(chunk, node);
             break;
         default:
             break;
