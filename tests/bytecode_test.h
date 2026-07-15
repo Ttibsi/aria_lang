@@ -18,6 +18,22 @@ static inline int test_compileExpr(void) {
     return 0;
 }
 
+static inline int test_compileVar(void) {
+    Aria_Chunk c = {0};
+
+    ASTNode n = (ASTNode){
+        .type = AST_VAR,
+        .var.name = "foo",
+    };
+    n.var.value = malloc(sizeof(ASTNode));
+    n.var.value->num_literal = 5;
+    compileVar(&c, &n);
+    Aria_Bytecode bc = *c.items;
+
+    onetest_assert(bc.op == OP_STORE);
+    onetest_assert(bc.operand_1 == 5);
+}
+
 static inline int test_compileStmt(void) {
     ASTNode inner = (ASTNode){.type = AST_NUM_LIT, .num_literal = 69};
     ASTNode n = (ASTNode){.type = AST_RETURN, .ret = {.expr = &inner}};
