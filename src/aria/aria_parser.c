@@ -354,6 +354,11 @@ ASTNode parseIf(AriaLexer* L, Arena* A) {
 
         if (check(L, TOK_IF)) {
             *ifNode.If.elseBlock = parseIf(L, A);
+
+            // NOTE: IF we have an inner if, we don't want to advance past the
+            // END multiple times. This will cause parsing issues -- multiple `IF`
+            // with only one end. See `examples/04_if.ari` for demonstration
+            return ifNode;
         } else {
             *ifNode.If.elseBlock = parseBlock(L, A);
         }
