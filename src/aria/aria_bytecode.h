@@ -12,7 +12,16 @@ typedef enum {
     OP_MUL,
     OP_RETURN,
     OP_STORE,
+    OP_LOAD,  // Load the variable with the name at location operand_1
     OP_SUB,
+    OP_JUMP_COND,  // Jump ahead operand_1 instructions if stack top is 1
+    OP_JUMP,
+    OP_LT,
+    OP_GT,
+    OP_LE,
+    OP_GE,
+    OP_EQ,  // ==
+    OP_NE,
 } Opcode;
 
 // A single instruction
@@ -51,6 +60,7 @@ typedef struct {
 } Aria_Module;
 
 void compileExpr(Aria_Chunk* chunk, ASTNode* node);
+void compileIf(Aria_Chunk* chunk, ASTNode* node);
 void compileVar(Aria_Chunk* chunk, ASTNode* node);
 void compileStmt(Aria_Chunk* chunk, ASTNode* node);
 Aria_Chunk compileFunc(ASTNode* node);
