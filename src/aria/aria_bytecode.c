@@ -69,7 +69,7 @@ void compileExpr(Aria_Chunk* chunk, ASTNode* node) {
     NOB_UNREACHABLE("Expr called incorrectly");
 }
 
-void compileIf(Aria_Chunk* chunk, ASTNode* node) {
+void compileIf(Aria_Chunk* chunk, ASTNode* node, bool inner) {
     // handle condition
     compileExpr(chunk, node->If.cond);
     const ASTNode* ifBlock = node->If.block;
@@ -82,19 +82,24 @@ void compileIf(Aria_Chunk* chunk, ASTNode* node) {
         compileStmt(chunk, item);
     }
 
-    Aria_Bytecode jump2 = {.op = OP_JUMP, .operand_1 = node->If.elseBlock->block.count + 1};
-    nob_da_append(chunk, jump2);
-
     // Else block
+    Aria_Chunk tempElseChunk = {0};
     ASTNode* elseBlock = node->If.elseBlock;
     if (elseBlock->type == AST_IF) {
-        compileIf(chunk, elseBlock);
+        compileIf(chunk, elseBlock, true);
     } else {
         for (size_t i = 0; i < elseBlock->block.count; i++) {
             ASTNode* item = &elseBlock->block.items[i];
-            compileStmt(chunk, item);
+            compileStmt(&tempElseChunk, item);
         }
     }
+
+    if (!inner) {
+        Aria_Bytecode jump2 = {.op = OP_JUMP, .operand_1 = tempElseChunk.count};
+        nob_da_append(chunk, jump2);
+    }
+
+    nob_da_append_many(chunk, tempElseChunk.items, tempElseChunk.count);
 }
 
 void compileVar(Aria_Chunk* chunk, ASTNode* node) {
@@ -139,7 +144,7 @@ void compileStmt(Aria_Chunk* chunk, ASTNode* node) {
         case AST_IDENT:
             break;
         case AST_IF:
-            compileIf(chunk, node);
+            compileIf(chunk, node, false);
             break;
         case AST_IMPORT:
             break;

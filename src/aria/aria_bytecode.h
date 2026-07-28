@@ -60,7 +60,7 @@ typedef struct {
 } Aria_Module;
 
 void compileExpr(Aria_Chunk* chunk, ASTNode* node);
-void compileIf(Aria_Chunk* chunk, ASTNode* node);
+void compileIf(Aria_Chunk* chunk, ASTNode* node, bool inner);
 void compileVar(Aria_Chunk* chunk, ASTNode* node);
 void compileStmt(Aria_Chunk* chunk, ASTNode* node);
 Aria_Chunk compileFunc(ASTNode* node);
