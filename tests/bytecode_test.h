@@ -18,6 +18,8 @@ static inline int test_compileExpr(void) {
     return 0;
 }
 
+static inline int test_compileIf(void) { return 1; }
+
 static inline int test_compileVar(void) {
     Aria_Chunk c = {0};
 
