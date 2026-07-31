@@ -2,7 +2,6 @@
 #define ARIA_BYTECODE_H
 
 #include "aria_parser.h"
-#include "aria_stack.h"
 #include "ht.h"
 
 typedef enum {
