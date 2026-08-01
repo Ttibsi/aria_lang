@@ -12,6 +12,12 @@ void compileExpr(Aria_Chunk* chunk, ASTNode* node) {
         nob_da_append(chunk, bc);
         return;
 
+    } else if (node->type == AST_IDENT) {
+        nob_da_append(&chunk->heap, node->identifier);
+        Aria_Bytecode bc = {.op = OP_LOAD, .operand_1 = chunk->heap.count};
+        nob_da_append(chunk, bc);
+        return;
+
     } else if (node->type == AST_CALL) {
         nob_da_append(&chunk->heap, node->funcCall.name);
         Aria_Bytecode bc = {.op = OP_CALL, .operand_1 = chunk->heap.count};
@@ -35,6 +41,24 @@ void compileExpr(Aria_Chunk* chunk, ASTNode* node) {
             case TOK_SLASH:
                 nob_da_append(chunk, (Aria_Bytecode){.op = OP_DIV});
                 break;
+            case TOK_LESS:
+                nob_da_append(chunk, (Aria_Bytecode){.op = OP_LT});
+                break;
+            case TOK_GREATER:
+                nob_da_append(chunk, (Aria_Bytecode){.op = OP_GT});
+                break;
+            case TOK_LESS_EQUAL:
+                nob_da_append(chunk, (Aria_Bytecode){.op = OP_LE});
+                break;
+            case TOK_GREATER_EQUAL:
+                nob_da_append(chunk, (Aria_Bytecode){.op = OP_GE});
+                break;
+            case TOK_EQUAL_EQUAL:
+                nob_da_append(chunk, (Aria_Bytecode){.op = OP_EQ});
+                break;
+            case TOK_BANG_EQUAL:
+                nob_da_append(chunk, (Aria_Bytecode){.op = OP_NE});
+                break;
             default:
                 NOB_UNREACHABLE("Unhandled operation in expr");
         }
@@ -43,6 +67,39 @@ void compileExpr(Aria_Chunk* chunk, ASTNode* node) {
     }
 
     NOB_UNREACHABLE("Expr called incorrectly");
+}
+
+void compileIf(Aria_Chunk* chunk, ASTNode* node, bool inner) {
+    // handle condition
+    compileExpr(chunk, node->If.cond);
+    const ASTNode* ifBlock = node->If.block;
+    Aria_Bytecode jump = {.op = OP_JUMP_COND, .operand_1 = ifBlock->block.count + 1};
+    nob_da_append(chunk, jump);
+
+    // IF block
+    for (size_t i = 0; i < ifBlock->block.count; i++) {
+        ASTNode* item = &ifBlock->block.items[i];
+        compileStmt(chunk, item);
+    }
+
+    // Else block
+    Aria_Chunk tempElseChunk = {0};
+    ASTNode* elseBlock = node->If.elseBlock;
+    if (elseBlock->type == AST_IF) {
+        compileIf(chunk, elseBlock, true);
+    } else {
+        for (size_t i = 0; i < elseBlock->block.count; i++) {
+            ASTNode* item = &elseBlock->block.items[i];
+            compileStmt(&tempElseChunk, item);
+        }
+    }
+
+    if (!inner) {
+        Aria_Bytecode jump2 = {.op = OP_JUMP, .operand_1 = tempElseChunk.count};
+        nob_da_append(chunk, jump2);
+    }
+
+    nob_da_append_many(chunk, tempElseChunk.items, tempElseChunk.count);
 }
 
 void compileVar(Aria_Chunk* chunk, ASTNode* node) {
@@ -87,6 +144,7 @@ void compileStmt(Aria_Chunk* chunk, ASTNode* node) {
         case AST_IDENT:
             break;
         case AST_IF:
+            compileIf(chunk, node, false);
             break;
         case AST_IMPORT:
             break;
@@ -180,6 +238,24 @@ char* opcodeName(Opcode op) {
             return "OP_DIV";
         case OP_CALL:
             return "OP_CALL";
+        case OP_JUMP_COND:
+            return "OP_JUMP_COND";
+        case OP_JUMP:
+            return "OP_JUMP";
+        case OP_LOAD:
+            return "OP_LOAD";
+        case OP_LT:
+            return "OP_LT";
+        case OP_GT:
+            return "OP_GT";
+        case OP_LE:
+            return "OP_LE";
+        case OP_GE:
+            return "OP_GE";
+        case OP_EQ:
+            return "OP_EQ";
+        case OP_NE:
+            return "OP_NE";
     }
 
     return "";

@@ -18,6 +18,53 @@ static inline int test_compileExpr(void) {
     return 0;
 }
 
+static inline int test_compileIf(void) {
+    ASTNode lhs = (ASTNode){.type = AST_NUM_LIT, .num_literal = 3};
+    ASTNode rhs = (ASTNode){.type = AST_NUM_LIT, .num_literal = 5};
+    ASTNode cond = (ASTNode){.type = AST_EXPR, .expr = {.op = TOK_LESS, .lhs = &lhs, .rhs = &rhs}};
+
+    ASTNode ifRetExpr = (ASTNode){.type = AST_NUM_LIT, .num_literal = 69};
+    ASTNode ifRet = (ASTNode){.type = AST_RETURN, .ret = {.expr = &ifRetExpr}};
+    ASTNode ifBlock = ariaCreateNode(AST_BLOCK);
+    nob_da_append(&ifBlock.block, ifRet);
+
+    ASTNode elseRetExpr = (ASTNode){.type = AST_NUM_LIT, .num_literal = 42};
+    ASTNode elseRet = (ASTNode){.type = AST_RETURN, .ret = {.expr = &elseRetExpr}};
+    ASTNode elseBlock = ariaCreateNode(AST_BLOCK);
+    nob_da_append(&elseBlock.block, elseRet);
+
+    ASTNode n = (ASTNode){
+        .type = AST_IF,
+        .If = {
+            .cond = &cond,
+            .block = &ifBlock,
+            .elseBlock = &elseBlock,
+        },
+    };
+    Aria_Chunk c = {0};
+
+    compileIf(&c, &n, false);
+
+    onetest_assert(c.count == 9);
+    onetest_assert(c.items[0].op == OP_STORE);
+    onetest_assert(c.items[0].operand_1 == 5);
+    onetest_assert(c.items[1].op == OP_STORE);
+    onetest_assert(c.items[1].operand_1 == 3);
+    onetest_assert(c.items[2].op == OP_LT);
+    onetest_assert(c.items[3].op == OP_JUMP_COND);
+    onetest_assert(c.items[3].operand_1 == 2);
+    onetest_assert(c.items[4].op == OP_STORE);
+    onetest_assert(c.items[4].operand_1 == 69);
+    onetest_assert(c.items[5].op == OP_RETURN);
+    onetest_assert(c.items[6].op == OP_JUMP);
+    onetest_assert(c.items[6].operand_1 == 2);
+    onetest_assert(c.items[7].op == OP_STORE);
+    onetest_assert(c.items[7].operand_1 == 42);
+    onetest_assert(c.items[8].op == OP_RETURN);
+
+    return 0;
+}
+
 static inline int test_compileVar(void) {
     Aria_Chunk c = {0};
 

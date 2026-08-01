@@ -52,6 +52,7 @@ int main(void) {
 
         // bytecode_test.h
         ONETEST_TEST(test_compileExpr),
+        ONETEST_TEST(test_compileIf),
         ONETEST_TEST(test_compileStmt),
         ONETEST_TEST(test_compileFunc),
         ONETEST_TEST(test_ariaEmitBytecode),
