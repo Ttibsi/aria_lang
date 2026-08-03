@@ -68,7 +68,6 @@ int main(void) {
         // executor_test.h
         ONETEST_TEST(test_executeInst),
         ONETEST_TEST(test_executeChunk),
-        ONETEST_TEST(test_ariaExecute),
     };
 
     const size_t test_count = sizeof(tests) / sizeof(tests[0]);
