@@ -2,7 +2,6 @@
 
 #include <assert.h>
 
-#include "aria_stack.h"
 #include "ht.h"
 #include "nob.h"
 
