@@ -47,7 +47,8 @@ OptionalInt executeInst(Aria_Bytecode* bc, Stack* stack, Aria_Chunk* c, Chunk_ma
         } break;
 
         case OP_LOAD: {
-            const char* name = c->heap.items[bc->operand_1];
+            const char* name = c->mod->heap.items[bc->operand_1];
+            (void)name;
         } break;
 
         case OP_SUB: {
@@ -62,15 +63,14 @@ OptionalInt executeInst(Aria_Bytecode* bc, Stack* stack, Aria_Chunk* c, Chunk_ma
 }
 
 [[nodiscard]] OptionalInt executeChunk(Aria_Chunk* c, Chunk_map_t* map) {
-    Stack* stack = createStack(1024);
+    Stack stack = {0};
     OptionalInt ret;
 
     nob_da_foreach(Aria_Bytecode, bc, c) {
-        ret = executeInst(bc, stack, c, map);
+        ret = executeInst(bc, &stack, c, map);
         if (ret.has_value) { break; }
     }
 
-    freeStack(stack);
     return ret;
 }
 

@@ -47,7 +47,7 @@ typedef struct {
 // Keys are variable/function names
 // values are the stack offset of those values
 typedef Ht(const char*, size_t) Symbol_table_t;
-struct Aria_Module;
+typedef struct Aria_Module Aria_Module;
 
 // A chunk is a named block (ex function, class)
 // stores a linked list of instructions
@@ -60,26 +60,26 @@ typedef struct {
 
     size_t stackStart;
     Symbol_table_t symtab;
-    struct Aria_Module* mod;
+    Aria_Module* mod;
 } Aria_Chunk;
 
 typedef Ht(const char*, Aria_Chunk) Chunk_map_t;
 
 // A module is the contents of a given `.ari` file
 // TODO: Square this up with AriaMod in aria.h (this should replace it)
-typedef struct {
+struct Aria_Module {
     char* name;
     Chunk_map_t chunks;
 
     Stack* stack;
     Heap heap;
-} Aria_Module;
+};
 
 void compileExpr(Aria_Chunk* chunk, ASTNode* node);
 void compileIf(Aria_Chunk* chunk, ASTNode* node, bool inner);
 void compileVar(Aria_Chunk* chunk, ASTNode* node);
 void compileStmt(Aria_Chunk* chunk, ASTNode* node);
-Aria_Chunk compileFunc(ASTNode* node);
+Aria_Chunk compileFunc(ASTNode* node, Aria_Module* mod);
 Aria_Module ariaEmitBytecode(ASTNode ast);
 
 void printBytecode(Aria_Module* mod);
