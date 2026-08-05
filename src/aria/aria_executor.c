@@ -18,7 +18,7 @@ OptionalInt executeInst(Aria_Bytecode* bc, Stack* stack, Aria_Chunk* c, Chunk_ma
         } break;
 
         case OP_CALL: {
-            const char* callee = c->heap.items[bc->operand_1];
+            const char* callee = c->mod->heap.items[bc->operand_1];
             OptionalInt funcCall = executeChunk(ht_find(chunks, callee), chunks);
             if (funcCall.has_value) { stackPush(stack, funcCall.value); }
         } break;
@@ -42,7 +42,12 @@ OptionalInt executeInst(Aria_Bytecode* bc, Stack* stack, Aria_Chunk* c, Chunk_ma
         } break;
 
         case OP_STORE: {
+            assert(bc->operand_count == 2);
             stackPush(stack, bc->operand_1);
+        } break;
+
+        case OP_LOAD: {
+            const char* name = c->heap.items[bc->operand_1];
         } break;
 
         case OP_SUB: {

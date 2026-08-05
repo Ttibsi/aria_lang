@@ -1,6 +1,12 @@
 #ifndef ARIA_STACK_H
 #define ARIA_STACK_H
 
+#include <assert.h>
+#include <stddef.h>
+
+#include "nob.h"
+
+#if 0
 // source:
 // https://www.digitalocean.com/community/tutorials/stack-in-c#how-to-implement-a-stack-in-c-with-code-examples
 
@@ -71,4 +77,33 @@ typedef struct {
 }
 
 #endif  // ARIA_STACK_IMPL
+#else
+
+typedef struct {
+    int* items;
+    size_t count;
+    size_t capacity;
+} Stack;
+
+inline int stackTop(Stack* stack) { return *(stack->items + stack->count); }
+
+inline void stackPush(Stack* stack, int value) { nob_da_append(stack, value); }
+
+inline int stackPop(Stack* stack) {
+    stack->count--;
+    return *(stack->items + stack->count);
+}
+
+inline int* stackGet(Stack* stack, size_t idx) { return stack->items + idx; }
+
+inline int stackSize(Stack* stack) { return stack->count; }
+
+inline void stackRewind(Stack* stack, size_t savePoint) {
+    assert(savePoint < stack->count);
+    stack->count = savePoint;
+}
+
+inline size_t stackSave(Stack* stack) { return stack->count; }
+#endif
+
 #endif  // ARIA_STACK_H

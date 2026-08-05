@@ -2,7 +2,10 @@
 #define ARIA_BYTECODE_H
 
 #include "aria_parser.h"
+#include "aria_stack.h"
 #include "ht.h"
+
+#define STACK_SIZE 1024 * 2
 
 typedef enum {
     OP_ADD,
@@ -10,8 +13,8 @@ typedef enum {
     OP_DIV,
     OP_MUL,
     OP_RETURN,
-    OP_STORE,
-    OP_LOAD,  // Load the variable with the name at location operand_1
+    OP_STORE,  // operand_1 = value to store, operand_2 = offset of space in stack
+    OP_LOAD,   // Load the variable with the name at location operand_1
     OP_SUB,
     OP_JUMP_COND,  // Jump ahead operand_1 instructions if stack top is 1
     OP_JUMP,
@@ -21,6 +24,8 @@ typedef enum {
     OP_GE,
     OP_EQ,  // ==
     OP_NE,
+    OP_STACK_REWIND,
+    OP_STACK_SAVE
 } Opcode;
 
 // A single instruction
@@ -29,6 +34,8 @@ typedef struct {
     size_t operand_1;
     size_t operand_2;
     size_t operand_3;
+
+    size_t operand_count;  // How many operands are populated?
 } Aria_Bytecode;
 
 typedef struct {
@@ -36,6 +43,11 @@ typedef struct {
     size_t count;
     size_t capacity;
 } Heap;
+
+// Keys are variable/function names
+// values are the stack offset of those values
+typedef Ht(const char*, size_t) Symbol_table_t;
+struct Aria_Module;
 
 // A chunk is a named block (ex function, class)
 // stores a linked list of instructions
@@ -46,7 +58,9 @@ typedef struct {
     size_t count;
     size_t capacity;
 
-    Heap heap;
+    size_t stackStart;
+    Symbol_table_t symtab;
+    struct Aria_Module* mod;
 } Aria_Chunk;
 
 typedef Ht(const char*, Aria_Chunk) Chunk_map_t;
@@ -56,6 +70,9 @@ typedef Ht(const char*, Aria_Chunk) Chunk_map_t;
 typedef struct {
     char* name;
     Chunk_map_t chunks;
+
+    Stack* stack;
+    Heap heap;
 } Aria_Module;
 
 void compileExpr(Aria_Chunk* chunk, ASTNode* node);

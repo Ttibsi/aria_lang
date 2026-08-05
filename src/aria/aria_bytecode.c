@@ -14,13 +14,13 @@ void compileExpr(Aria_Chunk* chunk, ASTNode* node) {
 
     } else if (node->type == AST_IDENT) {
         nob_da_append(&chunk->heap, node->identifier);
-        Aria_Bytecode bc = {.op = OP_LOAD, .operand_1 = chunk->heap.count};
+        Aria_Bytecode bc = {.op = OP_LOAD, .operand_1 = chunk->heap.count - 1};
         nob_da_append(chunk, bc);
         return;
 
     } else if (node->type == AST_CALL) {
         nob_da_append(&chunk->heap, node->funcCall.name);
-        Aria_Bytecode bc = {.op = OP_CALL, .operand_1 = chunk->heap.count};
+        Aria_Bytecode bc = {.op = OP_CALL, .operand_1 = chunk->heap.count - 1};
         nob_da_append(chunk, bc);
         return;
 
@@ -109,8 +109,11 @@ void compileVar(Aria_Chunk* chunk, ASTNode* node) {
         case TOK_CHAR:
             break;
         case TOK_NUM:
-            Aria_Bytecode bc = {.op = OP_STORE, .operand_1 = node->var.value->num_literal};
-            nob_da_append(chunk, bc);
+            ht_put(chunk->symtab, node->var.name) = stackSize(chunk.mod->stack);
+            Aria_Bytecode bc = {.op = OP_STORE,
+                                .operand_1 = node->var.value->num_literal,
+                                .operand_2 = stackSize(chunk.mod->stack),
+                                .operand_count = 2};
             break;
         case TOK_STR:
             break;
@@ -170,9 +173,12 @@ void compileStmt(Aria_Chunk* chunk, ASTNode* node) {
     }
 }
 
-Aria_Chunk compileFunc(ASTNode* node) {
+Aria_Chunk compileFunc(ASTNode* node, Aria_Module* mod) {
     Aria_Chunk chunk = {0};
     chunk.name = node->func.name;
+    chunk.stackStart = mod.stackStart;
+    chunk.symtab = {.hasheq = ht_cstr_hasheq};
+    chunk.mod = mod;
 
     for (size_t i = 0; i < node->func.body->block.count; i++) {
         ASTNode* item = &node->func.body->block.items[i];
@@ -187,12 +193,13 @@ Aria_Module ariaEmitBytecode(ASTNode ast) {
 
     Aria_Module mod = {0};
     mod.name = ast.block.name;
-    mod.chunks = (Chunk_map_t){.hasheq = ht_cstr_hasheq};
+    mod.chunks = {.hasheq = ht_cstr_hasheq};
+    mod.stack = createStack(STACK_SIZE);
 
     nob_da_foreach(ASTNode, node, &ast.block) {
         switch (node->type) {
             case AST_FUNC:
-                Aria_Chunk c = compileFunc(node);
+                Aria_Chunk c = compileFunc(node, mod.stack.count);
                 *ht_put(&mod.chunks, c.name) = c;
                 break;
             case AST_IMPORT:
@@ -259,6 +266,10 @@ char* opcodeName(Opcode op) {
             return "OP_EQ";
         case OP_NE:
             return "OP_NE";
+        case OP_STACK_REWIND:
+            return "OP_STACK_REWIND";
+        case OP_STACK_SAVE:
+            return "OP_STACK_SAVE";
     }
 
     return "";
