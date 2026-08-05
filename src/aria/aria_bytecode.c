@@ -187,6 +187,7 @@ Aria_Module ariaEmitBytecode(ASTNode ast) {
 
     Aria_Module mod = {0};
     mod.name = ast.block.name;
+    mod.chunks = (Chunk_map_t){.hasheq = ht_cstr_hasheq};
 
     nob_da_foreach(ASTNode, node, &ast.block) {
         switch (node->type) {
@@ -220,6 +221,8 @@ void printBytecode(Aria_Module* mod) {
                    i->operand_3);
         }
     }
+
+    printf("\n");
 }
 
 char* opcodeName(Opcode op) {

@@ -1,5 +1,6 @@
 #define ONETEST_IMPLEMENTATION
 #include "bytecode_test.h"
+#include "executor_test.h"
 #include "lexer_test.h"
 #include "onetest.h"
 #include "parser_test.h"
@@ -64,6 +65,10 @@ int main(void) {
         ONETEST_TEST(test_stackPush),
         ONETEST_TEST(test_stackPop),
         ONETEST_TEST(test_stackPeek),
+
+        // executor_test.h
+        ONETEST_TEST(test_executeInst),
+        ONETEST_TEST(test_executeChunk),
     };
 
     const size_t test_count = sizeof(tests) / sizeof(tests[0]);

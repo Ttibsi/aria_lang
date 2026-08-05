@@ -2,6 +2,7 @@
 
 #define ARIA_STACK_IMPL
 #include "aria_bytecode.h"
+#include "aria_executor.h"
 #include "aria_parser.h"
 #include "aria_stack.h"
 
@@ -39,8 +40,11 @@ int ariaDoString(AriaVM* vm, const char* str) {
     Aria_Module main_mod = ariaEmitBytecode(module);
     if (vm->debug_mode) { printBytecode(&main_mod); }
 
-    // arena_free(&parser_arena);
-    NOB_TODO("ariaDoString not implemented");
+    arena_free(&parser_arena);
+
+    const int ret = ariaExecute(main_mod);
+    printf("retcode: %d\n", ret);
+    return ret;
 }
 
 int ariaDoFile(AriaVM* vm, const char* filename) {
