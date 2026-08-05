@@ -181,7 +181,7 @@ ASTNode parseFunc(AriaLexer* L, Arena* A) {
     return funcNode;
 }
 
-ASTNode parseFuncCall(AriaLexer* L) {
+ASTNode parseFuncCall(AriaLexer* L, Arena* A) {
     ASTNode funcNode = ariaCreateNode(AST_CALL);
 
     // func name
@@ -192,15 +192,19 @@ ASTNode parseFuncCall(AriaLexer* L) {
     if (!match(L, TOK_LEFT_PAREN)) { parsingError("Function name not followed by open bracket\n"); }
     int args_idx = 0;
     while (!check(L, TOK_RIGHT_PAREN)) {
-        if (!check(L, TOK_IDENTIFIER)) { parsingError("function args contain non-identifiers\n"); }
+        if (!(check(L, TOK_IDENTIFIER) || check(L, TOK_NUM_LIT))) {
+            parsingError("function args contain non-identifiers\n");
+        }
         if (args_idx >= param_count) { parsingError("Function has too many arguments\n"); }
 
-        funcNode.funcCall.args[args_idx] = getStringName(L);
+        // TODO: initialise dynamic array?
+        nob_da_append(&funcNode.funcCall.args, parseExpression(L, A, 0));
         advance(L);
 
         args_idx++;
         if (check(L, TOK_COMMA)) { advance(L); }  // Skip commas
     }
+
     advance(L);
 
     return funcNode;
@@ -226,7 +230,7 @@ ASTNode parseExpression(AriaLexer* L, Arena* A, const binding_t min_bp) {
             break;
         case TOK_IDENTIFIER:
             if (L->items[L->index + 1].type == TOK_LEFT_PAREN) {
-                *node.expr.lhs = parseFuncCall(L);
+                *node.expr.lhs = parseFuncCall(L, A);
                 L->index--;
             } else {
                 *node.expr.lhs = parseIdentifier(L);
@@ -405,7 +409,7 @@ ASTNode parseMethodCall(AriaLexer* L, Arena* A) {
     if (!match(L, TOK_DOT)) { parsingError("No dot found in method call"); }
 
     node.methodCall.method = arena_alloc(A, sizeof(ASTNode));
-    *node.methodCall.method = parseFuncCall(L);
+    *node.methodCall.method = parseFuncCall(L, A);
 
     return node;
 }
@@ -450,7 +454,7 @@ ASTNode parseStatement(AriaLexer* L, Arena* A) {
             } else if (L->items[L->index + 1].type == TOK_EQUAL) {
                 return parseAssignment(L, A);
             } else if (L->items[L->index + 1].type == TOK_LEFT_PAREN) {
-                return parseFuncCall(L);
+                return parseFuncCall(L, A);
             }
             break;
         default:
@@ -654,11 +658,7 @@ void printASTNode(const ASTNode* n, int offset) {
             printf("%*sfunc name: %s\n", offset + 2, "", n->funcCall.name);
 
             // args
-            for (size_t i = 0; i < param_count; i++) {
-                if (n->funcCall.args[i] == 0) { break; }
-                printf("%*s@arg[ %s ]\n", offset + 2, "", n->funcCall.args[i]);
-            }
-
+            nob_da_foreach(ASTNode, inner, &n->funcCall.args) { printASTNode(inner, offset + 2); }
             printf("%*s]\n", offset, "");
             break;
 

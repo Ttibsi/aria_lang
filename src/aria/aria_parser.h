@@ -89,7 +89,11 @@ typedef struct _ASTNode {
 
         struct {
             char* name;
-            char* args[param_count];
+            struct {
+                struct _ASTNode* items;
+                size_t count;
+                size_t capacity;
+            } args;
         } funcCall;
 
         struct {
@@ -151,7 +155,7 @@ ASTNode* parseArg(AriaLexer* L, Arena* A);
 ASTNode parseAssignment(AriaLexer* L, Arena* A);
 ASTNode parseBlock(AriaLexer* L, Arena* A);
 ASTNode parseFunc(AriaLexer* L, Arena* A);
-ASTNode parseFuncCall(AriaLexer* L);
+ASTNode parseFuncCall(AriaLexer* L, Arena* A);
 ASTNode parseExpression(AriaLexer* L, Arena* A, const binding_t min_bp);
 ASTNode parseFor(AriaLexer* L, Arena* A);
 ASTNode parseForEach(AriaLexer* L, Arena* A);
