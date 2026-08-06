@@ -49,7 +49,7 @@ OptionalInt executeInst(Aria_Bytecode* bc, Stack* stack, Aria_Chunk* c, Chunk_ma
 
         case OP_STORE: {
             assert(bc->operand_count == 2);
-            stackPush(stack, bc->operand_1);
+            stack->items[bc->operand_2] = bc->operand_1;
         } break;
 
         case OP_LOAD: {
@@ -70,11 +70,11 @@ OptionalInt executeInst(Aria_Bytecode* bc, Stack* stack, Aria_Chunk* c, Chunk_ma
 }
 
 [[nodiscard]] OptionalInt executeChunk(Aria_Chunk* c, Chunk_map_t* map) {
-    Stack stack = {0};
+    Stack* stack = createStack(NOB_DA_INIT_CAP);
     OptionalInt ret;
 
     nob_da_foreach(Aria_Bytecode, bc, c) {
-        ret = executeInst(bc, &stack, c, map);
+        ret = executeInst(bc, stack, c, map);
         if (ret.has_value) { break; }
     }
 

@@ -8,7 +8,11 @@
 
 void compileExpr(Aria_Chunk* chunk, ASTNode* node) {
     if (node->type == AST_NUM_LIT) {
-        Aria_Bytecode bc = {.op = OP_STORE, .operand_1 = node->num_literal};
+        // Aria_Bytecode bc = {.op = OP_STORE, .operand_1 = node->num_literal};
+        Aria_Bytecode bc = {.op = OP_STORE,
+                            .operand_1 = node->num_literal,
+                            .operand_2 = stackSize(chunk->mod->stack),
+                            .operand_count = 2};
         nob_da_append(chunk, bc);
         return;
 
@@ -20,7 +24,8 @@ void compileExpr(Aria_Chunk* chunk, ASTNode* node) {
 
     } else if (node->type == AST_CALL) {
         nob_da_append(&chunk->mod->heap, node->funcCall.name);
-        Aria_Bytecode bc = {.op = OP_CALL, .operand_1 = chunk->mod->heap.count - 1};
+        Aria_Bytecode bc
+            = {.op = OP_CALL, .operand_1 = chunk->mod->heap.count - 1, .operand_count = 1};
         nob_da_append(chunk, bc);
         return;
 
