@@ -3,6 +3,7 @@
 
 #include <assert.h>
 #include <stddef.h>
+#include <stdlib.h>
 
 #include "nob.h"
 
@@ -12,6 +13,7 @@ typedef struct {
     size_t capacity;
 } Stack;
 
+[[nodiscard]] Stack* createStack(size_t capacity);
 [[nodiscard]] int stackTop(Stack* stack);
 void stackPush(Stack* stack, int value);
 [[nodiscard]] int stackPop(Stack* stack);
@@ -21,6 +23,13 @@ void stackRewind(Stack* stack, size_t savePoint);
 [[nodiscard]] size_t stackSave(Stack* stack);
 
 #ifdef ARIA_STACK_IMPL
+
+[[nodiscard]] Stack* createStack(size_t capacity) {
+    Stack* stk = malloc(sizeof(Stack));
+    *stk = (Stack){0};
+    nob_da_reserve(stk, capacity);
+    return stk;
+}
 
 int stackTop(Stack* stack) { return *(stack->items + stack->count); }
 

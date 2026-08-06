@@ -14,7 +14,7 @@ typedef enum {
     OP_MUL,
     OP_RETURN,
     OP_STORE,  // operand_1 = value to store, operand_2 = offset of space in stack
-    OP_LOAD,   // Load the variable with the name at location operand_1
+    OP_LOAD,   // operand_1 = offset of space in stack
     OP_SUB,
     OP_JUMP_COND,  // Jump ahead operand_1 instructions if stack top is 1
     OP_JUMP,

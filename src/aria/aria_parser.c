@@ -77,33 +77,32 @@ char* getStringName(AriaLexer* L) {
     return str.items;
 }
 
-ASTNode* parseArg(AriaLexer* L, Arena* A) {
-    ASTNode* node = arena_alloc(A, sizeof(ASTNode));
-    node->type = AST_ARG;
+ASTNode parseArg(AriaLexer* L) {
+    ASTNode node = ariaCreateNode(AST_ARG);
 
     // name
-    node->arg.name = getStringName(L);
+    node.arg.name = getStringName(L);
     advance(L);
 
     // type
     if (!checkType(L)) { parsingError("Type not defined for argument"); }
-    node->arg.type = L->items[L->index].type;
+    node.arg.type = L->items[L->index].type;
     advance(L);
 
-    if (node->arg.type == TOK_LIST || node->arg.type == TOK_MAP) {
+    if (node.arg.type == TOK_LIST || node.arg.type == TOK_MAP) {
         if (!match(L, TOK_LEFT_SQUACKET)) {
             parsingError("Container type doesn't define contents types");
         }
         if (!checkType(L)) { parsingError("Type not defined for container"); }
 
-        node->arg.inner_type_1 = L->items[L->index].type;
+        node.arg.inner_type_1 = L->items[L->index].type;
         advance(L);
 
-        if (node->arg.type == TOK_MAP) {
+        if (node.arg.type == TOK_MAP) {
             if (!match(L, TOK_COMMA)) {
                 parsingError("Map requires two types separated by commas");
             }
-            node->arg.inner_type_2 = L->items[L->index].type;
+            node.arg.inner_type_2 = L->items[L->index].type;
         }
 
         if (!match(L, TOK_RIGHT_SQUACKET)) { parsingError("Malformed container type"); }
@@ -161,8 +160,7 @@ ASTNode parseFunc(AriaLexer* L, Arena* A) {
         if (!check(L, TOK_IDENTIFIER)) { parsingError("function args contain non-identifiers\n"); }
         if (args_idx >= param_count) { parsingError("Function has too many arguments\n"); }
 
-        funcNode.func.args[args_idx] = parseArg(L, A);
-        args_idx++;
+        nob_da_append(&funcNode.func.args, parseArg(L));
         if (check(L, TOK_COMMA)) { advance(L); }  // Skip commas
     }
     advance(L);
@@ -707,10 +705,7 @@ void printASTNode(const ASTNode* n, int offset) {
             printf("%*sfunc name: %s\n", offset + 2, "", n->func.name);
 
             // args
-            for (size_t i = 0; i < param_count; i++) {
-                if (n->func.args[i] == 0) { break; }
-                printASTNode(n->func.args[i], offset + 2);
-            }
+            nob_da_foreach(ASTNode, inner, &n->func.args) { printASTNode(inner, offset + 2); }
 
             printf("%*sReturn type: %s\n", offset + 2, "", tokenStr(n->func.ret_type));
 

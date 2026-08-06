@@ -11,19 +11,23 @@ OptionalInt executeInst(Aria_Bytecode* bc, Stack* stack, Aria_Chunk* c, Chunk_ma
 
     switch (bc->op) {
         case OP_ADD: {
+            assert(bc->operand_count == 1);
             assert(stack->capacity >= 2);
+
             b = stackPop(stack);
             a = stackPop(stack);
             stackPush(stack, a + b);
         } break;
 
         case OP_CALL: {
+            assert(bc->operand_count == 1);
             const char* callee = c->mod->heap.items[bc->operand_1];
             OptionalInt funcCall = executeChunk(ht_find(chunks, callee), chunks);
             if (funcCall.has_value) { stackPush(stack, funcCall.value); }
         } break;
 
         case OP_DIV: {
+            assert(bc->operand_count == 1);
             assert(stack->capacity >= 2);
             b = stackPop(stack);
             a = stackPop(stack);
@@ -31,6 +35,7 @@ OptionalInt executeInst(Aria_Bytecode* bc, Stack* stack, Aria_Chunk* c, Chunk_ma
         } break;
 
         case OP_MUL: {
+            assert(bc->operand_count == 1);
             assert(stack->capacity >= 2);
             b = stackPop(stack);
             a = stackPop(stack);
@@ -38,6 +43,7 @@ OptionalInt executeInst(Aria_Bytecode* bc, Stack* stack, Aria_Chunk* c, Chunk_ma
         } break;
 
         case OP_RETURN: {
+            assert(bc->operand_count == 1);
             return (OptionalInt){true, stackPop(stack)};
         } break;
 
@@ -47,11 +53,12 @@ OptionalInt executeInst(Aria_Bytecode* bc, Stack* stack, Aria_Chunk* c, Chunk_ma
         } break;
 
         case OP_LOAD: {
+            assert(bc->operand_count == 2);
             const char* name = c->mod->heap.items[bc->operand_1];
-            (void)name;
         } break;
 
         case OP_SUB: {
+            assert(bc->operand_count == 1);
             assert(stack->capacity >= 2);
             b = stackPop(stack);
             a = stackPop(stack);

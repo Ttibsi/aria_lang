@@ -82,7 +82,11 @@ typedef struct _ASTNode {
 
         struct {
             char* name;
-            struct _ASTNode* args[param_count];
+            struct {
+                struct _ASTNode* items;
+                size_t count;
+                size_t capacity;
+            } args;
             TokenType ret_type;
             struct _ASTNode* body;
         } func;
@@ -151,7 +155,7 @@ typedef struct _ASTNode {
 binding_t prefixBindingPower(const TokenType tkn);
 binding_t infixBindingPower(const TokenType tkn);
 char* getStringName(AriaLexer* L);
-ASTNode* parseArg(AriaLexer* L, Arena* A);
+ASTNode parseArg(AriaLexer* L);
 ASTNode parseAssignment(AriaLexer* L, Arena* A);
 ASTNode parseBlock(AriaLexer* L, Arena* A);
 ASTNode parseFunc(AriaLexer* L, Arena* A);

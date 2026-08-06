@@ -13,8 +13,8 @@ void compileExpr(Aria_Chunk* chunk, ASTNode* node) {
         return;
 
     } else if (node->type == AST_IDENT) {
-        nob_da_append(&chunk->mod->heap, node->identifier);
-        Aria_Bytecode bc = {.op = OP_LOAD, .operand_1 = chunk->mod->heap.count - 1};
+        const size_t* index = ht_find(&chunk->symtab, node->identifier);
+        Aria_Bytecode bc = {.op = OP_LOAD, .operand_1 = *index};
         nob_da_append(chunk, bc);
         return;
 
@@ -25,8 +25,8 @@ void compileExpr(Aria_Chunk* chunk, ASTNode* node) {
         return;
 
     } else if (node->type == AST_EXPR) {
-        compileExpr(chunk, node->expr.rhs);
         compileExpr(chunk, node->expr.lhs);
+        compileExpr(chunk, node->expr.rhs);
 
         switch (node->expr.op) {
             case TOK_PLUS:
@@ -111,6 +111,7 @@ void compileVar(Aria_Chunk* chunk, ASTNode* node) {
         case TOK_NUM:
             const int stack_sz = stackSize(chunk->mod->stack);
             *ht_put(&chunk->symtab, node->var.name) = stack_sz;
+            printf("ht_put: %s\n", node->var.name);
             Aria_Bytecode bc = {.op = OP_STORE,
                                 .operand_1 = node->var.value->num_literal,
                                 .operand_2 = stack_sz,
@@ -182,6 +183,12 @@ Aria_Chunk compileFunc(ASTNode* node, Aria_Module* mod) {
     chunk.symtab = (Symbol_table_t){.hasheq = ht_cstr_hasheq};
     chunk.mod = mod;
 
+    // add every param to the symtab
+    for (size_t i = 0; i < node->func.args.count; i++) {
+        const ASTNode* arg = &node->func.args.items[i];
+        *ht_put(&chunk.symtab, arg->arg.name) = stackSize(chunk.mod->stack);
+    }
+
     for (size_t i = 0; i < node->func.body->block.count; i++) {
         ASTNode* item = &node->func.body->block.items[i];
         compileStmt(&chunk, item);
@@ -196,6 +203,7 @@ Aria_Module ariaEmitBytecode(ASTNode ast) {
     Aria_Module mod = {0};
     mod.name = ast.block.name;
     mod.chunks = (Chunk_map_t){.hasheq = ht_cstr_hasheq};
+    mod.stack = createStack(NOB_DA_INIT_CAP);
 
     nob_da_foreach(ASTNode, node, &ast.block) {
         switch (node->type) {
