@@ -91,13 +91,20 @@ static inline int test_parseFuncCall(void) {
     AriaLexer L = {0};
     ariaLexerInit(&L, "f(foo, bar)");
     ariaTokenize(&L);
+    Arena A = {0};
 
-    ASTNode n = parseFuncCall(&L);
+    ASTNode n = parseFuncCall(&L, &A);
     onetest_assert(n.type == AST_CALL);
-
     onetest_assert(strcmp(n.funcCall.name, "f") == 0);
-    onetest_assert(strcmp(n.funcCall.args[0], "foo") == 0);
-    onetest_assert(strcmp(n.funcCall.args[1], "bar") == 0);
+
+    const ASTNode* elem_1 = n.funcCall.args.items;
+    const ASTNode* elem_2 = n.funcCall.args.items + 1;
+
+    onetest_assert(elem_1->type == AST_IDENT);
+    onetest_assert(elem_2->type == AST_IDENT);
+
+    onetest_assert(strcmp(elem_1->string_literal, "foo") == 0);
+    onetest_assert(strcmp(elem_2->string_literal, "bar") == 0);
 
     return 0;
 }
@@ -263,7 +270,7 @@ static inline int test_parseMethodCall(void) {
 
     onetest_assert(n.methodCall.method->type == AST_CALL);
     onetest_assert(strcmp(n.methodCall.method->funcCall.name, "method") == 0);
-    onetest_assert(strcmp(n.methodCall.method->funcCall.args[0], "arg") == 0);
+    onetest_assert(strcmp(n.methodCall.method->funcCall.args.items->string_literal, "arg") == 0);
 
     return 0;
 }
