@@ -3,7 +3,7 @@
 
 typedef enum {
     STATUS_OK,
-    STATUS_SOME_ERR,
+    STATUS_FILENOTFOUND,
 } Status;
 
 // Forward declarations for VM

@@ -2,6 +2,7 @@
 
 #include <stdbool.h>
 #include <stdint.h>
+#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 
@@ -270,9 +271,36 @@ void aria_vm_cleanup(AriaVM* vm) {
 
 ///// Frontend
 
+void parse(const char* buf) {
+    // While the current token isn't EOF, we pass the current token
+    // into the top of the RD parser. The RD emits bytes straight
+    // into the chunk to construct the AriaFunction obj
+}
+
 ///// Backend
 
+void execute(AriaFunction* func) {
+    // take the chunk from the function, iterate through the ops and execute as relevant
+    // This is another dispatching type method, each operation will likely need it's own
+    // C function for executing
+}
+
 ///// Runtime
-Status aria_load_file(AriaVM* vm, const char* filepath) {}
+Status aria_load_file(AriaVM* vm, const char* filepath) {
+    // Read file into chars
+    // call frontend then backend
+
+    FILE* fp = fopen(filepath, "r");
+    if (fp == NULL) { return STATUS_FILENOTFOUND; }
+
+    fseek(fp, 0, SEEK_END);
+    size_t length = ftell(fp);
+    fseek(fp, 0, SEEK_SET);
+
+    char* buf = malloc(length);
+    fread(buf, 1, length, fp);
+
+    parse(buf);
+}
 
 Status aria_call_func(AriaVM* vm, const char* func) {}
