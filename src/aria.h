@@ -18,7 +18,7 @@ typedef struct {
     struct ValueArray* stack;
     struct ValueArray* callstack;  // Every object should be a pointer to an AriaFunction
 
-    DA(String*, Strings);  // Easier to keep track of and free all SVs at once
+    struct Strings* strings;
 } AriaVM;
 
 void aria_vm_cleanup(AriaVM* vm);

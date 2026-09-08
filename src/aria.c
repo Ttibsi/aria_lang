@@ -74,6 +74,8 @@ typedef struct {
     uint32_t hash;
 } String;
 
+DA(String, Strings);
+
 typedef struct {
     String key;
     Value value;  // Should this be something else?
@@ -258,12 +260,12 @@ void table_set(Table* tbl, String key, Value val) {
 }
 
 void aria_vm_cleanup(AriaVM* vm) {
-    for (int i = vm->Strings.count; i >= 0; i--) {
-        String str = vm->Strings.items[i];
+    for (int i = vm->strings->count; i >= 0; i--) {
+        String str = vm->strings->items[i];
         free(str.data);
     }
 
-    free(vm->Strings.items);
+    free(vm->strings->items);
 }
 
 ///// Frontend
