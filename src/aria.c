@@ -1,5 +1,7 @@
 #include "aria.h"
 
+#include <assert.h>
+#include <ctype.h>
 #include <stdbool.h>
 #include <stdint.h>
 #include <stdio.h>
@@ -70,7 +72,7 @@ typedef uint64_t Value;
 /// Structs and Enums
 typedef struct {
     char* data;
-    int len;
+    size_t len;
 
     uint32_t hash;
 } String;
@@ -160,10 +162,45 @@ typedef enum {
 
 typedef struct {
     TokType type;
-    const char* start;
+    int start;
     int length;
     int line;
 } Token;
+
+typedef struct {
+    const char* kw;
+    int len;
+    TokType tok;
+} Keyword;
+
+// clang-format off
+static const Keyword keywords[] = {
+    {"BOOL",    4, TOK_BOOL    }, // 23
+    {"CHAR",    4, TOK_CHAR    }, // 24
+    {"ELSE",    4, TOK_ELSE    }, // 25
+    {"END",     3, TOK_END     }, // 26
+    {"FALSE",   5, TOK_FALSE   }, // 27
+    {"FOR",     3, TOK_FOR     }, // 28
+    {"FOREACH", 7, TOK_FOREACH }, // 29
+    {"FUNC",    4, TOK_FUNC    }, // 30
+    {"IF",      2, TOK_IF      }, // 31
+    {"IMPORT",  6, TOK_IMPORT  }, // 32
+    {"IN",      2, TOK_IN      }, // 33
+    {"LIST",    4, TOK_LIST    }, // 34
+    {"MAP",     3, TOK_MAP     }, // 35
+    {"NIL",     3, TOK_NIL     }, // 36
+    {"NUM",     3, TOK_NUM     }, // 37
+    {"RET",     3, TOK_RET     }, // 38
+    {"STEP",    4, TOK_STEP    }, // 39
+    {"STR",     3, TOK_STR     }, // 40
+    {"THEN",    4, TOK_THEN    }, // 41
+    {"TO",      2, TOK_TO      }, // 42
+    {"TRUE",    4, TOK_TRUE    }, // 43
+    {"TYPE",    4, TOK_TYPE    }, // 44
+    {"VAR",     3, TOK_VAR     }, // 45
+};
+static const int keyword_count = sizeof(keywords) / sizeof(keywords[0]);
+// clang-format on
 
 typedef struct {
     Token prev;
@@ -225,7 +262,7 @@ String make_str_from_cstr(const char* data) {
 
 bool str_cmp(String* a, String* b) {
     if (a->len != b->len) { return false; }
-    for (int i = 0; i < a->len; i++) {
+    for (size_t i = 0; i < a->len; i++) {
         if (a->data[i] != b->data[i]) { return false; }
     }
 
@@ -271,10 +308,161 @@ void aria_vm_cleanup(AriaVM* vm) {
 
 ///// Frontend
 
+static size_t pc;
+
+Token makeToken(TokType type, int start, int length) {
+    // TODO: line
+    Token tok = (Token){.type = type, .start = start, .length = length, .line = 0};
+    return tok;
+}
+
+char peek(String input) { return input.data[pc]; }
+char peekNext(String input) {
+    if (pc == input.len) { return '\0'; }
+    return input.data[pc++];
+}
+
+void advanceChar() { pc++; }
+
+void skipWhitespace(String input) {
+    while (isspace(peek(input))) { advanceChar(); }
+}
+
+void advanceComment(String input) {
+    while (peek(input) != '\n') { advanceChar(); }
+}
+
+Token scanEqualVariant(String input, TokType single, TokType equal, int start) {
+    if (peekNext(input) == '=') {
+        advanceChar();
+        advanceChar();
+        return makeToken(equal, start, 2);
+    }
+
+    advanceChar();
+    return makeToken(single, start, 1);
+}
+
+Token scanStringLiteral(String input, int start) {
+    assert(peek(input) == '"');
+    int length = 0;
+
+    while (peekNext(input) != '"' && peekNext(input) != '\0') {
+        advanceChar();
+        length++;
+    }
+
+    if (peekNext(input) == '\0') {
+        // TODO: Handle error case
+        return makeToken(TOK_EOF, start, 0);
+    }
+
+    advanceChar();  // consume closing quote
+    length++;
+    assert(peek(input) == '"');
+    advanceChar();  // Next char
+    length++;
+
+    return makeToken(TOK_STRING_LIT, start, length);
+}
+
+Token scanNumber(String input, int start) {
+    // TODO: handle other numeric formats (hex, bin, oct)
+    int length = 0;
+
+    do {
+        advanceChar();
+        length++;
+    } while (isdigit(peek(input)) || peek(input) == '.');
+
+    return makeToken(TOK_NUM_LIT, start, length);
+}
+
+Token scanIdentifier(String input, int start) {
+    int length = 0;
+
+    do {
+        length++;
+        advanceChar();
+    } while (isalnum(peek(input)) || peek(input) == '_');
+
+    // Check if it's a keyword
+    for (int i = 0; i < keyword_count; i++) {
+        if (keywords[i].len == length && strncmp(&input.data[start], keywords[i].kw, length) == 0) {
+            return makeToken(keywords[i].tok, start, length);
+        }
+    }
+
+    return makeToken(TOK_IDENTIFIER, start, length);
+}
+
+Token scanToken(String input) {
+    skipWhitespace(input);
+
+    int start = pc;
+    char c = peek(input);
+
+    if (c == '\0') { return makeToken(TOK_EOF, start, 0); }
+    switch (c) {
+            // clang-format off
+        case ',': advanceChar(); return makeToken(TOK_COMMA, start, 1);
+        case ';': advanceComment(input); return makeToken(TOK_COUNT, 0, 0);
+        case ':': advanceChar(); return makeToken(TOK_COLON, start, 1);
+        case '-': advanceChar(); return makeToken(TOK_MINUS, start, 1);
+        case '+': advanceChar(); return makeToken(TOK_PLUS, start, 1);
+        case '*': advanceChar(); return makeToken(TOK_STAR, start, 1);
+        case '/': advanceChar(); return makeToken(TOK_SLASH, start, 1);
+        case '[': advanceChar(); return makeToken(TOK_LEFT_SQUACKET, start, 1);
+        case ']': advanceChar(); return makeToken(TOK_RIGHT_SQUACKET, start, 1);
+        case '(': advanceChar(); return makeToken(TOK_LEFT_PAREN, start, 1);
+        case ')': advanceChar(); return makeToken(TOK_RIGHT_PAREN, start, 1);
+        case '!': return scanEqualVariant(input, TOK_BANG, TOK_BANG_EQUAL, start);
+        case '=': return scanEqualVariant(input, TOK_EQUAL, TOK_EQUAL_EQUAL, start);
+        case '<': return scanEqualVariant(input, TOK_LESS, TOK_LESS_EQUAL, start);
+        case '>': return scanEqualVariant(input, TOK_GREATER, TOK_GREATER_EQUAL, start);
+        case '"': return scanStringLiteral(input, start);
+        case '&':
+                  if (peek(input) == '&') {
+                      advanceChar();
+                      advanceChar();
+                      return makeToken(TOK_AND, start, 2);
+                  }
+                  break;
+        case '|':
+                  if (peek(input) == '|') {
+                      advanceChar();
+                      advanceChar();
+                      return makeToken(TOK_OR, start, 2);
+                  }
+                  break;
+        case '.':
+                  advanceChar();
+                  if (peek(input) == '.' && peekNext(input) == '.') {
+                      advanceChar();
+                      advanceChar();
+                      return makeToken(TOK_ELLIPSIS, start, 3);
+                  }
+                  return makeToken(TOK_DOT, start, 1);
+                  break;
+    }
+
+    //clang-format on
+
+    if (isdigit(c)) { return scanNumber(input, start); }
+    if (isalpha(c) || c == '_') { return scanIdentifier(input, start); }
+
+    // TODO: Handle error case
+    return makeToken(TOK_ERROR, start, 0);
+}
+
 void parse(const char* buf) {
     // While the current token isn't EOF, we pass the current token
     // into the top of the RD parser. The RD emits bytes straight
     // into the chunk to construct the AriaFunction obj
+
+    String input = make_str_from_cstr(buf);
+    pc = 0;
+    Token tok = scanToken(input);
 }
 
 ///// Backend
@@ -303,4 +491,6 @@ Status aria_load_file(AriaVM* vm, const char* filepath) {
     parse(buf);
 }
 
-Status aria_call_func(AriaVM* vm, const char* func) {}
+Status aria_call_func(AriaVM* vm, const char* func) {
+    return STATUS_OK;
+}
