@@ -486,10 +486,7 @@ bool match(Parser* parser, TokType type) {
     return true;
 }
 
-void declaration(Parser* parser) {
-    if (match(parser, TOK_VAR)) {
-        varDeclaration();
-    }
+void funcDeclaration(Parser* p) {
 }
 
 void parse(const char* buf) {
@@ -506,7 +503,17 @@ void parse(const char* buf) {
 
     while (parser.current.type != TOK_EOF) {
         printf("Token: %d start(%d), len(%d)\n", parser.current.type, parser.current.start, parser.current.length);
-        declaration(&parser);
+
+        switch (parser.current.type) {
+            case TOK_IMPORT:
+                break;
+            case TOK_FUNC:
+                funcDeclaration(parser);
+                break;
+            default:
+                // TODO: handle errors
+                break;
+        }
     }
 }
 
