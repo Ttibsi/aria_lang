@@ -205,6 +205,7 @@ static const int keyword_count = sizeof(keywords) / sizeof(keywords[0]);
 typedef struct {
     Token prev;
     Token current;
+    String input;
     Status status;  // This may not be needed? ParserStatus instead? Status was repurposed for
                     // public error reporting
 } Parser;
@@ -243,20 +244,35 @@ typedef struct {
 DA(AriaValue, ValueArray);
 
 ///// Utility Functions
-String make_str_from_cstr(const char* data) {
-    const int len = strlen(data);
-    String str = {0};
-    str.data = malloc(sizeof(char) * len);
-    memcpy(str.data, data, len);
-    str.len = len;
 
+uint32_t hash(const char* data, size_t len) {
     uint32_t hash = 2166136261u;
     for (int i = 0; i < len; i++) {
         hash ^= (uint8_t)data[i];
         hash *= 16777619;
     }
-    str.hash = hash;
 
+    return hash;
+}
+
+String make_str_from_cstr(const char* data) {
+    const size_t len = strlen(data);
+    String str = {0};
+    str.data = malloc(sizeof(char) * len);
+    memcpy(str.data, data, len);
+    str.len = len;
+
+    str.hash = hash(str.data, len);
+    return str;
+}
+
+String make_str_from_offset(String input, size_t offset, size_t size) {
+    String str = {0};
+    str.data = malloc(sizeof(char) * size);
+    memcpy(str.data, input.data + offset, size);
+    str.len = size;
+
+    str.hash = hash(str.data, size);
     return str;
 }
 
@@ -308,6 +324,7 @@ void aria_vm_cleanup(AriaVM* vm) {
 
 ///// Frontend
 
+// Lexer
 static size_t pc;
 
 Token makeToken(TokType type, int start, int length) {
@@ -455,14 +472,42 @@ Token scanToken(String input) {
     return makeToken(TOK_ERROR, start, 0);
 }
 
+// Parser
+
+bool check(Parser* parser, TokType type) {
+    return parser->current.type == type;
+}
+
+bool match(Parser* parser, TokType type) {
+    if (!check(parser, type)) { return false; }
+
+    parser->prev = parser->current;
+    parser->current = scanToken(parser->input);
+    return true;
+}
+
+void declaration(Parser* parser) {
+    if (match(parser, TOK_VAR)) {
+        varDeclaration();
+    }
+}
+
 void parse(const char* buf) {
     // While the current token isn't EOF, we pass the current token
     // into the top of the RD parser. The RD emits bytes straight
     // into the chunk to construct the AriaFunction obj
 
-    String input = make_str_from_cstr(buf);
     pc = 0;
-    Token tok = scanToken(input);
+    Parser parser = {0};
+    parser.input = make_str_from_cstr(buf);
+    parser.current = scanToken(parser.input);
+
+    // TODO: imports and functions here?
+
+    while (parser.current.type != TOK_EOF) {
+        printf("Token: %d start(%d), len(%d)\n", parser.current.type, parser.current.start, parser.current.length);
+        declaration(&parser);
+    }
 }
 
 ///// Backend
