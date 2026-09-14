@@ -257,6 +257,29 @@ typedef struct {
 
 DA(AriaValue, ValueArray);
 
+typedef enum {
+    PREC_NONE,
+    PREC_EQUALITY,
+    PREC_COMPARISON,
+    PREC_CALL,
+} Precedence;
+
+typedef struct {
+    Parser parser;
+    AriaFunction function;
+    Token locals[256];
+    int local_count;
+    Token function_name;
+} Compiler;
+
+typedef void (*ParseFn)(Compiler* compiler);
+
+typedef struct {
+    ParseFn prefix;
+    ParseFn infix;
+    Precedence precedence;
+} ParseRule;
+
 ///// Utility Functions
 
 uint32_t hash(const char* data, size_t len) {
@@ -497,31 +520,6 @@ Token scanToken(String input) {
 
 // Parser
 
-typedef enum {
-    PREC_NONE,
-    PREC_EQUALITY,
-    PREC_COMPARISON,
-    PREC_CALL,
-} Precedence;
-
-typedef struct Compiler Compiler;
-
-typedef void (*ParseFn)(Compiler* compiler);
-
-typedef struct {
-    ParseFn prefix;
-    ParseFn infix;
-    Precedence precedence;
-} ParseRule;
-
-struct Compiler {
-    Parser parser;
-    AriaFunction function;
-    Token locals[256];
-    int local_count;
-    Token function_name;
-};
-
 void advanceToken(Compiler* compiler);
 bool check(Compiler* compiler, TokType type);
 bool match(Compiler* compiler, TokType type);
@@ -557,7 +555,6 @@ void importDeclaration(Compiler* compiler);
 const char* opcodeName(OP op);
 uint16_t readShort(const Chunk* chunk, int offset);
 void printOpcodes(Compiler* compiler);
-void parse(const char* buf);
 
 static ParseRule rules[TOK_COUNT] = {
     [TOK_LEFT_PAREN] = {grouping, call, PREC_CALL},
@@ -964,7 +961,7 @@ void printOpcodes(Compiler* compiler) {
     }
 }
 
-void parse(const char* buf) {
+Compiler parse(const char* buf) {
     Compiler compiler = {0};
     pc = 0;
     compiler.parser.input = make_str_from_cstr(buf);
@@ -980,9 +977,11 @@ void parse(const char* buf) {
         }
     }
 
-    printOpcodes(&compiler);
-    free(compiler.function.chunk.code.items);
-    free(compiler.parser.input.data);
+    return compiler;
+
+    // printOpcodes(&compiler);
+    // free(compiler.function.chunk.code.items);
+    // free(compiler.parser.input.data);
 }
 
 ///// Backend
@@ -998,8 +997,6 @@ Status aria_load_file(AriaVM* vm, const char* filepath) {
     // Read file into chars
     // call frontend then backend
 
-    (void)vm;
-
     FILE* fp = fopen(filepath, "r");
     if (fp == NULL) { return STATUS_FILENOTFOUND; }
 
@@ -1012,7 +1009,8 @@ Status aria_load_file(AriaVM* vm, const char* filepath) {
     buf[length] = '\0';
     fclose(fp);
 
-    parse(buf);
+    Compiler compiler = parse(buf);
+
     free(buf);
     return STATUS_OK;
 }
