@@ -42,10 +42,9 @@ FUNC main(argc NUM, argv LIST[STR]) NUM
 END
 */
 
-///// Type Aliases
-typedef uint64_t Value;
-
 ///// Macros
+#define ARIA_DEBUG
+
 #define DA(T, name)   \
     struct name {     \
         T* items;     \
@@ -69,6 +68,15 @@ typedef uint64_t Value;
         (ptr)->items[(ptr)->count++] = item;                       \
     } while (0)
 
+#define checkError(func)                \
+    do {                                \
+        if (func) {                     \
+            P->hasError = true;         \
+            syncToStatementBoundary(P); \
+            return;                     \
+        }                               \
+    } while (0)
+
 /// Structs and Enums
 typedef struct {
     char* data;
@@ -79,19 +87,14 @@ typedef struct {
 
 DA(String, Strings);
 
+typedef struct AriaValue AriaValue;
 typedef struct {
     String key;
-    Value value;  // Should this be something else?
+    AriaValue* value;
 } HashTableElem;
 
-typedef struct {
+typedef struct Table {
     DA(HashTableElem, buckets)[16];
-    // struct buckets {
-    //     HashTableElem* items;
-    //     int count;
-    //     int capacity;
-    // } buckets[16];
-
 } Table;
 
 typedef enum {
@@ -101,9 +104,6 @@ typedef enum {
     TOK_LEFT_SQUACKET,   // 2
     TOK_RIGHT_SQUACKET,  // 3
     TOK_COMMA,           // 4
-    TOK_DOT,             // 5
-    TOK_SEMICOLON,       // 6
-    TOK_COLON,           // 7
     TOK_MINUS,           // 8
     TOK_PLUS,            // 9
     TOK_SLASH,           // 10
@@ -120,9 +120,8 @@ typedef enum {
     TOK_LESS_EQUAL,     // 19
 
     // digraphs
-    TOK_AND,       // 20
-    TOK_OR,        // 21
-    TOK_ELLIPSIS,  // 22
+    TOK_AND,  // 20
+    TOK_OR,   // 21
 
     // Keywords.
     TOK_BOOL,     // 23
@@ -146,7 +145,6 @@ typedef enum {
     TOK_THEN,     // 41
     TOK_TO,       // 42
     TOK_TRUE,     // 43
-    TOK_TYPE,     // 44
     TOK_VAR,      // 45
 
     // Literals.
@@ -155,9 +153,8 @@ typedef enum {
     TOK_CHAR_LIT,    // 48
     TOK_NUM_LIT,     // 49
 
-    TOK_ERROR,  // 50
-    TOK_EOF,    // 51
-    TOK_COUNT
+    TOK_EOF,  // 51
+    TOK_ERROR,
 } TokType;
 
 typedef struct {
@@ -196,7 +193,6 @@ static const Keyword keywords[] = {
     {"THEN",    4, TOK_THEN    }, // 41
     {"TO",      2, TOK_TO      }, // 42
     {"TRUE",    4, TOK_TRUE    }, // 43
-    {"TYPE",    4, TOK_TYPE    }, // 44
     {"VAR",     3, TOK_VAR     }, // 45
 };
 static const int keyword_count = sizeof(keywords) / sizeof(keywords[0]);
@@ -206,26 +202,40 @@ typedef struct {
     Token prev;
     Token current;
     String input;
-    Status status;  // This may not be needed? ParserStatus instead? Status was repurposed for
-                    // public error reporting
+    bool hasError;
 } Parser;
 
 typedef enum {
-    OP_CONSTANT,
-    OP_GET_LOCAL,
-    OP_SET_LOCAL,
-    OP_GET_NAME,
-    OP_CALL,
-    OP_LESS,
-    OP_EQUAL,
-    OP_ADD,
-    OP_POP,
+    OP_NULL,
+    OP_SET_VAR,
+    OP_GET_VAR,
+    OP_NIL,
+    OP_TRUE,
+    OP_FALSE,
+    OP_CONST_NUM,
+    OP_CONST_STR,
+    OP_CONST_CHAR,
+    OP_DEFINE_GLOBAL,
     OP_JUMP_IF_FALSE,
     OP_JUMP,
+    OP_POP,
     OP_LOOP,
-    OP_ITER_INIT,
-    OP_ITER_NEXT,
     OP_RETURN,
+    OP_CALL,
+    OP_NOT,
+    OP_NEGATE,
+    OP_ADD,
+    OP_SUBTRACT,
+    OP_MULTIPLY,
+    OP_DIVIDE,
+    OP_EQUAL,
+    OP_NOT_EQUAL,
+    OP_GREATER,
+    OP_GREATER_EQUAL,
+    OP_LESS,
+    OP_LESS_EQUAL,
+    OP_AND,
+    OP_OR,
 } OP;
 
 typedef struct {
@@ -235,8 +245,11 @@ typedef struct {
 } Chunk;
 
 typedef struct {
-    const char* name;  // function name - should be `main` by default
-    int arity;         // how many parameters
+    String name;  // function name - should be `main` by default
+    String ret_type;
+    int arity;  // how many parameters
+    String globals[UINT8_MAX + 1];
+    uint8_t global_count;
     Chunk chunk;
 } AriaFunction;
 
@@ -246,45 +259,33 @@ typedef enum {
     FUNCTION,
 } ValueTag;
 
-typedef struct {
+struct AriaValue {
     ValueTag tag;
     union {
         int i;
         bool b;
         AriaFunction* func;
     } as;
-} AriaValue;
+};
 
 DA(AriaValue, ValueArray);
 
 typedef enum {
-    PREC_NONE,
+    PREC_NONE = 0,
+    PREC_OR,
+    PREC_AND,
     PREC_EQUALITY,
     PREC_COMPARISON,
-    PREC_CALL,
+    PREC_TERM,
+    PREC_FACTOR,
+    PREC_UNARY,
 } Precedence;
-
-typedef struct {
-    Parser parser;
-    AriaFunction function;
-    Token locals[256];
-    int local_count;
-    Token function_name;
-} Compiler;
-
-typedef void (*ParseFn)(Compiler* compiler);
-
-typedef struct {
-    ParseFn prefix;
-    ParseFn infix;
-    Precedence precedence;
-} ParseRule;
 
 ///// Utility Functions
 
 uint32_t hash(const char* data, size_t len) {
     uint32_t hash = 2166136261u;
-    for (int i = 0; i < len; i++) {
+    for (size_t i = 0; i < len; i++) {
         hash ^= (uint8_t)data[i];
         hash *= 16777619;
     }
@@ -295,9 +296,8 @@ uint32_t hash(const char* data, size_t len) {
 String make_str_from_cstr(const char* data) {
     const size_t len = strlen(data);
     String str = {0};
-    str.data = malloc(sizeof(char) * (len + 1));
+    str.data = malloc(sizeof(char) * len);
     memcpy(str.data, data, len);
-    str.data[len] = '\0';
     str.len = len;
 
     str.hash = hash(str.data, len);
@@ -334,13 +334,13 @@ HashTableElem* table_find(Table* tbl, String* key) {
     return NULL;
 }
 
-Value* table_get(Table* tbl, String* key) {
+AriaValue* table_get(Table* tbl, String* key) {
     HashTableElem* found = table_find(tbl, key);
     if (found == NULL) { return NULL; }
-    return &found->value;
+    return found->value;
 }
 
-void table_set(Table* tbl, String key, Value val) {
+void table_set(Table* tbl, String key, AriaValue* val) {
     HashTableElem* found = table_find(tbl, &key);
     if (found == NULL) {
         uint8_t idx = key.hash % 16;
@@ -352,14 +352,30 @@ void table_set(Table* tbl, String key, Value val) {
 }
 
 void aria_vm_cleanup(AriaVM* vm) {
-    if (vm == NULL || vm->strings == NULL) { return; }
-
-    for (int i = vm->strings->count - 1; i >= 0; i--) {
+    for (int i = vm->strings->count; i >= 0; i--) {
         String str = vm->strings->items[i];
         free(str.data);
     }
 
     free(vm->strings->items);
+
+    if (vm->moduleImports != NULL) {
+        for (int i = 0; i < vm->moduleImports->count; i++) {
+            String str = vm->moduleImports->items[i];
+            free(str.data);
+        }
+        free(vm->moduleImports->items);
+        free(vm->moduleImports);
+    }
+
+    if (vm->fileImports != NULL) {
+        for (int i = 0; i < vm->fileImports->count; i++) {
+            String str = vm->fileImports->items[i];
+            free(str.data);
+        }
+        free(vm->fileImports->items);
+        free(vm->fileImports);
+    }
 }
 
 ///// Frontend
@@ -368,6 +384,10 @@ void aria_vm_cleanup(AriaVM* vm) {
 static size_t pc;
 
 Token makeToken(TokType type, int start, int length) {
+#ifdef ARIA_DEBUG
+    printf("Token: %d, start: %d, length: %d\n", type, start, length);
+#endif
+
     // TODO: line
     Token tok = (Token){.type = type, .start = start, .length = length, .line = 0};
     return tok;
@@ -375,24 +395,18 @@ Token makeToken(TokType type, int start, int length) {
 
 char peek(String input) { return input.data[pc]; }
 char peekNext(String input) {
-    if (pc + 1 >= input.len) { return '\0'; }
-    return input.data[pc + 1];
+    if (pc == input.len) { return '\0'; }
+    return input.data[pc++];
 }
 
 void advanceChar() { pc++; }
 
-void advanceComment(String input);
-
 void skipWhitespace(String input) {
-    while (true) {
-        while (isspace(peek(input))) { advanceChar(); }
-        if (peek(input) != ';') { return; }
-        advanceComment(input);
-    }
+    while (isspace(peek(input))) { advanceChar(); }
 }
 
 void advanceComment(String input) {
-    while (peek(input) != '\n' && peek(input) != '\0') { advanceChar(); }
+    while (peek(input) != '\n') { advanceChar(); }
 }
 
 Token scanEqualVariant(String input, TokType single, TokType equal, int start) {
@@ -466,11 +480,14 @@ Token scanToken(String input) {
     char c = peek(input);
 
     if (c == '\0') { return makeToken(TOK_EOF, start, 0); }
+    if (c == ';') {
+        advanceComment(input);
+        c = peek(input);
+    }
+
     switch (c) {
             // clang-format off
         case ',': advanceChar(); return makeToken(TOK_COMMA, start, 1);
-        case ';': advanceComment(input); return makeToken(TOK_COUNT, 0, 0);
-        case ':': advanceChar(); return makeToken(TOK_COLON, start, 1);
         case '-': advanceChar(); return makeToken(TOK_MINUS, start, 1);
         case '+': advanceChar(); return makeToken(TOK_PLUS, start, 1);
         case '*': advanceChar(); return makeToken(TOK_STAR, start, 1);
@@ -498,15 +515,6 @@ Token scanToken(String input) {
                       return makeToken(TOK_OR, start, 2);
                   }
                   break;
-        case '.':
-                  advanceChar();
-                  if (peek(input) == '.' && peekNext(input) == '.') {
-                      advanceChar();
-                      advanceChar();
-                      return makeToken(TOK_ELLIPSIS, start, 3);
-                  }
-                  return makeToken(TOK_DOT, start, 1);
-                  break;
     }
 
     //clang-format on
@@ -519,469 +527,706 @@ Token scanToken(String input) {
 }
 
 // Parser
+void parseBlock(Parser* P, AriaFunction* func, bool* emittedReturn);
+bool parsePrecedence(Parser* P, AriaFunction* func, Precedence minPrec, const TokType* stops, int stopCount);
 
-void advanceToken(Compiler* compiler);
-bool check(Compiler* compiler, TokType type);
-bool match(Compiler* compiler, TokType type);
-void consume(Compiler* compiler, TokType type);
-Chunk* currentChunk(Compiler* compiler);
-void emitByte(Compiler* compiler, uint8_t byte);
-void emitShort(Compiler* compiler, uint16_t value);
-void emitName(Compiler* compiler, Token name);
-int emitJump(Compiler* compiler, OP op);
-void patchJump(Compiler* compiler, int offset);
-void emitLoop(Compiler* compiler, int loop_start);
-bool identifiersEqual(Compiler* compiler, Token a, Token b);
-int addLocal(Compiler* compiler, Token name);
-int resolveLocal(Compiler* compiler, Token name);
-void expression(Compiler* compiler);
-void statement(Compiler* compiler);
-void parsePrecedence(Compiler* compiler, Precedence precedence);
-void number(Compiler* compiler);
-void variable(Compiler* compiler);
-void grouping(Compiler* compiler);
-void call(Compiler* compiler);
-ParseRule* getRule(TokType type);
-void binary(Compiler* compiler);
-void parseType(Compiler* compiler);
-void block(Compiler* compiler);
-void varDeclaration(Compiler* compiler);
-void ifStatement(Compiler* compiler);
-void forStatement(Compiler* compiler);
-void foreachStatement(Compiler* compiler);
-void returnStatement(Compiler* compiler);
-void funcDeclaration(Compiler* compiler);
-void importDeclaration(Compiler* compiler);
-const char* opcodeName(OP op);
-uint16_t readShort(const Chunk* chunk, int offset);
-void printOpcodes(Compiler* compiler);
-
-static ParseRule rules[TOK_COUNT] = {
-    [TOK_LEFT_PAREN] = {grouping, call, PREC_CALL},
-    [TOK_LESS] = {NULL, binary, PREC_COMPARISON},
-    [TOK_EQUAL_EQUAL] = {NULL, binary, PREC_EQUALITY},
-    [TOK_IDENTIFIER] = {variable, NULL, PREC_NONE},
-    [TOK_NUM_LIT] = {number, NULL, PREC_NONE},
-};
-
-void advanceToken(Compiler* compiler) {
-    compiler->parser.prev = compiler->parser.current;
-    compiler->parser.current = scanToken(compiler->parser.input);
-    assert(compiler->parser.current.type != TOK_ERROR);
+bool check(Parser* parser, TokType type) {
+    return parser->current.type == type;
 }
 
-bool check(Compiler* compiler, TokType type) {
-    return compiler->parser.current.type == type;
+bool checkType(Parser* parser) {
+    TokType curType = parser->current.type;
+    if (curType == TOK_BOOL || curType == TOK_CHAR || curType == TOK_NIL || curType == TOK_NUM || curType == TOK_STR ||
+        curType == TOK_LIST || curType == TOK_MAP) {
+        return true;
+    }
+
+    return false;
 }
 
-bool match(Compiler* compiler, TokType type) {
-    if (!check(compiler, type)) { return false; }
-    advanceToken(compiler);
+bool match(Parser* parser, TokType type) {
+    if (!check(parser, type)) { return false; }
+
+    parser->prev = parser->current;
+    parser->current = scanToken(parser->input);
     return true;
 }
 
-void consume(Compiler* compiler, TokType type) {
-    assert(check(compiler, type));
-    advanceToken(compiler);
+void advanceTok(Parser* P) {
+    P->prev = P->current;
+    P->current = scanToken(P->input);
 }
 
-Chunk* currentChunk(Compiler* compiler) {
-    return &compiler->function.chunk;
+void setError(Parser* P) {
+    P->hasError = true;
+    advanceTok(P);
 }
 
-void emitByte(Compiler* compiler, uint8_t byte) {
-    da_append(&currentChunk(compiler)->code, byte);
+void emitByte(AriaFunction* func, uint8_t byte) { da_append(&func->chunk.code, byte); }
+
+void emitBytes(AriaFunction* func, uint8_t byte1, uint8_t byte2) {
+    emitByte(func, byte1);
+    emitByte(func, byte2);
 }
 
-void emitShort(Compiler* compiler, uint16_t value) {
-    emitByte(compiler, (value >> 8) & 0xff);
-    emitByte(compiler, value & 0xff);
+int emitJump(AriaFunction* func, uint8_t instruction) {
+    emitByte(func, instruction);
+    emitByte(func, 0xff);
+    emitByte(func, 0xff);
+    return func->chunk.code.count - 2;
 }
 
-void emitName(Compiler* compiler, Token name) {
-    assert(name.start >= 0 && name.start <= UINT16_MAX);
-    assert(name.length >= 0 && name.length <= UINT16_MAX);
-    emitShort(compiler, (uint16_t)name.start);
-    emitShort(compiler, (uint16_t)name.length);
+void patchJump(AriaFunction* func, int offset) {
+    int jump = func->chunk.code.count - offset - 2;
+    if (jump > UINT16_MAX) { return; }
+
+    func->chunk.code.items[offset] = (jump >> 8) & 0xff;
+    func->chunk.code.items[offset + 1] = jump & 0xff;
 }
 
-int emitJump(Compiler* compiler, OP op) {
-    emitByte(compiler, op);
-    emitByte(compiler, 0xff);
-    emitByte(compiler, 0xff);
-    return currentChunk(compiler)->code.count - 2;
+void emitLoop(AriaFunction* func, int loopStart) {
+    emitByte(func, OP_LOOP);
+    int offset = func->chunk.code.count - loopStart + 2;
+    if (offset > UINT16_MAX) { return; }
+
+    emitByte(func, (offset >> 8) & 0xff);
+    emitByte(func, offset & 0xff);
 }
 
-void patchJump(Compiler* compiler, int offset) {
-    const int jump = currentChunk(compiler)->code.count - offset - 2;
-    assert(jump <= UINT16_MAX);
-    currentChunk(compiler)->code.items[offset] = (jump >> 8) & 0xff;
-    currentChunk(compiler)->code.items[offset + 1] = jump & 0xff;
-}
-
-void emitLoop(Compiler* compiler, int loop_start) {
-    emitByte(compiler, OP_LOOP);
-    const int offset = currentChunk(compiler)->code.count - loop_start + 2;
-    assert(offset <= UINT16_MAX);
-    emitShort(compiler, offset);
-}
-
-bool identifiersEqual(Compiler* compiler, Token a, Token b) {
-    if (a.length != b.length) { return false; }
-    return memcmp(compiler->parser.input.data + a.start, compiler->parser.input.data + b.start,
-                  a.length) == 0;
-}
-
-int addLocal(Compiler* compiler, Token name) {
-    assert(compiler->local_count < (int)(sizeof(compiler->locals) / sizeof(compiler->locals[0])));
-    compiler->locals[compiler->local_count] = name;
-    return compiler->local_count++;
-}
-
-int resolveLocal(Compiler* compiler, Token name) {
-    for (int i = compiler->local_count - 1; i >= 0; i--) {
-        if (identifiersEqual(compiler, name, compiler->locals[i])) { return i; }
+uint8_t identifierConstant(Parser* P, AriaFunction* func, Token nameTok) {
+    if (func->global_count == UINT8_MAX) {
+        P->hasError = true;
+        return 0;
     }
 
-    return -1;
+    uint8_t idx = func->global_count;
+    func->globals[idx] = make_str_from_offset(P->input, nameTok.start, nameTok.length);
+    func->global_count++;
+    return idx;
 }
 
-void number(Compiler* compiler) {
-    char value[32] = {0};
-    assert(compiler->parser.prev.length < (int)sizeof(value));
-    memcpy(value, compiler->parser.input.data + compiler->parser.prev.start,
-           compiler->parser.prev.length);
+void parseImport(Parser* P, AriaVM* vm) {
+    assert(P->current.type == TOK_IMPORT);
+    match(P, TOK_IMPORT);
 
-    const long number = strtol(value, NULL, 10);
-    assert(number >= 0 && number <= UINT8_MAX);
-    emitByte(compiler, OP_CONSTANT);
-    emitByte(compiler, (uint8_t)number);
-}
-
-void variable(Compiler* compiler) {
-    const int slot = resolveLocal(compiler, compiler->parser.prev);
-    if (slot == -1) {
-        emitByte(compiler, OP_GET_NAME);
-        emitName(compiler, compiler->parser.prev);
+    if (check(P, TOK_EOF)) {
+        P->hasError = true;
         return;
     }
 
-    emitByte(compiler, OP_GET_LOCAL);
-    emitByte(compiler, (uint8_t)slot);
-}
-
-void grouping(Compiler* compiler) {
-    expression(compiler);
-    consume(compiler, TOK_RIGHT_PAREN);
-}
-
-void call(Compiler* compiler) {
-    int argument_count = 0;
-    if (!check(compiler, TOK_RIGHT_PAREN)) {
-        do {
-            expression(compiler);
-            argument_count++;
-        } while (match(compiler, TOK_COMMA));
+    if (!(check(P, TOK_IDENTIFIER) || check(P, TOK_STRING_LIT))) {
+        setError(P);
+        return;
     }
-    assert(argument_count <= UINT8_MAX);
-    consume(compiler, TOK_RIGHT_PAREN);
 
-    emitByte(compiler, OP_CALL);
-    emitByte(compiler, (uint8_t)argument_count);
+    String importName = make_str_from_offset(P->input, P->current.start, P->current.length);
+    if (check(P, TOK_STRING_LIT)) {
+        if (vm->fileImports == NULL) { vm->fileImports = calloc(1, sizeof(Strings)); }
+        da_append(vm->fileImports, importName);
+    } else {
+        if (vm->moduleImports == NULL) { vm->moduleImports = calloc(1, sizeof(Strings)); }
+        da_append(vm->moduleImports, importName);
+    }
+
+    match(P, P->current.type);
 }
 
-void binary(Compiler* compiler) {
-    const TokType operator_type = compiler->parser.prev.type;
-    const ParseRule* rule = getRule(operator_type);
-    parsePrecedence(compiler, (Precedence)(rule->precedence + 1));
-
-    switch (operator_type) {
-        case TOK_LESS: emitByte(compiler, OP_LESS); break;
-        case TOK_EQUAL_EQUAL: emitByte(compiler, OP_EQUAL); break;
-        default: assert(false); break;
+bool isStatementBoundary(Parser* P) {
+    switch (P->current.type) {
+        case TOK_VAR:
+        case TOK_IF:
+        case TOK_FOR:
+        case TOK_FOREACH:
+        case TOK_RET:
+        case TOK_END:
+        case TOK_ELSE:
+        case TOK_EOF:
+            return true;
+        default:
+            return false;
     }
 }
 
-ParseRule* getRule(TokType type) {
-    return &rules[type];
+// Used for error recovery
+void syncToStatementBoundary(Parser* P) {
+    while (!isStatementBoundary(P)) { advanceTok(P); }
 }
 
-void parsePrecedence(Compiler* compiler, Precedence precedence) {
-    advanceToken(compiler);
-    ParseFn prefix = getRule(compiler->parser.prev.type)->prefix;
-    assert(prefix != NULL);
-    prefix(compiler);
 
-    while (precedence <= getRule(compiler->parser.current.type)->precedence) {
-        advanceToken(compiler);
-        ParseFn infix = getRule(compiler->parser.prev.type)->infix;
-        assert(infix != NULL);
-        infix(compiler);
+bool isExprStop(Parser* P, const TokType* stops, int stopCount) {
+    for (int i = 0; i < stopCount; i++) {
+        if (check(P, stops[i])) { return true; }
+    }
+    return false;
+}
+
+Precedence getInfixPrecedence(TokType type) {
+    switch (type) {
+        case TOK_OR:
+            return PREC_OR;
+        case TOK_AND:
+            return PREC_AND;
+        case TOK_EQUAL_EQUAL:
+        case TOK_BANG_EQUAL:
+            return PREC_EQUALITY;
+        case TOK_GREATER:
+        case TOK_GREATER_EQUAL:
+        case TOK_LESS:
+        case TOK_LESS_EQUAL:
+            return PREC_COMPARISON;
+        case TOK_PLUS:
+        case TOK_MINUS:
+            return PREC_TERM;
+        case TOK_STAR:
+        case TOK_SLASH:
+            return PREC_FACTOR;
+        default:
+            return PREC_NONE;
     }
 }
 
-void expression(Compiler* compiler) {
-    parsePrecedence(compiler, PREC_EQUALITY);
-}
-
-void parseType(Compiler* compiler) {
-    if (match(compiler, TOK_NUM)) { return; }
-
-    consume(compiler, TOK_LIST);
-    consume(compiler, TOK_LEFT_SQUACKET);
-    consume(compiler, TOK_STR);
-    consume(compiler, TOK_RIGHT_SQUACKET);
-}
-
-void block(Compiler* compiler) {
-    while (!check(compiler, TOK_END) && !check(compiler, TOK_ELSE) && !check(compiler, TOK_EOF)) {
-        statement(compiler);
+void emitBinaryOp(AriaFunction* func, TokType op) {
+    switch (op) {
+        case TOK_OR:
+            emitByte(func, OP_OR);
+            break;
+        case TOK_AND:
+            emitByte(func, OP_AND);
+            break;
+        case TOK_EQUAL_EQUAL:
+            emitByte(func, OP_EQUAL);
+            break;
+        case TOK_BANG_EQUAL:
+            emitByte(func, OP_NOT_EQUAL);
+            break;
+        case TOK_GREATER:
+            emitByte(func, OP_GREATER);
+            break;
+        case TOK_GREATER_EQUAL:
+            emitByte(func, OP_GREATER_EQUAL);
+            break;
+        case TOK_LESS:
+            emitByte(func, OP_LESS);
+            break;
+        case TOK_LESS_EQUAL:
+            emitByte(func, OP_LESS_EQUAL);
+            break;
+        case TOK_PLUS:
+            emitByte(func, OP_ADD);
+            break;
+        case TOK_MINUS:
+            emitByte(func, OP_SUBTRACT);
+            break;
+        case TOK_STAR:
+            emitByte(func, OP_MULTIPLY);
+            break;
+        case TOK_SLASH:
+            emitByte(func, OP_DIVIDE);
+            break;
+        default:
+            break;
     }
 }
 
-void varDeclaration(Compiler* compiler) {
-    consume(compiler, TOK_IDENTIFIER);
-    const int slot = addLocal(compiler, compiler->parser.prev);
-    parseType(compiler);
-    consume(compiler, TOK_EQUAL);
-    expression(compiler);
-    emitByte(compiler, OP_SET_LOCAL);
-    emitByte(compiler, (uint8_t)slot);
+
+bool parsePrefix(Parser* P, AriaFunction* func, const TokType* stops, int stopCount) {
+    TokType tok = P->current.type;
+    switch (tok) {
+        case TOK_NUM_LIT:
+            emitByte(func, OP_CONST_NUM);
+            match(P, TOK_NUM_LIT);
+            return true;
+        case TOK_STRING_LIT:
+            emitByte(func, OP_CONST_STR);
+            match(P, TOK_STRING_LIT);
+            return true;
+        case TOK_CHAR_LIT:
+            emitByte(func, OP_CONST_CHAR);
+            match(P, TOK_CHAR_LIT);
+            return true;
+        case TOK_TRUE:
+            emitByte(func, OP_TRUE);
+            match(P, TOK_TRUE);
+            return true;
+        case TOK_FALSE:
+            emitByte(func, OP_FALSE);
+            match(P, TOK_FALSE);
+            return true;
+        case TOK_NIL:
+            emitByte(func, OP_NIL);
+            match(P, TOK_NIL);
+            return true;
+        case TOK_IDENTIFIER: {
+            Token nameTok = P->current;
+            match(P, TOK_IDENTIFIER);
+            uint8_t nameIdx = identifierConstant(P, func, nameTok);
+            emitBytes(func, OP_GET_VAR, nameIdx);
+            return true;
+        }
+        case TOK_LEFT_PAREN: {
+            match(P, TOK_LEFT_PAREN);
+            TokType groupStop[1] = {TOK_RIGHT_PAREN};
+            if (!parsePrecedence(P, func, PREC_OR, groupStop, 1)) { return false; }
+            if (!match(P, TOK_RIGHT_PAREN)) {
+                P->hasError = true;
+                return false;
+            }
+            return true;
+        }
+        case TOK_BANG:
+            match(P, TOK_BANG);
+            if (!parsePrecedence(P, func, PREC_UNARY, stops, stopCount)) { return false; }
+            emitByte(func, OP_NOT);
+            return true;
+        case TOK_MINUS:
+            match(P, TOK_MINUS);
+            if (!parsePrecedence(P, func, PREC_UNARY, stops, stopCount)) { return false; }
+            emitByte(func, OP_NEGATE);
+            return true;
+        default:
+            P->hasError = true;
+            return false;
+    }
 }
 
-void ifStatement(Compiler* compiler) {
-    expression(compiler);
-    consume(compiler, TOK_THEN);
+bool parsePrecedence(Parser* P, AriaFunction* func, Precedence minPrec, const TokType* stops, int stopCount) {
+    if (check(P, TOK_EOF) || isExprStop(P, stops, stopCount)) {
+        P->hasError = true;
+        return false;
+    }
 
-    const int false_jump = emitJump(compiler, OP_JUMP_IF_FALSE);
-    emitByte(compiler, OP_POP);
-    block(compiler);
+    if (!parsePrefix(P, func, stops, stopCount)) { return false; }
 
-    const int end_jump = emitJump(compiler, OP_JUMP);
-    patchJump(compiler, false_jump);
-    emitByte(compiler, OP_POP);
+    while (!(check(P, TOK_EOF) || isExprStop(P, stops, stopCount))) {
+        Precedence prec = getInfixPrecedence(P->current.type);
+        if (prec < minPrec || prec == PREC_NONE) { break; }
 
-    if (match(compiler, TOK_ELSE)) {
-        if (match(compiler, TOK_IF)) {
-            ifStatement(compiler);
-            patchJump(compiler, end_jump);
+        TokType op = P->current.type;
+        match(P, op);
+        if (!parsePrecedence(P, func, (Precedence)(prec + 1), stops, stopCount)) { return false; }
+        emitBinaryOp(func, op);
+    }
+
+    return true;
+}
+
+bool parseExpressionUntil(Parser* P, AriaFunction* func, const TokType* stops, int stopCount) {
+    return parsePrecedence(P, func, PREC_OR, stops, stopCount);
+}
+
+void parseVariable(Parser* P, AriaFunction* func) {
+    assert(P->current.type == TOK_VAR);
+    match(P, TOK_VAR);
+
+    checkError(!check(P, TOK_IDENTIFIER));
+    Token nameTok = P->current;
+    match(P, TOK_IDENTIFIER);
+
+    checkError(!checkType(P));
+    Token declaredType = P->current;
+    match(P, declaredType.type);
+
+    if (declaredType.type == TOK_LIST || declaredType.type == TOK_MAP) {
+        checkError(!match(P, TOK_LEFT_SQUACKET));
+        checkError(!checkType(P));
+        match(P, P->current.type);
+
+        if (declaredType.type == TOK_MAP) {
+            checkError(!match(P, TOK_COMMA));
+            checkError(!checkType(P));
+            match(P, P->current.type);
+        }
+
+        checkError(!match(P, TOK_RIGHT_SQUACKET));
+    }
+
+    if (match(P, TOK_EQUAL)) {
+        TokType initStops[7] = {TOK_VAR, TOK_IF, TOK_FOR, TOK_FOREACH, TOK_RET, TOK_END, TOK_ELSE};
+        checkError(!parseExpressionUntil(P, func, initStops, 7));
+    } else {
+        emitByte(func, OP_NIL);
+    }
+
+    uint8_t nameIdx = identifierConstant(P, func, nameTok);
+    emitBytes(func, OP_DEFINE_GLOBAL, nameIdx);
+    emitByte(func, (uint8_t)declaredType.type);
+}
+
+void parseIf(Parser* P, AriaFunction* func, bool* emittedReturn) {
+    assert(P->current.type == TOK_IF);
+    match(P, TOK_IF);
+
+    if (check(P, TOK_EOF)) {
+        P->hasError = true;
+        return;
+    }
+
+    TokType condStops[1] = {TOK_THEN};
+    if (!parseExpressionUntil(P, func, condStops, 1)) {
+        P->hasError = true;
+        return;
+    }
+    if (!match(P, TOK_THEN)) { P->hasError = true; }
+
+    int thenJump = emitJump(func, OP_JUMP_IF_FALSE);
+    emitByte(func, OP_POP);
+
+    parseBlock(P, func, emittedReturn);
+
+    int elseJump = emitJump(func, OP_JUMP);
+    patchJump(func, thenJump);
+    emitByte(func, OP_POP);
+
+    if (match(P, TOK_ELSE)) {
+        if (check(P, TOK_IF)) {
+            parseIf(P, func, emittedReturn);
+            patchJump(func, elseJump);
+            return;
+        }
+        parseBlock(P, func, emittedReturn);
+    }
+
+    patchJump(func, elseJump);
+    if (!match(P, TOK_END)) { P->hasError = true; }
+}
+
+void parseFor(Parser* P, AriaFunction* func, bool* emittedReturn) {
+    assert(P->current.type == TOK_FOR);
+    match(P, TOK_FOR);
+
+    if (check(P, TOK_EOF)) {
+        P->hasError = true;
+        return;
+    }
+
+    checkError(!check(P, TOK_IDENTIFIER));
+    match(P, TOK_IDENTIFIER);
+
+    checkError(!match(P, TOK_EQUAL));
+    TokType startStops[1] = {TOK_TO};
+    if (!parseExpressionUntil(P, func, startStops, 1)) {
+        P->hasError = true;
+        return;
+    }
+
+    checkError(!match(P, TOK_TO));
+
+    TokType stopStops[2] = {TOK_STEP, TOK_THEN};
+    if (!parseExpressionUntil(P, func, stopStops, 2)) {
+        P->hasError = true;
+        return;
+    }
+
+    if (match(P, TOK_STEP)) {
+        TokType stepStops[1] = {TOK_THEN};
+        if (!parseExpressionUntil(P, func, stepStops, 1)) {
+            P->hasError = true;
+            return;
+        }
+    }
+
+    checkError(!match(P, TOK_THEN));
+    int loopStart = func->chunk.code.count;
+    int exitJump = emitJump(func, OP_JUMP_IF_FALSE);
+    emitByte(func, OP_POP);
+
+    parseBlock(P, func, emittedReturn);
+
+    emitLoop(func, loopStart);
+    patchJump(func, exitJump);
+    emitByte(func, OP_POP);
+
+    if (!match(P, TOK_END)) { P->hasError = true; }
+}
+
+void parseForEach(Parser* P, AriaFunction* func, bool* emittedReturn) {
+    assert(P->current.type == TOK_FOREACH);
+    match(P, TOK_FOREACH);
+
+    checkError(!check(P, TOK_IDENTIFIER));
+    match(P, TOK_IDENTIFIER);
+
+    checkError(!match(P, TOK_COMMA));
+    checkError(!check(P, TOK_IDENTIFIER));
+    match(P, TOK_IDENTIFIER);
+
+    checkError(!match(P, TOK_IN));
+
+    checkError(!check(P, TOK_IDENTIFIER));
+    match(P, TOK_IDENTIFIER);
+
+    checkError(!match(P, TOK_THEN));
+
+    int loopStart = func->chunk.code.count;
+    int exitJump = emitJump(func, OP_JUMP_IF_FALSE);
+    emitByte(func, OP_POP);
+
+    parseBlock(P, func, emittedReturn);
+
+    emitLoop(func, loopStart);
+    patchJump(func, exitJump);
+    emitByte(func, OP_POP);
+
+    if (!match(P, TOK_END)) { P->hasError = true; }
+}
+
+void parseReturn(Parser* P, AriaFunction* func, bool* emittedReturn) {
+    assert(P->current.type == TOK_RET);
+    match(P, TOK_RET);
+
+    if (check(P, TOK_EOF)) {
+        P->hasError = true;
+        return;
+    }
+
+    // Return is terminated by the surrounding block boundary.
+    if (check(P, TOK_END) || check(P, TOK_ELSE)) {
+        emitByte(func, OP_NIL);
+        emitByte(func, OP_RETURN);
+        *emittedReturn = true;
+        return;
+    }
+
+    TokType retStops[2] = {TOK_END, TOK_ELSE};
+    if (!parseExpressionUntil(P, func, retStops, 2)) {
+        P->hasError = true;
+        return;
+    }
+
+    emitByte(func, OP_RETURN);
+    *emittedReturn = true;
+}
+
+void parseIdentifier(Parser* P, AriaFunction* func) {
+    assert(P->current.type == TOK_IDENTIFIER);
+    int stmtStart = func->chunk.code.count;
+    Token nameTok = P->current;
+    match(P, TOK_IDENTIFIER);
+
+    if (match(P, TOK_LEFT_PAREN)) {
+        int args_idx = 0;
+        while (!check(P, TOK_RIGHT_PAREN)) {
+            if (check(P, TOK_EOF)) {
+                P->hasError = true;
+                func->chunk.code.count = stmtStart;
+                return;
+            }
+
+            TokType argStops[2] = {TOK_COMMA, TOK_RIGHT_PAREN};
+            if (!parseExpressionUntil(P, func, argStops, 2)) {
+                P->hasError = true;
+                func->chunk.code.count = stmtStart;
+                return;
+            }
+            args_idx++;
+
+            if (match(P, TOK_COMMA)) {
+                if (check(P, TOK_RIGHT_PAREN)) {
+                    P->hasError = true;
+                    func->chunk.code.count = stmtStart;
+                    return;
+                }
+                continue;
+            }
+
+            if (!check(P, TOK_RIGHT_PAREN)) {
+                P->hasError = true;
+                func->chunk.code.count = stmtStart;
+                syncToStatementBoundary(P);
+                return;
+            }
+        }
+        if (!match(P, TOK_RIGHT_PAREN)) {
+            P->hasError = true;
+            func->chunk.code.count = stmtStart;
             return;
         }
 
-        block(compiler);
-    }
-
-    consume(compiler, TOK_END);
-    patchJump(compiler, end_jump);
-}
-
-void forStatement(Compiler* compiler) {
-    consume(compiler, TOK_IDENTIFIER);
-    const int slot = addLocal(compiler, compiler->parser.prev);
-    consume(compiler, TOK_EQUAL);
-    expression(compiler);
-    emitByte(compiler, OP_SET_LOCAL);
-    emitByte(compiler, (uint8_t)slot);
-    consume(compiler, TOK_TO);
-
-    const int condition_start = currentChunk(compiler)->code.count;
-    emitByte(compiler, OP_GET_LOCAL);
-    emitByte(compiler, (uint8_t)slot);
-    expression(compiler);
-    emitByte(compiler, OP_LESS);
-    const int exit_jump = emitJump(compiler, OP_JUMP_IF_FALSE);
-    emitByte(compiler, OP_POP);
-
-    const int body_jump = emitJump(compiler, OP_JUMP);
-    const int increment_start = currentChunk(compiler)->code.count;
-    emitByte(compiler, OP_GET_LOCAL);
-    emitByte(compiler, (uint8_t)slot);
-    if (match(compiler, TOK_STEP)) {
-        expression(compiler);
-    } else {
-        emitByte(compiler, OP_CONSTANT);
-        emitByte(compiler, 1);
-    }
-    emitByte(compiler, OP_ADD);
-    emitByte(compiler, OP_SET_LOCAL);
-    emitByte(compiler, (uint8_t)slot);
-    emitLoop(compiler, condition_start);
-    patchJump(compiler, body_jump);
-
-    consume(compiler, TOK_THEN);
-    block(compiler);
-    emitLoop(compiler, increment_start);
-    patchJump(compiler, exit_jump);
-    emitByte(compiler, OP_POP);
-    consume(compiler, TOK_END);
-}
-
-void foreachStatement(Compiler* compiler) {
-    consume(compiler, TOK_IDENTIFIER);
-    const int index_slot = addLocal(compiler, compiler->parser.prev);
-    consume(compiler, TOK_COMMA);
-    consume(compiler, TOK_IDENTIFIER);
-    const int element_slot = addLocal(compiler, compiler->parser.prev);
-    consume(compiler, TOK_IN);
-    expression(compiler);
-    consume(compiler, TOK_THEN);
-
-    emitByte(compiler, OP_ITER_INIT);
-    const int loop_start = currentChunk(compiler)->code.count;
-    emitByte(compiler, OP_ITER_NEXT);
-    emitByte(compiler, (uint8_t)index_slot);
-    emitByte(compiler, (uint8_t)element_slot);
-    const int exit_jump = currentChunk(compiler)->code.count;
-    emitByte(compiler, 0xff);
-    emitByte(compiler, 0xff);
-    block(compiler);
-    emitLoop(compiler, loop_start);
-    patchJump(compiler, exit_jump);
-    consume(compiler, TOK_END);
-}
-
-void returnStatement(Compiler* compiler) {
-    expression(compiler);
-    emitByte(compiler, OP_RETURN);
-}
-
-void statement(Compiler* compiler) {
-    if (match(compiler, TOK_ELLIPSIS)) {
+        uint8_t nameIdx = identifierConstant(P, func, nameTok);
+        emitByte(func, OP_CALL);
+        emitByte(func, nameIdx);
+        emitByte(func, (uint8_t)args_idx);
         return;
-    } else if (match(compiler, TOK_VAR)) {
-        varDeclaration(compiler);
-    } else if (match(compiler, TOK_IF)) {
-        ifStatement(compiler);
-    } else if (match(compiler, TOK_FOR)) {
-        forStatement(compiler);
-    } else if (match(compiler, TOK_FOREACH)) {
-        foreachStatement(compiler);
-    } else if (match(compiler, TOK_RET)) {
-        returnStatement(compiler);
+    }
+
+    if (match(P, TOK_EQUAL)) {
+        if (check(P, TOK_EOF) || check(P, TOK_END) || check(P, TOK_ELSE)) {
+            P->hasError = true;
+            func->chunk.code.count = stmtStart;
+            return;
+        }
+
+        TokType rhsStops[2] = {TOK_END, TOK_ELSE};
+        if (!parseExpressionUntil(P, func, rhsStops, 2)) {
+            P->hasError = true;
+            func->chunk.code.count = stmtStart;
+            return;
+        }
+
+        uint8_t nameIdx = identifierConstant(P, func, nameTok);
+        emitByte(func, OP_SET_VAR);
+        emitByte(func, nameIdx);
+        return;
+    }
+
+    P->hasError = true;
+    func->chunk.code.count = stmtStart;
+    syncToStatementBoundary(P);
+}
+
+void parseStatement(Parser* P, AriaFunction* func, bool* emittedReturn) {
+    if (check(P, TOK_EOF)) {
+        P->hasError = true;
+        return;
+    }
+
+    switch (P->current.type) {
+        case TOK_VAR:
+            parseVariable(P, func);
+            break;
+        case TOK_IF:
+            parseIf(P, func, emittedReturn);
+            break;
+        case TOK_FOR:
+            parseFor(P, func, emittedReturn);
+            break;
+        case TOK_FOREACH:
+            parseForEach(P, func, emittedReturn);
+            break;
+        case TOK_RET:
+            parseReturn(P, func, emittedReturn);
+            break;
+        case TOK_IDENTIFIER:
+            parseIdentifier(P, func);
+            break;
+        default:
+            setError(P);
+            break;
+    }
+}
+
+void parseBlock(Parser* P, AriaFunction* func, bool* emittedReturn) {
+    while (!(check(P, TOK_END) || check(P, TOK_ELSE) || check(P, TOK_EOF))) {
+        TokType start = P->current.type;
+        parseStatement(P, func, emittedReturn);
+        if (P->current.type == start) { setError(P); }
+    }
+}
+
+AriaValue parseFunc(Parser* P) {
+    AriaFunction* func = malloc(sizeof(AriaFunction));
+    *func = (AriaFunction){0};
+    bool emittedReturn = false;
+
+    // Function header
+    if (!match(P, TOK_FUNC)) { P->hasError = true; }
+    if (!check(P, TOK_IDENTIFIER)) {
+        P->hasError = true;
+        setError(P);
     } else {
-        expression(compiler);
-        emitByte(compiler, OP_POP);
-    }
-}
-
-void funcDeclaration(Compiler* compiler) {
-    consume(compiler, TOK_IDENTIFIER);
-    compiler->function = (AriaFunction){.name = compiler->parser.input.data + compiler->parser.prev.start};
-    compiler->function_name = compiler->parser.prev;
-    compiler->local_count = 0;
-
-    consume(compiler, TOK_LEFT_PAREN);
-    if (!check(compiler, TOK_RIGHT_PAREN)) {
-        do {
-            consume(compiler, TOK_IDENTIFIER);
-            addLocal(compiler, compiler->parser.prev);
-            compiler->function.arity++;
-            parseType(compiler);
-        } while (match(compiler, TOK_COMMA));
-    }
-    consume(compiler, TOK_RIGHT_PAREN);
-    parseType(compiler);
-    block(compiler);
-    consume(compiler, TOK_END);
-}
-
-void importDeclaration(Compiler* compiler) {
-    assert(check(compiler, TOK_STRING_LIT) || check(compiler, TOK_IDENTIFIER));
-    advanceToken(compiler);
-}
-
-const char* opcodeName(OP op) {
-    switch (op) {
-        case OP_CONSTANT: return "OP_CONSTANT";
-        case OP_GET_LOCAL: return "OP_GET_LOCAL";
-        case OP_SET_LOCAL: return "OP_SET_LOCAL";
-        case OP_GET_NAME: return "OP_GET_NAME";
-        case OP_CALL: return "OP_CALL";
-        case OP_LESS: return "OP_LESS";
-        case OP_EQUAL: return "OP_EQUAL";
-        case OP_ADD: return "OP_ADD";
-        case OP_POP: return "OP_POP";
-        case OP_JUMP_IF_FALSE: return "OP_JUMP_IF_FALSE";
-        case OP_JUMP: return "OP_JUMP";
-        case OP_LOOP: return "OP_LOOP";
-        case OP_ITER_INIT: return "OP_ITER_INIT";
-        case OP_ITER_NEXT: return "OP_ITER_NEXT";
-        case OP_RETURN: return "OP_RETURN";
+        Token tok = P->current;
+        func->name = make_str_from_offset(P->input, tok.start, tok.length);
+        match(P, TOK_IDENTIFIER);
     }
 
-    assert(false);
-    return "";
-}
-
-uint16_t readShort(const Chunk* chunk, int offset) {
-    return ((uint16_t)chunk->code.items[offset] << 8) | chunk->code.items[offset + 1];
-}
-
-void printOpcodes(Compiler* compiler) {
-    const Chunk* chunk = &compiler->function.chunk;
-    printf("== %.*s ==\n", compiler->function_name.length,
-           compiler->parser.input.data + compiler->function_name.start);
-
-    for (int offset = 0; offset < chunk->code.count;) {
-        const OP op = chunk->code.items[offset++];
-        printf("  %04d %-17s", offset - 1, opcodeName(op));
-
-        switch (op) {
-            case OP_CONSTANT: printf(" %d", chunk->code.items[offset++]); break;
-            case OP_GET_LOCAL:
-            case OP_SET_LOCAL: printf(" slot %d", chunk->code.items[offset++]); break;
-            case OP_GET_NAME: {
-                const uint16_t start = readShort(chunk, offset);
-                const uint16_t length = readShort(chunk, offset + 2);
-                offset += 4;
-                printf(" %.*s", length, compiler->parser.input.data + start);
-            } break;
-            case OP_CALL: printf(" %d", chunk->code.items[offset++]); break;
-            case OP_JUMP_IF_FALSE:
-            case OP_JUMP: {
-                const uint16_t jump = readShort(chunk, offset);
-                offset += 2;
-                printf(" -> %d", offset + jump);
-            } break;
-            case OP_LOOP: {
-                const uint16_t jump = readShort(chunk, offset);
-                offset += 2;
-                printf(" -> %d", offset - jump);
-            } break;
-            case OP_ITER_NEXT: {
-                const uint8_t index_slot = chunk->code.items[offset++];
-                const uint8_t element_slot = chunk->code.items[offset++];
-                const uint16_t jump = readShort(chunk, offset);
-                offset += 2;
-                printf(" slots %d, %d -> %d", index_slot, element_slot, offset + jump);
-            } break;
-            default: break;
+    // Function args
+    if (!match(P, TOK_LEFT_PAREN)) { P->hasError = true; }
+    int args_idx = 0;
+    while (!check(P, TOK_RIGHT_PAREN)) {
+        if (!check(P, TOK_IDENTIFIER)) {
+            setError(P);
+            continue;
         }
-        printf("\n");
+        match(P, TOK_IDENTIFIER);
+
+        TokType argType = P->current.type;
+        if (!checkType(P)) {
+            P->hasError = true;
+            if (check(P, TOK_RIGHT_PAREN)) { break; }
+            advanceTok(P);
+            continue;
+        }
+        match(P, argType);
+
+        if (argType == TOK_LIST || argType == TOK_MAP) {
+            if (!match(P, TOK_LEFT_SQUACKET)) { P->hasError = true; }
+
+            if (!checkType(P)) {
+                P->hasError = true;
+                if (!(check(P, TOK_COMMA) || check(P, TOK_RIGHT_SQUACKET) || check(P, TOK_RIGHT_PAREN))) {
+                    advanceTok(P);
+                }
+            } else {
+                match(P, P->current.type);
+            }
+
+            if (argType == TOK_MAP) {
+                if (!match(P, TOK_COMMA)) { P->hasError = true; }
+                if (!checkType(P)) {
+                    P->hasError = true;
+                    if (!(check(P, TOK_RIGHT_SQUACKET) || check(P, TOK_RIGHT_PAREN))) {
+                        advanceTok(P);
+                    }
+                } else {
+                    match(P, P->current.type);
+                }
+            }
+
+            if (!match(P, TOK_RIGHT_SQUACKET)) { P->hasError = true; }
+        }
+
+        args_idx++;
+        if (check(P, TOK_COMMA)) { match(P, TOK_COMMA); }
     }
+    if (!match(P, TOK_RIGHT_PAREN)) { P->hasError = true; }
+    func->arity = args_idx;
+
+    // Function return type
+    if (!checkType(P)) {
+        setError(P);
+    } else {
+        Token retTok = P->current;
+        func->ret_type = make_str_from_offset(P->input, retTok.start, retTok.length);
+        match(P, retTok.type);
+    }
+
+    // Function body
+    parseBlock(P, func, &emittedReturn);
+    if (!match(P, TOK_END)) { P->hasError = true; }
+    if (!emittedReturn) {
+        emitByte(func, OP_NIL);
+        emitByte(func, OP_RETURN);
+    }
+
+    AriaValue funcValue = {0};
+    funcValue.tag = FUNCTION;
+    funcValue.as.func = func;
+    return funcValue;
 }
 
-Compiler parse(const char* buf) {
-    Compiler compiler = {0};
+void parse(const char* buf, AriaVM* vm) {
+    // While the current token isn't EOF, we pass the current token
+    // into the top of the RD parser. The RD emits bytes straight
+    // into the chunk to construct the AriaFunction obj
+
     pc = 0;
-    compiler.parser.input = make_str_from_cstr(buf);
-    compiler.parser.current = scanToken(compiler.parser.input);
+    Parser parser = {0};
+    parser.input = make_str_from_cstr(buf);
+    parser.current = scanToken(parser.input);
 
-    while (!check(&compiler, TOK_EOF)) {
-        if (match(&compiler, TOK_IMPORT)) {
-            importDeclaration(&compiler);
-        } else if (match(&compiler, TOK_FUNC)) {
-            funcDeclaration(&compiler);
+    // TODO: imports and functions here?
+
+    while (parser.current.type != TOK_EOF) {
+        if (parser.current.type == TOK_IMPORT) {
+            parseImport(&parser, vm);
+        } else if (parser.current.type == TOK_FUNC) {
+            AriaValue funcValue = parseFunc(&parser);
+            assert(funcValue.tag == FUNCTION);
+            table_set(vm->functions, funcValue.as.func->name, &funcValue);
         } else {
-            assert(false);
+            setError(&parser);
         }
     }
-
-    return compiler;
-
-    // printOpcodes(&compiler);
-    // free(compiler.function.chunk.code.items);
-    // free(compiler.parser.input.data);
 }
 
 ///// Backend
@@ -1004,14 +1249,11 @@ Status aria_load_file(AriaVM* vm, const char* filepath) {
     size_t length = ftell(fp);
     fseek(fp, 0, SEEK_SET);
 
-    char* buf = malloc(length + 1);
+    char* buf = malloc(length);
     fread(buf, 1, length, fp);
-    buf[length] = '\0';
-    fclose(fp);
 
-    Compiler compiler = parse(buf);
+    parse(buf, vm);
 
-    free(buf);
     return STATUS_OK;
 }
 
