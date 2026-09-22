@@ -324,11 +324,12 @@ bool str_cmp(String* a, String* b) {
 }
 
 HashTableElem* table_find(Table* tbl, String* key) {
+    if (tbl == NULL) { return NULL; }
     uint8_t idx = key->hash % 16;
-    struct buckets entry = tbl->buckets[idx];
+    struct buckets* entry = &tbl->buckets[idx];
 
-    for (int i = 0; i < entry.count; i++) {
-        if (str_cmp(&entry.items[i].key, key)) { return &entry.items[i]; }
+    for (int i = 0; i < entry->count; i++) {
+        if (str_cmp(&entry->items[i].key, key)) { return &entry->items[i]; }
     }
 
     return NULL;
@@ -341,23 +342,40 @@ AriaValue* table_get(Table* tbl, String* key) {
 }
 
 void table_set(Table* tbl, String key, AriaValue* val) {
+    if (tbl == NULL) { return; }
     HashTableElem* found = table_find(tbl, &key);
-    if (found == NULL) {
-        uint8_t idx = key.hash % 16;
-        struct buckets entry = tbl->buckets[idx];
-
-        HashTableElem insertable = (HashTableElem){key, val};
-        da_append(&entry, insertable);
+    if (found != NULL) {
+        *(found->value) = *val;
+        return;
     }
+
+    uint8_t idx = key.hash % 16;
+    struct buckets* entry = &tbl->buckets[idx];
+    AriaValue* stored = malloc(sizeof(AriaValue));
+    *stored = *val;
+
+    HashTableElem insertable = (HashTableElem){key, stored};
+    da_append(entry, insertable);
 }
 
 void aria_vm_cleanup(AriaVM* vm) {
-    for (int i = vm->strings->count; i >= 0; i--) {
-        String str = vm->strings->items[i];
-        free(str.data);
+    if (vm->functions != NULL) {
+        for (int i = 0; i < 16; i++) {
+            struct buckets* bucket = &vm->functions->buckets[i];
+            for (int j = 0; j < bucket->count; j++) { free(bucket->items[j].value); }
+            free(bucket->items);
+        }
+        free(vm->functions);
     }
 
-    free(vm->strings->items);
+    if (vm->strings != NULL) {
+        for (int i = vm->strings->count - 1; i >= 0; i--) {
+            String str = vm->strings->items[i];
+            free(str.data);
+        }
+        free(vm->strings->items);
+        free(vm->strings);
+    }
 
     if (vm->moduleImports != NULL) {
         for (int i = 0; i < vm->moduleImports->count; i++) {
@@ -395,8 +413,8 @@ Token makeToken(TokType type, int start, int length) {
 
 char peek(String input) { return input.data[pc]; }
 char peekNext(String input) {
-    if (pc == input.len) { return '\0'; }
-    return input.data[pc++];
+    if (pc + 1 >= input.len) { return '\0'; }
+    return input.data[pc + 1];
 }
 
 void advanceChar() { pc++; }
@@ -523,7 +541,8 @@ Token scanToken(String input) {
     if (isalpha(c) || c == '_') { return scanIdentifier(input, start); }
 
     // TODO: Handle error case
-    return makeToken(TOK_ERROR, start, 0);
+    advanceChar();
+    return makeToken(TOK_ERROR, start, 1);
 }
 
 // Parser
@@ -1204,6 +1223,96 @@ AriaValue parseFunc(Parser* P) {
     return funcValue;
 }
 
+const char* op_name(uint8_t op) {
+    switch ((OP)op) {
+        case OP_NULL: return "OP_NULL";
+        case OP_SET_VAR: return "OP_SET_VAR";
+        case OP_GET_VAR: return "OP_GET_VAR";
+        case OP_NIL: return "OP_NIL";
+        case OP_TRUE: return "OP_TRUE";
+        case OP_FALSE: return "OP_FALSE";
+        case OP_CONST_NUM: return "OP_CONST_NUM";
+        case OP_CONST_STR: return "OP_CONST_STR";
+        case OP_CONST_CHAR: return "OP_CONST_CHAR";
+        case OP_DEFINE_GLOBAL: return "OP_DEFINE_GLOBAL";
+        case OP_JUMP_IF_FALSE: return "OP_JUMP_IF_FALSE";
+        case OP_JUMP: return "OP_JUMP";
+        case OP_POP: return "OP_POP";
+        case OP_LOOP: return "OP_LOOP";
+        case OP_RETURN: return "OP_RETURN";
+        case OP_CALL: return "OP_CALL";
+        case OP_NOT: return "OP_NOT";
+        case OP_NEGATE: return "OP_NEGATE";
+        case OP_ADD: return "OP_ADD";
+        case OP_SUBTRACT: return "OP_SUBTRACT";
+        case OP_MULTIPLY: return "OP_MULTIPLY";
+        case OP_DIVIDE: return "OP_DIVIDE";
+        case OP_EQUAL: return "OP_EQUAL";
+        case OP_NOT_EQUAL: return "OP_NOT_EQUAL";
+        case OP_GREATER: return "OP_GREATER";
+        case OP_GREATER_EQUAL: return "OP_GREATER_EQUAL";
+        case OP_LESS: return "OP_LESS";
+        case OP_LESS_EQUAL: return "OP_LESS_EQUAL";
+        case OP_AND: return "OP_AND";
+        case OP_OR: return "OP_OR";
+        default: return "OP_UNKNOWN";
+    }
+}
+
+void dump_function_ops(AriaFunction* func) {
+    printf("=== Function %.*s (%d bytes) ===\n", (int)func->name.len, func->name.data, func->chunk.code.count);
+    for (int i = 0; i < func->chunk.code.count; i++) {
+        uint8_t op = func->chunk.code.items[i];
+        printf("%04d  %s", i, op_name(op));
+
+        switch ((OP)op) {
+            case OP_SET_VAR:
+            case OP_GET_VAR:
+                if (i + 1 < func->chunk.code.count) {
+                    printf(" %u", func->chunk.code.items[i + 1]);
+                    i += 1;
+                }
+                break;
+            case OP_DEFINE_GLOBAL:
+                if (i + 2 < func->chunk.code.count) {
+                    printf(" name=%u type=%u", func->chunk.code.items[i + 1], func->chunk.code.items[i + 2]);
+                    i += 2;
+                }
+                break;
+            case OP_JUMP_IF_FALSE:
+            case OP_JUMP:
+            case OP_LOOP:
+                if (i + 2 < func->chunk.code.count) {
+                    uint16_t offset = (uint16_t)((func->chunk.code.items[i + 1] << 8) | func->chunk.code.items[i + 2]);
+                    printf(" %u", offset);
+                    i += 2;
+                }
+                break;
+            case OP_CALL:
+                if (i + 2 < func->chunk.code.count) {
+                    printf(" callee=%u argc=%u", func->chunk.code.items[i + 1], func->chunk.code.items[i + 2]);
+                    i += 2;
+                }
+                break;
+            default:
+                break;
+        }
+        printf("\n");
+    }
+}
+
+void dump_all_functions(AriaVM* vm) {
+    for (int i = 0; i < 16; i++) {
+        struct buckets* bucket = &vm->functions->buckets[i];
+        for (int j = 0; j < bucket->count; j++) {
+            AriaValue* value = bucket->items[j].value;
+            if (value != NULL && value->tag == FUNCTION && value->as.func != NULL) {
+                dump_function_ops(value->as.func);
+            }
+        }
+    }
+}
+
 void parse(const char* buf, AriaVM* vm) {
     // While the current token isn't EOF, we pass the current token
     // into the top of the RD parser. The RD emits bytes straight
@@ -1213,6 +1322,8 @@ void parse(const char* buf, AriaVM* vm) {
     Parser parser = {0};
     parser.input = make_str_from_cstr(buf);
     parser.current = scanToken(parser.input);
+    if (vm->functions == NULL) { vm->functions = calloc(1, sizeof(Table)); }
+    if (vm->strings == NULL) { vm->strings = calloc(1, sizeof(Strings)); }
 
     // TODO: imports and functions here?
 
@@ -1249,10 +1360,16 @@ Status aria_load_file(AriaVM* vm, const char* filepath) {
     size_t length = ftell(fp);
     fseek(fp, 0, SEEK_SET);
 
-    char* buf = malloc(length);
+    char* buf = malloc(length + 1);
     fread(buf, 1, length, fp);
+    buf[length] = '\0';
+    fclose(fp);
 
     parse(buf, vm);
+#ifdef ARIA_DEBUG
+    dump_all_functions(vm);
+#endif
+    free(buf);
 
     return STATUS_OK;
 }
