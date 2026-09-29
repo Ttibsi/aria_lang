@@ -2,8 +2,9 @@
 #define ARIA_H
 
 typedef enum {
-    STATUS_OK,
+    STATUS_OK = 0,
     STATUS_FILENOTFOUND,
+    STATUS_NOMAIN,
 } Status;
 
 // Forward declarations for VM
@@ -19,6 +20,8 @@ typedef struct {
     struct ValueArray* callstack;  // Every object should be a pointer to an AriaFunction
 
     struct Strings* strings;
+    struct Strings* moduleImports;
+    struct Strings* fileImports;
 } AriaVM;
 
 void aria_vm_cleanup(AriaVM* vm);

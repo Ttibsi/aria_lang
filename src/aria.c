@@ -576,6 +576,9 @@ void advanceTok(Parser* P) {
     P->current = scanToken(P->input);
 }
 
+// TODO: add a Status field to the parser, set the Status with new error types properly
+// Do we want a "printReadableError" function too that prints more information based on enum value?
+// Then in parse() we return a Status and can handle that properly in aria_load_file()
 void setError(Parser* P) {
     P->hasError = true;
     advanceTok(P);
@@ -1325,8 +1328,6 @@ void parse(const char* buf, AriaVM* vm) {
     if (vm->functions == NULL) { vm->functions = calloc(1, sizeof(Table)); }
     if (vm->strings == NULL) { vm->strings = calloc(1, sizeof(Strings)); }
 
-    // TODO: imports and functions here?
-
     while (parser.current.type != TOK_EOF) {
         if (parser.current.type == TOK_IMPORT) {
             parseImport(&parser, vm);
@@ -1342,17 +1343,55 @@ void parse(const char* buf, AriaVM* vm) {
 
 ///// Backend
 
-void execute(AriaFunction* func) {
+Status execute(AriaFunction* func) {
     // take the chunk from the function, iterate through the ops and execute as relevant
     // This is another dispatching type method, each operation will likely need it's own
     // C function for executing
+    if (func == NULL) { return STATUS_NOMAIN; }
+
+    struct code body = func->chunk.code;
+    for (int i = 0; i < body.count; i++) {
+        uint8_t inst = body.items[i];
+
+        switch (inst) {
+            case OP_NULL: break;
+            case OP_SET_VAR: break;
+            case OP_GET_VAR: break;
+            case OP_NIL: break;
+            case OP_TRUE: break;
+            case OP_FALSE: break;
+            case OP_CONST_NUM: break;
+            case OP_CONST_STR: break;
+            case OP_CONST_CHAR: break;
+            case OP_DEFINE_GLOBAL: break;
+            case OP_JUMP_IF_FALSE: break;
+            case OP_JUMP: break;
+            case OP_POP: break;
+            case OP_LOOP: break;
+            case OP_RETURN: break;
+            case OP_CALL: break;
+            case OP_NOT: break;
+            case OP_NEGATE: break;
+            case OP_ADD: break;
+            case OP_SUBTRACT: break;
+            case OP_MULTIPLY: break;
+            case OP_DIVIDE: break;
+            case OP_EQUAL: break;
+            case OP_NOT_EQUAL: break;
+            case OP_GREATER: break;
+            case OP_GREATER_EQUAL: break;
+            case OP_LESS: break;
+            case OP_LESS_EQUAL: break;
+            case OP_AND: break;
+            case OP_OR: break;
+        }
+    }
+
+    return STATUS_OK;
 }
 
 ///// Runtime
 Status aria_load_file(AriaVM* vm, const char* filepath) {
-    // Read file into chars
-    // call frontend then backend
-
     FILE* fp = fopen(filepath, "r");
     if (fp == NULL) { return STATUS_FILENOTFOUND; }
 
@@ -1369,8 +1408,17 @@ Status aria_load_file(AriaVM* vm, const char* filepath) {
 #ifdef ARIA_DEBUG
     dump_all_functions(vm);
 #endif
-    free(buf);
 
+    Status err = STATUS_OK;
+    String main = make_str_from_cstr("main");
+    AriaValue* main_func = table_get(vm->functions, &main);
+
+    err = execute(main_func->as.func);
+    if (err) { goto cleanup; }
+
+
+cleanup:
+    free(buf);
     return STATUS_OK;
 }
 
