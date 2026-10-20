@@ -257,6 +257,7 @@ typedef enum {
     INTEGER,
     BOOLEAN,
     FUNCTION,
+    NIL,
 } ValueTag;
 
 struct AriaValue {
@@ -265,6 +266,7 @@ struct AriaValue {
         int i;
         bool b;
         AriaFunction* func;
+        bool nil;
     } as;
 };
 
@@ -1343,7 +1345,7 @@ void parse(const char* buf, AriaVM* vm) {
 
 ///// Backend
 
-Status execute(AriaFunction* func) {
+Status execute(AriaVM* vm, AriaFunction* func) {
     // take the chunk from the function, iterate through the ops and execute as relevant
     // This is another dispatching type method, each operation will likely need it's own
     // C function for executing
@@ -1357,9 +1359,18 @@ Status execute(AriaFunction* func) {
             case OP_NULL: break;
             case OP_SET_VAR: break;
             case OP_GET_VAR: break;
-            case OP_NIL: break;
-            case OP_TRUE: break;
-            case OP_FALSE: break;
+            case OP_NIL: {
+                AriaValue v = (AriaValue){.tag = NIL, .as.nil = true};
+                da_append(vm->stack, v);
+            } break;
+            case OP_TRUE: {
+                AriaValue v = (AriaValue){.tag = BOOLEAN, .as.b = true};
+                da_append(vm->stack, v);
+            } break;
+            case OP_FALSE: {
+                AriaValue v = (AriaValue){.tag = BOOLEAN, .as.b = false};
+                da_append(vm->stack, v);
+            } break;
             case OP_CONST_NUM: break;
             case OP_CONST_STR: break;
             case OP_CONST_CHAR: break;
@@ -1413,7 +1424,7 @@ Status aria_load_file(AriaVM* vm, const char* filepath) {
     String main = make_str_from_cstr("main");
     AriaValue* main_func = table_get(vm->functions, &main);
 
-    err = execute(main_func->as.func);
+    err = execute(vm, main_func->as.func);
     if (err) { goto cleanup; }
 
 
