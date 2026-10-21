@@ -30,7 +30,6 @@ int main(int argc, char** argv) {
     nob_cc_flags(&cmd);
     cmd_append(&cmd, "-std=c99");
     cmd_append(&cmd, "-g");
-    cmd_append(&cmd, "src/aria.c");
     cmd_append(&cmd, "src/test.c");
     nob_cc_output(&cmd, "build/test");
     if (!cmd_run(&cmd)) { return 2; }

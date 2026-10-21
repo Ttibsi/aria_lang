@@ -1,4 +1,4 @@
-#include "aria.h"
+#include "aria.c"
 
 #define ONETEST_IMPLEMENTATION
 #include "onetest.h"
