@@ -24,7 +24,16 @@ int main(int argc, char** argv) {
     cmd_append(&cmd, "src/aria.c");
     cmd_append(&cmd, "src/main.c");
     nob_cc_output(&cmd, "build/aria");
-
     if (!cmd_run(&cmd)) { return 1; }
+
+    cmd_append(&cmd, "gcc");
+    nob_cc_flags(&cmd);
+    cmd_append(&cmd, "-std=c99");
+    cmd_append(&cmd, "-g");
+    cmd_append(&cmd, "src/aria.c");
+    cmd_append(&cmd, "src/test.c");
+    nob_cc_output(&cmd, "build/test");
+    if (!cmd_run(&cmd)) { return 2; }
+
     return 0;
 }

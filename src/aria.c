@@ -77,12 +77,6 @@ END
         }                               \
     } while (0)
 
-#define append_to_stack(tag, field, value)                        \
-    do {                                                          \
-        AriaValue v = (AriaValue){.tag = tag, .as.field = value}; \
-        da_append(vm->stack, v);                                  \
-    } while (0)
-
 /// Structs and Enums
 typedef struct {
     char* data;
@@ -260,10 +254,10 @@ typedef struct {
 } AriaFunction;
 
 typedef enum {
-    INTEGER,
-    BOOLEAN,
-    FUNCTION,
-    NIL,
+    VAL_INTEGER,
+    VAL_BOOLEAN,
+    VAL_FUNCTION,
+    VAL_NIL,
 } ValueTag;
 
 struct AriaValue {
@@ -1229,7 +1223,7 @@ AriaValue parseFunc(Parser* P) {
     }
 
     AriaValue funcValue = {0};
-    funcValue.tag = FUNCTION;
+    funcValue.tag = VAL_FUNCTION;
     funcValue.as.func = func;
     return funcValue;
 }
@@ -1317,7 +1311,7 @@ void dump_all_functions(AriaVM* vm) {
         struct buckets* bucket = &vm->functions->buckets[i];
         for (int j = 0; j < bucket->count; j++) {
             AriaValue* value = bucket->items[j].value;
-            if (value != NULL && value->tag == FUNCTION && value->as.func != NULL) {
+            if (value != NULL && value->tag == VAL_FUNCTION && value->as.func != NULL) {
                 dump_function_ops(value->as.func);
             }
         }
@@ -1341,7 +1335,7 @@ void parse(const char* buf, AriaVM* vm) {
             parseImport(&parser, vm);
         } else if (parser.current.type == TOK_FUNC) {
             AriaValue funcValue = parseFunc(&parser);
-            assert(funcValue.tag == FUNCTION);
+            assert(funcValue.tag == VAL_FUNCTION);
             table_set(vm->functions, funcValue.as.func->name, &funcValue);
         } else {
             setError(&parser);
@@ -1350,6 +1344,12 @@ void parse(const char* buf, AriaVM* vm) {
 }
 
 ///// Backend
+#define append_to_stack(val_tag, field, value)                        \
+    do {                                                          \
+        AriaValue v = (AriaValue){.tag = val_tag, .as.field = value}; \
+        da_append(vm->stack, v);                                  \
+    } while (0)
+
 
 AriaValue pop(AriaVM* vm) {
     AriaValue result = vm->stack->items[--vm->stack->count];
@@ -1370,9 +1370,9 @@ Status execute(AriaVM* vm, AriaFunction* func) {
             case OP_NULL: break;
             case OP_SET_VAR: break;
             case OP_GET_VAR: break;
-            case OP_NIL: append_to_stack(NIL, nil, true); break;
-            case OP_TRUE: append_to_stack(BOOLEAN, b, true); break;
-            case OP_FALSE: append_to_stack(BOOLEAN, b, false); break;
+            case OP_NIL: append_to_stack(VAL_NIL, nil, true); break;
+            case OP_TRUE: append_to_stack(VAL_BOOLEAN, b, true); break;
+            case OP_FALSE: append_to_stack(VAL_BOOLEAN, b, false); break;
             case OP_CONST_NUM: break;
             case OP_CONST_STR: break;
             case OP_CONST_CHAR: break;
