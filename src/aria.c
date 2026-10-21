@@ -77,9 +77,9 @@ END
         }                               \
     } while (0)
 
-#define append_to_stack(field, value)                             \
+#define append_to_stack(tag, field, value)                        \
     do {                                                          \
-        AriaValue v = (AriaValue){.tag = NIL, .as.field = value}; \
+        AriaValue v = (AriaValue){.tag = tag, .as.field = value}; \
         da_append(vm->stack, v);                                  \
     } while (0)
 
@@ -1370,9 +1370,9 @@ Status execute(AriaVM* vm, AriaFunction* func) {
             case OP_NULL: break;
             case OP_SET_VAR: break;
             case OP_GET_VAR: break;
-            case OP_NIL: append_to_stack(nil, true); break;
-            case OP_TRUE: append_to_stack(b, true); break;
-            case OP_FALSE: append_to_stack(b, false); break;
+            case OP_NIL: append_to_stack(NIL, nil, true); break;
+            case OP_TRUE: append_to_stack(BOOLEAN, b, true); break;
+            case OP_FALSE: append_to_stack(BOOLEAN, b, false); break;
             case OP_CONST_NUM: break;
             case OP_CONST_STR: break;
             case OP_CONST_CHAR: break;
