@@ -1351,6 +1351,11 @@ void parse(const char* buf, AriaVM* vm) {
 
 ///// Backend
 
+AriaValue pop(AriaVM* vm) {
+    AriaValue result = vm->stack->items[--vm->stack->count];
+    return result;
+}
+
 Status execute(AriaVM* vm, AriaFunction* func) {
     // take the chunk from the function, iterate through the ops and execute as relevant
     // This is another dispatching type method, each operation will likely need it's own
@@ -1376,7 +1381,10 @@ Status execute(AriaVM* vm, AriaFunction* func) {
             case OP_JUMP: break;
             case OP_POP: break;
             case OP_LOOP: break;
-            case OP_RETURN: break;
+            case OP_RETURN: {
+                AriaValue result = pop(vm);
+                return STATUS_OK;
+            } break;
             case OP_CALL: break;
             case OP_NOT: break;
             case OP_NEGATE: break;
