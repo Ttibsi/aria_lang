@@ -1,10 +1,12 @@
 #ifndef ARIA_H
 #define ARIA_H
 
+static char* AriaErrMsg = "";
 typedef enum {
     STATUS_OK = 0,
     STATUS_FILENOTFOUND,
     STATUS_NOMAIN,
+    STATUS_RUNTIMEERROR,
 } Status;
 
 // Forward declarations for VM

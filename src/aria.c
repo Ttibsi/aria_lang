@@ -1379,7 +1379,14 @@ Status execute(AriaVM* vm, AriaFunction* func) {
             case OP_DEFINE_GLOBAL: break;
             case OP_JUMP_IF_FALSE: break;
             case OP_JUMP: break;
-            case OP_POP: break;
+            case OP_POP: {
+                if (vm->stack->count) {
+                    pop(vm);
+                } else {
+                    AriaErrMsg = "Attempted to read value from empty stack";
+                    return STATUS_RUNTIMEERROR;
+                }
+            } break;
             case OP_LOOP: break;
             case OP_RETURN: {
                 AriaValue result = pop(vm);
