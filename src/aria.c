@@ -77,6 +77,12 @@ END
         }                               \
     } while (0)
 
+#define append_to_stack(field, value)                             \
+    do {                                                          \
+        AriaValue v = (AriaValue){.tag = NIL, .as.field = value}; \
+        da_append(vm->stack, v);                                  \
+    } while (0)
+
 /// Structs and Enums
 typedef struct {
     char* data;
@@ -1359,18 +1365,9 @@ Status execute(AriaVM* vm, AriaFunction* func) {
             case OP_NULL: break;
             case OP_SET_VAR: break;
             case OP_GET_VAR: break;
-            case OP_NIL: {
-                AriaValue v = (AriaValue){.tag = NIL, .as.nil = true};
-                da_append(vm->stack, v);
-            } break;
-            case OP_TRUE: {
-                AriaValue v = (AriaValue){.tag = BOOLEAN, .as.b = true};
-                da_append(vm->stack, v);
-            } break;
-            case OP_FALSE: {
-                AriaValue v = (AriaValue){.tag = BOOLEAN, .as.b = false};
-                da_append(vm->stack, v);
-            } break;
+            case OP_NIL: append_to_stack(nil, true); break;
+            case OP_TRUE: append_to_stack(b, true); break;
+            case OP_FALSE: append_to_stack(b, false); break;
             case OP_CONST_NUM: break;
             case OP_CONST_STR: break;
             case OP_CONST_CHAR: break;
