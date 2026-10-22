@@ -242,6 +242,7 @@ typedef struct {
     // dynamic array of operations and opcodes
     // This relies on the fact that an enum is just a number underneath
     DA(uint8_t, code);
+    DA(AriaValue, constants);
 } Chunk;
 
 typedef struct {
@@ -256,6 +257,7 @@ typedef struct {
 typedef enum {
     VAL_INTEGER,
     VAL_BOOLEAN,
+    VAL_CHAR,
     VAL_FUNCTION,
     VAL_NIL,
 } ValueTag;
@@ -265,6 +267,7 @@ struct AriaValue {
     union {
         int i;
         bool b;
+        char c;
         AriaFunction* func;
         bool nil;
     } as;
@@ -1373,9 +1376,17 @@ Status execute(AriaVM* vm, AriaFunction* func) {
             case OP_NIL: append_to_stack(VAL_NIL, nil, true); break;
             case OP_TRUE: append_to_stack(VAL_BOOLEAN, b, true); break;
             case OP_FALSE: append_to_stack(VAL_BOOLEAN, b, false); break;
-            case OP_CONST_NUM: break;
+            case OP_CONST_NUM: {
+                const int num = body.items[++i];
+                AriaValue v = (AriaValue){.tag = VAL_INTEGER, .as.i = num};
+                da_append(&func->chunk.constants, v);
+            } break;
             case OP_CONST_STR: break;
-            case OP_CONST_CHAR: break;
+            case OP_CONST_CHAR: {
+                const char c = body.items[++i];
+                AriaValue v = (AriaValue){.tag = VAL_CHAR, .as.c = c};
+                da_append(&func->chunk.constants, v);
+            }break;
             case OP_DEFINE_GLOBAL: break;
             case OP_JUMP_IF_FALSE: break;
             case OP_JUMP: break;
