@@ -35,6 +35,7 @@ int test_emitJump(void) { return 1; }
 int test_patchJump(void) { return 1; }
 int test_emitLoop(void) { return 1; }
 int test_identifierConstant(void) { return 1; }
+int test_addConstant(void) { return 1; }
 int test_parseImport(void) { return 1; }
 int test_isStatementBoundary(void) { return 1; }
 int test_syncToStatementBoundary(void) { return 1; }
@@ -96,6 +97,7 @@ int main(void) {
         ONETEST_TEST(test_patchJump),
         ONETEST_TEST(test_emitLoop),
         ONETEST_TEST(test_identifierConstant),
+        ONETEST_TEST(test_addConstant),
         ONETEST_TEST(test_parseImport),
         ONETEST_TEST(test_isStatementBoundary),
         ONETEST_TEST(test_syncToStatementBoundary),

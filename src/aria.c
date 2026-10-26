@@ -258,6 +258,7 @@ typedef enum {
     VAL_INTEGER,
     VAL_BOOLEAN,
     VAL_CHAR,
+    VAL_STRING,
     VAL_FUNCTION,
     VAL_NIL,
 } ValueTag;
@@ -268,6 +269,7 @@ struct AriaValue {
         int i;
         bool b;
         char c;
+        String str;
         AriaFunction* func;
         bool nil;
     } as;
@@ -632,6 +634,16 @@ uint8_t identifierConstant(Parser* P, AriaFunction* func, Token nameTok) {
     return idx;
 }
 
+uint8_t addConstant(Parser* P, AriaFunction* func, AriaValue value) {
+    if (func->chunk.constants.count > UINT8_MAX) {
+        P->hasError = true;
+        return 0;
+    }
+
+    da_append(&func->chunk.constants, value);
+    return (uint8_t)(func->chunk.constants.count - 1);
+}
+
 void parseImport(Parser* P, AriaVM* vm) {
     assert(P->current.type == TOK_IMPORT);
     match(P, TOK_IMPORT);
@@ -763,10 +775,16 @@ bool parsePrefix(Parser* P, AriaFunction* func, const TokType* stops, int stopCo
             emitByte(func, OP_CONST_NUM);
             match(P, TOK_NUM_LIT);
             return true;
-        case TOK_STRING_LIT:
-            emitByte(func, OP_CONST_STR);
+        case TOK_STRING_LIT: {
+            Token token = P->current;
+            String string = make_str_from_offset(P->input, token.start + 1, token.length - 2);
+            AriaValue value = {.tag = VAL_STRING, .as.str = string};
+            uint8_t index = addConstant(P, func, value);
+
+            emitBytes(func, OP_CONST_STR, index);
             match(P, TOK_STRING_LIT);
             return true;
+        }
         case TOK_CHAR_LIT:
             emitByte(func, OP_CONST_CHAR);
             match(P, TOK_CHAR_LIT);
@@ -1381,7 +1399,26 @@ Status execute(AriaVM* vm, AriaFunction* func) {
                 AriaValue v = (AriaValue){.tag = VAL_INTEGER, .as.i = num};
                 da_append(&func->chunk.constants, v);
             } break;
-            case OP_CONST_STR: break;
+            case OP_CONST_STR: {
+                if (i + 1 >= body.count) {
+                    AriaErrMsg = "Missing string constant index";
+                    return STATUS_RUNTIMEERROR;
+                }
+
+                uint8_t index = body.items[++i];
+                if (index >= func->chunk.constants.count) {
+                    AriaErrMsg = "Invalid string constant index";
+                    return STATUS_RUNTIMEERROR;
+                }
+
+                AriaValue value = func->chunk.constants.items[index];
+                if (value.tag != VAL_STRING) {
+                    AriaErrMsg = "Constant is not a string";
+                    return STATUS_RUNTIMEERROR;
+                }
+
+                da_append(vm->stack, value);
+            } break;
             case OP_CONST_CHAR: {
                 const char c = body.items[++i];
                 AriaValue v = (AriaValue){.tag = VAL_CHAR, .as.c = c};
