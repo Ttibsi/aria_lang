@@ -795,9 +795,14 @@ bool parsePrefix(Parser* P, AriaFunction* func, const TokType* stops, int stopCo
             match(P, TOK_STRING_LIT);
             return true;
         }
-        case TOK_CHAR_LIT:
-            emitByte(func, OP_CONST_CHAR);
+        case TOK_CHAR_LIT: {
+            const char c = P->input.data[P->current.start + 1];
+            AriaValue value = {.tag = VAL_CHAR, .as.c = c};
+            uint8_t index = addConstant(P, func, value);
+            emitBytes(func, OP_CONST_CHAR, index);
             match(P, TOK_CHAR_LIT);
+
+           }
             return true;
         case TOK_TRUE:
             emitByte(func, OP_TRUE);
@@ -1439,9 +1444,15 @@ Status execute(AriaVM* vm, AriaFunction* func) {
             } break;
 
             case OP_CONST_CHAR: {
-                const char c = body.items[++i];
-                AriaValue v = (AriaValue){.tag = VAL_CHAR, .as.c = c};
-                da_append(&func->chunk.constants, v);
+                const int constant_idx = body.items[++i];
+                if (constant_idx >= func->chunk.constants.count) {
+                    AriaErrMsg = "Missing char constant index";
+                    return STATUS_RUNTIMEERROR;
+                }
+
+                AriaValue char_val = func->chunk.constants.items[constant_idx];
+                assert(char_val.tag == VAL_CHAR);
+                da_append(vm->stack, char_val);
             }break;
 
             case OP_DEFINE_GLOBAL: break;
