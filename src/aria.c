@@ -1404,6 +1404,7 @@ Status execute(AriaVM* vm, AriaFunction* func) {
             case OP_NIL: append_to_stack(VAL_NIL, nil, true); break;
             case OP_TRUE: append_to_stack(VAL_BOOLEAN, b, true); break;
             case OP_FALSE: append_to_stack(VAL_BOOLEAN, b, false); break;
+
             case OP_CONST_NUM: {
                 const int constant_idx = body.items[++i];
                 if (constant_idx >= func->chunk.constants.count) {
@@ -1415,6 +1416,7 @@ Status execute(AriaVM* vm, AriaFunction* func) {
                 assert(num_val.tag == VAL_INTEGER);
                 da_append(vm->stack, num_val);
             } break;
+
             case OP_CONST_STR: {
                 if (i + 1 >= body.count) {
                     AriaErrMsg = "Missing string constant index";
@@ -1435,14 +1437,17 @@ Status execute(AriaVM* vm, AriaFunction* func) {
 
                 da_append(vm->stack, value);
             } break;
+
             case OP_CONST_CHAR: {
                 const char c = body.items[++i];
                 AriaValue v = (AriaValue){.tag = VAL_CHAR, .as.c = c};
                 da_append(&func->chunk.constants, v);
             }break;
+
             case OP_DEFINE_GLOBAL: break;
             case OP_JUMP_IF_FALSE: break;
             case OP_JUMP: break;
+
             case OP_POP: {
                 if (vm->stack->count) {
                     pop(vm);
@@ -1451,11 +1456,13 @@ Status execute(AriaVM* vm, AriaFunction* func) {
                     return STATUS_RUNTIMEERROR;
                 }
             } break;
+
             case OP_LOOP: break;
             case OP_RETURN: {
                 AriaValue result = pop(vm);
                 return STATUS_OK;
             } break;
+
             case OP_CALL: break;
             case OP_NOT: break;
             case OP_NEGATE: break;
