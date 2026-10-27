@@ -1510,11 +1510,22 @@ Status execute(AriaVM* vm, AriaFunction* func) {
                 const AriaValue b = pop(vm);
                 const AriaValue a = pop(vm);
 
-                if (a.tag == VAL_INTEGER) {
+                if (a.tag == VAL_INTEGER && b.tag == VAL_INTEGER) {
                     const int ret = a.as.i + b.as.i;
                     push(VAL_INTEGER, i, ret);
-                } else if (a.tag == VAL_STRING) {
-                    assert(false && "TODO");
+                } else if (a.tag == VAL_STRING && b.tag == VAL_STRING) {
+                    const size_t len = a.as.str.len + b.as.str.len;
+                    char* data = malloc(len);
+
+                    memcpy(data, a.as.str.data, a.as.str.len);
+                    memcpy(data + a.as.str.len, b.as.str.data, b.as.str.len);
+                    String str = {.data = data, .len = len, .hash = hash(data, len)};
+
+                    da_append(vm->strings, str);
+                    push(VAL_STRING, str, str);
+                } else {
+                    AriaErrMsg = "Attempted to add incompatible data types";
+                    return STATUS_RUNTIMEERROR;
                 }
             } break;
 
