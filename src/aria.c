@@ -1380,10 +1380,10 @@ void parse(const char* buf, AriaVM* vm) {
 }
 
 ///// Backend
-#define append_to_stack(val_tag, field, value)                        \
-    do {                                                          \
+#define push(val_tag, field, value)                                   \
+    do {                                                              \
         AriaValue v = (AriaValue){.tag = val_tag, .as.field = value}; \
-        da_append(vm->stack, v);                                  \
+        da_append(vm->stack, v);                                      \
     } while (0)
 
 
@@ -1406,9 +1406,9 @@ Status execute(AriaVM* vm, AriaFunction* func) {
             case OP_NULL: break;
             case OP_SET_VAR: break;
             case OP_GET_VAR: break;
-            case OP_NIL: append_to_stack(VAL_NIL, nil, true); break;
-            case OP_TRUE: append_to_stack(VAL_BOOLEAN, b, true); break;
-            case OP_FALSE: append_to_stack(VAL_BOOLEAN, b, false); break;
+            case OP_NIL: push(VAL_NIL, nil, true); break;
+            case OP_TRUE: push(VAL_BOOLEAN, b, true); break;
+            case OP_FALSE: push(VAL_BOOLEAN, b, false); break;
 
             case OP_CONST_NUM: {
                 const int constant_idx = body.items[++i];
@@ -1475,7 +1475,15 @@ Status execute(AriaVM* vm, AriaFunction* func) {
             } break;
 
             case OP_CALL: break;
-            case OP_NOT: break;
+            case OP_NOT: {
+                if (vm->stack->count < 1) {
+                    AriaErrMsg = "Attempted to negate empty stack";
+                    return STATUS_RUNTIMEERROR;
+                }
+                AriaValue v = pop(vm);
+                if (v.tag == VAL_BOOLEAN && v.as.b == true) { push(VAL_BOOLEAN, b, false); break; }
+                push(VAL_BOOLEAN, b, true);
+            } break;
             case OP_NEGATE: break;
             case OP_ADD: break;
             case OP_SUBTRACT: break;
