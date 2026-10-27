@@ -1501,7 +1501,23 @@ Status execute(AriaVM* vm, AriaFunction* func) {
                 push(VAL_INTEGER, i, negated);
             } break;
 
-            case OP_ADD: break;
+            case OP_ADD: {
+                if (vm->stack->count < 2) {
+                    AriaErrMsg = "Attempted to add insufficient values";
+                    return STATUS_RUNTIMEERROR;
+                }
+
+                const AriaValue b = pop(vm);
+                const AriaValue a = pop(vm);
+
+                if (a.tag == VAL_INTEGER) {
+                    const int ret = a.as.i + b.as.i;
+                    push(VAL_INTEGER, i, ret);
+                } else if (a.tag == VAL_STRING) {
+                    assert(false && "TODO");
+                }
+            } break;
+
             case OP_SUBTRACT: break;
             case OP_MULTIPLY: break;
             case OP_DIVIDE: break;
