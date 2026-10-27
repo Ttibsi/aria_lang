@@ -1477,14 +1477,30 @@ Status execute(AriaVM* vm, AriaFunction* func) {
             case OP_CALL: break;
             case OP_NOT: {
                 if (vm->stack->count < 1) {
-                    AriaErrMsg = "Attempted to negate empty stack";
+                    AriaErrMsg = "Attempted to invert empty stack";
                     return STATUS_RUNTIMEERROR;
                 }
                 AriaValue v = pop(vm);
                 if (v.tag == VAL_BOOLEAN && v.as.b == true) { push(VAL_BOOLEAN, b, false); break; }
                 push(VAL_BOOLEAN, b, true);
             } break;
-            case OP_NEGATE: break;
+
+            case OP_NEGATE: {
+                if (vm->stack->count < 1) {
+                    AriaErrMsg = "Attempted to negate empty stack";
+                    return STATUS_RUNTIMEERROR;
+                }
+
+                AriaValue v = pop(vm);
+                if (v.tag != VAL_INTEGER) {
+                    AriaErrMsg = "Attempted to negate non-integer value";
+                    return STATUS_RUNTIMEERROR;
+                }
+
+                int negated = -(v.as.i);
+                push(VAL_INTEGER, i, negated);
+            } break;
+
             case OP_ADD: break;
             case OP_SUBTRACT: break;
             case OP_MULTIPLY: break;
