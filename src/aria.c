@@ -772,8 +772,18 @@ bool parsePrefix(Parser* P, AriaFunction* func, const TokType* stops, int stopCo
     TokType tok = P->current.type;
     switch (tok) {
         case TOK_NUM_LIT:
-            emitByte(func, OP_CONST_NUM);
+            char* num_str = malloc(P->current.length + 1);
+            memcpy(num_str, P->input.data + P->current.start, P->current.length);
+            num_str[P->current.length] = '\0';
+
+            int num = atoi(num_str);
+            free(num_str);
+
+            AriaValue value = {.tag = VAL_INTEGER, .as.i = num};
+            uint8_t index = addConstant(P, func, value);
+            emitBytes(func, OP_CONST_NUM, index);
             match(P, TOK_NUM_LIT);
+
             return true;
         case TOK_STRING_LIT: {
             Token token = P->current;
@@ -1395,9 +1405,15 @@ Status execute(AriaVM* vm, AriaFunction* func) {
             case OP_TRUE: append_to_stack(VAL_BOOLEAN, b, true); break;
             case OP_FALSE: append_to_stack(VAL_BOOLEAN, b, false); break;
             case OP_CONST_NUM: {
-                const int num = body.items[++i];
-                AriaValue v = (AriaValue){.tag = VAL_INTEGER, .as.i = num};
-                da_append(&func->chunk.constants, v);
+                const int constant_idx = body.items[++i];
+                if (constant_idx >= func->chunk.constants.count) {
+                    AriaErrMsg = "Missing num constant index";
+                    return STATUS_RUNTIMEERROR;
+                }
+
+                AriaValue num_val = func->chunk.constants.items[constant_idx];
+                assert(num_val.tag == VAL_INTEGER);
+                da_append(vm->stack, num_val);
             } break;
             case OP_CONST_STR: {
                 if (i + 1 >= body.count) {
