@@ -266,7 +266,7 @@ typedef enum {
 struct AriaValue {
     ValueTag tag;
     union {
-        int i;
+        long long i;
         bool b;
         char c;
         String str;
