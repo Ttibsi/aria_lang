@@ -275,6 +275,8 @@ struct AriaValue {
     } as;
 };
 
+static AriaValue ARIA_NIL = {.tag = VAL_NIL, .as.nil = true};
+
 DA(AriaValue, ValueArray);
 
 typedef enum {
@@ -1601,7 +1603,40 @@ Status execute(AriaVM* vm, AriaFunction* func) {
                 push(VAL_INTEGER, i, ret);
             } break;
 
-            case OP_EQUAL: break;
+            case OP_EQUAL: {
+                if (vm->stack->count < 2) {
+                    AriaErrMsg = "Attempted to compare insufficient values";
+                    return STATUS_RUNTIMEERROR;
+                }
+
+                AriaValue b = vm->stack->items[vm->stack->count - 1];
+                AriaValue a = vm->stack->items[vm->stack->count - 2];
+                if (a.tag != b.tag) {
+                    push(VAL_BOOLEAN, b, false);
+                    break;
+                }
+
+                pop(vm);
+                pop(vm);
+
+                bool ret;
+                if (a.tag == VAL_INTEGER) {
+                    ret = (a.as.i == b.as.i);
+                } else if (a.tag == VAL_BOOLEAN) {
+                    ret = (a.as.b == b.as.b);
+                } else if (a.tag == VAL_CHAR) {
+                    ret = (a.as.c == b.as.c);
+                } else if (a.tag == VAL_STRING) {
+                    ret = str_cmp(&a.as.str, &b.as.str);
+                } else if (a.tag == VAL_NIL) {
+                    ret = (a.as.nil == b.as.nil);
+                } else {
+                    ret = false;
+                }
+
+                push(VAL_BOOLEAN, b, ret);
+
+            } break;
             case OP_NOT_EQUAL: break;
             case OP_GREATER: break;
             case OP_GREATER_EQUAL: break;
