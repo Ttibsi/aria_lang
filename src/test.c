@@ -61,6 +61,7 @@ int test_dump_all_functions(void) { return 1; }
 int test_parse(void) { return 1; }
 
 int test_pop(void) { return 1; }
+int test_valuesEqual(void) { return 1; }
 int test_execute(void) { return 1; }
 int test_aria_load_file(void) { return 1; }
 int test_aria_call_func(void) { return 1; }
@@ -121,6 +122,7 @@ int main(void) {
         ONETEST_TEST(test_dump_all_functions),
         ONETEST_TEST(test_parse),
         ONETEST_TEST(test_pop),
+        ONETEST_TEST(test_valuesEqual),
         ONETEST_TEST(test_execute),
         ONETEST_TEST(test_aria_load_file),
         ONETEST_TEST(test_aria_call_func),

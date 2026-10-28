@@ -1394,6 +1394,20 @@ AriaValue pop(AriaVM* vm) {
     return result;
 }
 
+bool valuesEqual(AriaValue a, AriaValue b) {
+    if (a.tag != b.tag) { return false; }
+
+    switch (a.tag) {
+        case VAL_INTEGER: return a.as.i == b.as.i;
+        case VAL_BOOLEAN: return a.as.b == b.as.b;
+        case VAL_CHAR: return a.as.c == b.as.c;
+        case VAL_STRING: return str_cmp(&a.as.str, &b.as.str);
+        case VAL_FUNCTION: return a.as.func == b.as.func;
+        case VAL_NIL: return true;
+        default: return false;
+    }
+}
+
 Status execute(AriaVM* vm, AriaFunction* func) {
     // take the chunk from the function, iterate through the ops and execute as relevant
     // This is another dispatching type method, each operation will likely need it's own
@@ -1609,35 +1623,24 @@ Status execute(AriaVM* vm, AriaFunction* func) {
                     return STATUS_RUNTIMEERROR;
                 }
 
-                AriaValue b = vm->stack->items[vm->stack->count - 1];
-                AriaValue a = vm->stack->items[vm->stack->count - 2];
-                if (a.tag != b.tag) {
-                    push(VAL_BOOLEAN, b, false);
-                    break;
-                }
-
-                pop(vm);
-                pop(vm);
-
-                bool ret;
-                if (a.tag == VAL_INTEGER) {
-                    ret = (a.as.i == b.as.i);
-                } else if (a.tag == VAL_BOOLEAN) {
-                    ret = (a.as.b == b.as.b);
-                } else if (a.tag == VAL_CHAR) {
-                    ret = (a.as.c == b.as.c);
-                } else if (a.tag == VAL_STRING) {
-                    ret = str_cmp(&a.as.str, &b.as.str);
-                } else if (a.tag == VAL_NIL) {
-                    ret = (a.as.nil == b.as.nil);
-                } else {
-                    ret = false;
-                }
-
-                push(VAL_BOOLEAN, b, ret);
+                AriaValue b = pop(vm);
+                AriaValue a = pop(vm);
+                push(VAL_BOOLEAN, b, valuesEqual(a, b));
 
             } break;
-            case OP_NOT_EQUAL: break;
+
+            case OP_NOT_EQUAL: {
+                if (vm->stack->count < 2) {
+                    AriaErrMsg = "Attempted to compare insufficient values";
+                    return STATUS_RUNTIMEERROR;
+                }
+
+                AriaValue b = pop(vm);
+                AriaValue a = pop(vm);
+                push(VAL_BOOLEAN, b, !valuesEqual(a, b));
+
+            } break;
+
             case OP_GREATER: break;
             case OP_GREATER_EQUAL: break;
             case OP_LESS: break;
