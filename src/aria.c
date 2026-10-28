@@ -1491,12 +1491,13 @@ Status execute(AriaVM* vm, AriaFunction* func) {
                     return STATUS_RUNTIMEERROR;
                 }
 
-                AriaValue v = pop(vm);
+                const AriaValue v = vm->stack->items[vm->stack->count - 1];
                 if (v.tag != VAL_INTEGER) {
                     AriaErrMsg = "Attempted to negate non-integer value";
                     return STATUS_RUNTIMEERROR;
                 }
 
+                pop(vm);
                 int negated = -(v.as.i);
                 push(VAL_INTEGER, i, negated);
             } break;
@@ -1507,13 +1508,22 @@ Status execute(AriaVM* vm, AriaFunction* func) {
                     return STATUS_RUNTIMEERROR;
                 }
 
-                const AriaValue b = pop(vm);
-                const AriaValue a = pop(vm);
+                const AriaValue b = vm->stack->items[vm->stack->count - 1];
+                const AriaValue a = vm->stack->items[vm->stack->count - 2];
 
-                if (a.tag == VAL_INTEGER && b.tag == VAL_INTEGER) {
+                if (!((a.tag == VAL_INTEGER && b.tag == VAL_INTEGER) ||
+                      (a.tag == VAL_STRING && b.tag == VAL_STRING))) {
+                    AriaErrMsg = "Attempted to add incompatible data types";
+                    return STATUS_RUNTIMEERROR;
+                }
+
+                pop(vm);
+                pop(vm);
+
+                if (a.tag == VAL_INTEGER) {
                     const int ret = a.as.i + b.as.i;
                     push(VAL_INTEGER, i, ret);
-                } else if (a.tag == VAL_STRING && b.tag == VAL_STRING) {
+                } else {
                     const size_t len = a.as.str.len + b.as.str.len;
                     char* data = malloc(len);
 
@@ -1523,9 +1533,6 @@ Status execute(AriaVM* vm, AriaFunction* func) {
 
                     da_append(vm->strings, str);
                     push(VAL_STRING, str, str);
-                } else {
-                    AriaErrMsg = "Attempted to add incompatible data types";
-                    return STATUS_RUNTIMEERROR;
                 }
             } break;
 
@@ -1535,17 +1542,19 @@ Status execute(AriaVM* vm, AriaFunction* func) {
                     return STATUS_RUNTIMEERROR;
                 }
 
-                const AriaValue b = pop(vm);
-                const AriaValue a = pop(vm);
+                const AriaValue b = vm->stack->items[vm->stack->count - 1];
+                const AriaValue a = vm->stack->items[vm->stack->count - 2];
 
-                if (a.tag == VAL_INTEGER && b.tag == VAL_INTEGER) {
-                    const int ret = a.as.i - b.as.i;
-                    push(VAL_INTEGER, i, ret);
-                } else {
+                if (a.tag != VAL_INTEGER || b.tag != VAL_INTEGER) {
                     AriaErrMsg = "Attempted to subtract incompatible data types";
                     return STATUS_RUNTIMEERROR;
                 }
-            }break;
+
+                pop(vm);
+                pop(vm);
+                const int ret = a.as.i - b.as.i;
+                push(VAL_INTEGER, i, ret);
+            } break;
 
             case OP_MULTIPLY: {
                 if (vm->stack->count < 2) {
@@ -1553,17 +1562,19 @@ Status execute(AriaVM* vm, AriaFunction* func) {
                     return STATUS_RUNTIMEERROR;
                 }
 
-                const AriaValue b = pop(vm);
-                const AriaValue a = pop(vm);
+                const AriaValue b = vm->stack->items[vm->stack->count - 1];
+                const AriaValue a = vm->stack->items[vm->stack->count - 2];
 
-                if (a.tag == VAL_INTEGER && b.tag == VAL_INTEGER) {
-                    const int ret = a.as.i * b.as.i;
-                    push(VAL_INTEGER, i, ret);
-                } else {
+                if (a.tag != VAL_INTEGER || b.tag != VAL_INTEGER) {
                     AriaErrMsg = "Attempted to multiply incompatible data types";
                     return STATUS_RUNTIMEERROR;
                 }
-            }break;
+
+                pop(vm);
+                pop(vm);
+                const int ret = a.as.i * b.as.i;
+                push(VAL_INTEGER, i, ret);
+            } break;
 
             case OP_DIVIDE: {
                 if (vm->stack->count < 2) {
@@ -1571,22 +1582,24 @@ Status execute(AriaVM* vm, AriaFunction* func) {
                     return STATUS_RUNTIMEERROR;
                 }
 
-                const AriaValue b = pop(vm);
-                const AriaValue a = pop(vm);
+                const AriaValue b = vm->stack->items[vm->stack->count - 1];
+                const AriaValue a = vm->stack->items[vm->stack->count - 2];
 
-                if (a.tag == VAL_INTEGER && b.tag == VAL_INTEGER) {
-                    if (b.as.i == 0) {
-                        AriaErrMsg = "Attempted to divide by zero";
-                        return STATUS_RUNTIMEERROR;
-                    }
-
-                    const int ret = a.as.i / b.as.i;
-                    push(VAL_INTEGER, i, ret);
-                } else {
+                if (a.tag != VAL_INTEGER || b.tag != VAL_INTEGER) {
                     AriaErrMsg = "Attempted to divide incompatible data types";
                     return STATUS_RUNTIMEERROR;
                 }
-            }break;
+
+                if (b.as.i == 0) {
+                    AriaErrMsg = "Attempted to divide by zero";
+                    return STATUS_RUNTIMEERROR;
+                }
+
+                pop(vm);
+                pop(vm);
+                const int ret = a.as.i / b.as.i;
+                push(VAL_INTEGER, i, ret);
+            } break;
 
             case OP_EQUAL: break;
             case OP_NOT_EQUAL: break;
