@@ -1529,9 +1529,65 @@ Status execute(AriaVM* vm, AriaFunction* func) {
                 }
             } break;
 
-            case OP_SUBTRACT: break;
-            case OP_MULTIPLY: break;
-            case OP_DIVIDE: break;
+            case OP_SUBTRACT: {
+                if (vm->stack->count < 2) {
+                    AriaErrMsg = "Attempted to subtract insufficient values";
+                    return STATUS_RUNTIMEERROR;
+                }
+
+                const AriaValue b = pop(vm);
+                const AriaValue a = pop(vm);
+
+                if (a.tag == VAL_INTEGER && b.tag == VAL_INTEGER) {
+                    const int ret = a.as.i - b.as.i;
+                    push(VAL_INTEGER, i, ret);
+                } else {
+                    AriaErrMsg = "Attempted to subtract incompatible data types";
+                    return STATUS_RUNTIMEERROR;
+                }
+            }break;
+
+            case OP_MULTIPLY: {
+                if (vm->stack->count < 2) {
+                    AriaErrMsg = "Attempted to multiply insufficient values";
+                    return STATUS_RUNTIMEERROR;
+                }
+
+                const AriaValue b = pop(vm);
+                const AriaValue a = pop(vm);
+
+                if (a.tag == VAL_INTEGER && b.tag == VAL_INTEGER) {
+                    const int ret = a.as.i * b.as.i;
+                    push(VAL_INTEGER, i, ret);
+                } else {
+                    AriaErrMsg = "Attempted to multiply incompatible data types";
+                    return STATUS_RUNTIMEERROR;
+                }
+            }break;
+
+            case OP_DIVIDE: {
+                if (vm->stack->count < 2) {
+                    AriaErrMsg = "Attempted to divide insufficient values";
+                    return STATUS_RUNTIMEERROR;
+                }
+
+                const AriaValue b = pop(vm);
+                const AriaValue a = pop(vm);
+
+                if (a.tag == VAL_INTEGER && b.tag == VAL_INTEGER) {
+                    if (b.as.i == 0) {
+                        AriaErrMsg = "Attempted to divide by zero";
+                        return STATUS_RUNTIMEERROR;
+                    }
+
+                    const int ret = a.as.i / b.as.i;
+                    push(VAL_INTEGER, i, ret);
+                } else {
+                    AriaErrMsg = "Attempted to divide incompatible data types";
+                    return STATUS_RUNTIMEERROR;
+                }
+            }break;
+
             case OP_EQUAL: break;
             case OP_NOT_EQUAL: break;
             case OP_GREATER: break;
