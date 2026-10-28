@@ -1389,6 +1389,8 @@ void parse(const char* buf, AriaVM* vm) {
     } while (0)
 
 
+#define cmp_in_value(a, op, b) a.as.i op b.as.i
+
 AriaValue pop(AriaVM* vm) {
     AriaValue result = vm->stack->items[--vm->stack->count];
     return result;
@@ -1641,10 +1643,90 @@ Status execute(AriaVM* vm, AriaFunction* func) {
 
             } break;
 
-            case OP_GREATER: break;
-            case OP_GREATER_EQUAL: break;
-            case OP_LESS: break;
-            case OP_LESS_EQUAL: break;
+            case OP_GREATER: {
+                if (vm->stack->count < 2) {
+                    AriaErrMsg = "Attempted operation GT on insufficient values";
+                    return STATUS_RUNTIMEERROR;
+                }
+
+                AriaValue b = vm->stack->items[vm->stack->count - 1];
+                AriaValue a = vm->stack->items[vm->stack->count - 2];
+
+                if (a.tag != VAL_INTEGER || b.tag != VAL_INTEGER) {
+                    AriaErrMsg = "Cannot compare (GT) values that aren't integers";
+                    return STATUS_RUNTIMEERROR;
+                }
+
+                pop(vm);
+                pop(vm);
+                bool ret = cmp_in_value(a, >, b);
+                push(VAL_BOOLEAN, b, ret);
+
+            } break;
+
+            case OP_GREATER_EQUAL: {
+                if (vm->stack->count < 2) {
+                    AriaErrMsg = "Attempted operation GE on insufficient values";
+                    return STATUS_RUNTIMEERROR;
+                }
+
+                AriaValue b = vm->stack->items[vm->stack->count - 1];
+                AriaValue a = vm->stack->items[vm->stack->count - 2];
+
+                if (a.tag != VAL_INTEGER || b.tag != VAL_INTEGER) {
+                    AriaErrMsg = "Cannot compare (GE) values that aren't integers";
+                    return STATUS_RUNTIMEERROR;
+                }
+
+                pop(vm);
+                pop(vm);
+                bool ret = cmp_in_value(a, >=, b);
+                push(VAL_BOOLEAN, b, ret);
+
+            } break;
+
+            case OP_LESS: {
+                if (vm->stack->count < 2) {
+                    AriaErrMsg = "Attempted operation LT on insufficient values";
+                    return STATUS_RUNTIMEERROR;
+                }
+
+                AriaValue b = vm->stack->items[vm->stack->count - 1];
+                AriaValue a = vm->stack->items[vm->stack->count - 2];
+
+                if (a.tag != VAL_INTEGER || b.tag != VAL_INTEGER) {
+                    AriaErrMsg = "Cannot compare (LT) values that aren't integers";
+                    return STATUS_RUNTIMEERROR;
+                }
+
+                pop(vm);
+                pop(vm);
+                bool ret = cmp_in_value(a, <, b);
+                push(VAL_BOOLEAN, b, ret);
+
+            } break;
+
+            case OP_LESS_EQUAL: {
+                if (vm->stack->count < 2) {
+                    AriaErrMsg = "Attempted operation LE on insufficient values";
+                    return STATUS_RUNTIMEERROR;
+                }
+
+                AriaValue b = vm->stack->items[vm->stack->count - 1];
+                AriaValue a = vm->stack->items[vm->stack->count - 2];
+
+                if (a.tag != VAL_INTEGER || b.tag != VAL_INTEGER) {
+                    AriaErrMsg = "Cannot compare (LE) values that aren't integers";
+                    return STATUS_RUNTIMEERROR;
+                }
+
+                pop(vm);
+                pop(vm);
+                bool ret = cmp_in_value(a, <=, b);
+                push(VAL_BOOLEAN, b, ret);
+
+            } break;
+
             case OP_AND: break;
             case OP_OR: break;
         }
