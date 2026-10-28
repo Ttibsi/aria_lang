@@ -1389,7 +1389,7 @@ void parse(const char* buf, AriaVM* vm) {
     } while (0)
 
 
-#define cmp_in_value(a, op, b) a.as.i op b.as.i
+#define cmp_in_value(a, op, b) ((a).as.i op (b).as.i)
 
 AriaValue pop(AriaVM* vm) {
     AriaValue result = vm->stack->items[--vm->stack->count];
