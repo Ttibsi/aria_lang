@@ -1415,15 +1415,52 @@ Status execute(AriaVM* vm, AriaFunction* func) {
     // This is another dispatching type method, each operation will likely need it's own
     // C function for executing
     if (func == NULL) { return STATUS_NOMAIN; }
+    if (vm->stack == NULL) { vm->stack = calloc(1, sizeof(ValueArray)); }
+    if (vm->strings == NULL) { vm->strings = calloc(1, sizeof(Strings)); }
 
     struct code body = func->chunk.code;
+    AriaValue vars[UINT8_MAX + 1] = {0};
+    bool is_set[UINT8_MAX + 1] = {0};
     for (int i = 0; i < body.count; i++) {
         uint8_t inst = body.items[i];
 
         switch (inst) {
             case OP_NULL: break;
-            case OP_SET_VAR: break;
-            case OP_GET_VAR: break;
+            case OP_SET_VAR: {
+                if (i + 1 >= body.count) {
+                    AriaErrMsg = "Missing operand for OP_SET_VAR";
+                    return STATUS_RUNTIMEERROR;
+                }
+                uint8_t name_idx = body.items[++i];
+
+                if (vm->stack->count < 1) {
+                    AriaErrMsg = "Cannot set variable from empty stack";
+                    return STATUS_RUNTIMEERROR;
+                }
+                if (!is_set[name_idx]) {
+                    AriaErrMsg = "Cannot assign to undefined variable";
+                    return STATUS_RUNTIMEERROR;
+                }
+
+                AriaValue rhs = pop(vm);
+                vars[name_idx] = rhs;
+                is_set[name_idx] = true;
+                da_append(vm->stack, rhs);
+            } break;
+
+            case OP_GET_VAR: {
+                if (i + 1 >= body.count) {
+                    AriaErrMsg = "Missing operand for OP_GET_VAR";
+                    return STATUS_RUNTIMEERROR;
+                }
+                uint8_t name_idx = body.items[++i];
+                if (!is_set[name_idx]) {
+                    AriaErrMsg = "Cannot read undefined variable";
+                    return STATUS_RUNTIMEERROR;
+                }
+
+                da_append(vm->stack, vars[name_idx]);
+            } break;
             case OP_NIL: push(VAL_NIL, nil, true); break;
             case OP_TRUE: push(VAL_BOOLEAN, b, true); break;
             case OP_FALSE: push(VAL_BOOLEAN, b, false); break;
@@ -1473,7 +1510,23 @@ Status execute(AriaVM* vm, AriaFunction* func) {
                 da_append(vm->stack, char_val);
             }break;
 
-            case OP_DEFINE_GLOBAL: break;
+            case OP_DEFINE_GLOBAL: {
+                if (i + 2 >= body.count) {
+                    AriaErrMsg = "Missing operands for OP_DEFINE_GLOBAL";
+                    return STATUS_RUNTIMEERROR;
+                }
+                uint8_t name_idx = body.items[++i];
+                i++;  // declared type byte, currently unused at runtime
+
+                if (vm->stack->count < 1) {
+                    AriaErrMsg = "Cannot define variable from empty stack";
+                    return STATUS_RUNTIMEERROR;
+                }
+
+                AriaValue val = pop(vm);
+                vars[name_idx] = val;
+                is_set[name_idx] = true;
+            } break;
             case OP_JUMP_IF_FALSE: break;
             case OP_JUMP: break;
 
