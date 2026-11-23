@@ -1410,6 +1410,10 @@ bool valuesEqual(AriaValue a, AriaValue b) {
     }
 }
 
+static inline bool is_falsey(AriaValue v) {
+    return (v.tag == VAL_NIL) || (v.tag == VAL_BOOLEAN && v.as.b == false);
+}
+
 Status execute(AriaVM* vm, AriaFunction* func) {
     // take the chunk from the function, iterate through the ops and execute as relevant
     // This is another dispatching type method, each operation will likely need it's own
@@ -1421,8 +1425,10 @@ Status execute(AriaVM* vm, AriaFunction* func) {
     struct code body = func->chunk.code;
     AriaValue vars[UINT8_MAX + 1] = {0};
     bool is_set[UINT8_MAX + 1] = {0};
-    for (int i = 0; i < body.count; i++) {
-        uint8_t inst = body.items[i];
+    int ip = 0;
+    while (ip < body.count) {
+        int i = ip;
+        uint8_t inst = body.items[ip++];
 
         switch (inst) {
             case OP_NULL: break;
@@ -1527,8 +1533,33 @@ Status execute(AriaVM* vm, AriaFunction* func) {
                 vars[name_idx] = val;
                 is_set[name_idx] = true;
             } break;
-            case OP_JUMP_IF_FALSE: break;
-            case OP_JUMP: break;
+            case OP_JUMP_IF_FALSE: {
+                if (i + 2 >= body.count) {
+                    AriaErrMsg = "Missing operands for OP_JUMP_IF_FALSE";
+                    return STATUS_RUNTIMEERROR;
+                }
+                uint8_t hi = body.items[++i];
+                uint8_t lo = body.items[++i];
+                uint16_t offset = (uint16_t)((hi << 8) | lo);
+
+                if (vm->stack->count < 1) {
+                    AriaErrMsg = "Missing condition value for jump";
+                    return STATUS_RUNTIMEERROR;
+                }
+                AriaValue cond = vm->stack->items[vm->stack->count - 1];
+                if (is_falsey(cond)) { i += offset; }
+            } break;
+
+            case OP_JUMP: {
+                if (i + 2 >= body.count) {
+                    AriaErrMsg = "Missing operands for OP_JUMP";
+                    return STATUS_RUNTIMEERROR;
+                }
+                uint8_t hi = body.items[++i];
+                uint8_t lo = body.items[++i];
+                uint16_t offset = (uint16_t)((hi << 8) | lo);
+                i += offset;
+            } break;
 
             case OP_POP: {
                 if (vm->stack->count) {
@@ -1539,7 +1570,20 @@ Status execute(AriaVM* vm, AriaFunction* func) {
                 }
             } break;
 
-            case OP_LOOP: break;
+            case OP_LOOP: {
+                if (i + 2 >= body.count) {
+                    AriaErrMsg = "Missing operands for OP_LOOP";
+                    return STATUS_RUNTIMEERROR;
+                }
+                uint8_t hi = body.items[++i];
+                uint8_t lo = body.items[++i];
+                uint16_t offset = (uint16_t)((hi << 8) | lo);
+                if (offset > (uint16_t)i) {
+                    AriaErrMsg = "Invalid loop offset";
+                    return STATUS_RUNTIMEERROR;
+                }
+                i -= offset;
+            } break;
             case OP_RETURN: {
                 AriaValue result = pop(vm);
                 return STATUS_OK;
@@ -1783,6 +1827,8 @@ Status execute(AriaVM* vm, AriaFunction* func) {
             case OP_AND: break;
             case OP_OR: break;
         }
+
+        ip = i + 1;
     }
 
     return STATUS_OK;
